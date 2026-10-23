@@ -111,14 +111,13 @@ public final class CompileCard {
 
 		float ease = ramp(now - shownAt);
 		Font font = minecraft.font;
-		int textX = ICON_MARGIN + ICON_EDGE + 4;
-		int textY = ICON_MARGIN + (ICON_EDGE - font.lineHeight) / 2 + 1;
+		int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+		int screenHeight = minecraft.getWindow().getGuiScaledHeight();
 
 		if (words.isPresent()) {
 			float phase = (now % PULSE_MILLIS) / (float) PULSE_MILLIS;
 			float pulse = 0.75F + 0.25F * (float) Math.cos(2.0 * Math.PI * phase);
-			icon(graphics, ease * pulse);
-			word(graphics, font, words.get(), textX, textY, ease);
+			drawNotice(graphics, font, words.get(), screenWidth, screenHeight, ease, pulse);
 
 			return;
 		}
@@ -129,20 +128,31 @@ public final class CompileCard {
 
 		float out = warmedFor <= DONE_MILLIS ? 1.0F
 				: 1.0F - (warmedFor - DONE_MILLIS) / (float) FADE_MILLIS;
-		icon(graphics, ease * out);
-		word(graphics, font, Component.translatable(ScreenText.COMPILED), textX, textY, out);
+		drawNotice(graphics, font, Component.translatable(ScreenText.COMPILED), screenWidth,
+				screenHeight, out, 1.0F);
+	}
+
+	private static void drawNotice(GuiGraphicsExtractor graphics, Font font, Component words,
+			int screenWidth, int screenHeight, float alpha, float pulse) {
+		int textX = screenWidth - ICON_MARGIN - font.width(words);
+		int iconX = textX - ICON_EDGE - 4;
+		int iconY = screenHeight - ICON_MARGIN - ICON_EDGE;
+		int textY = iconY + (ICON_EDGE - font.lineHeight) / 2 + 1;
+
+		icon(graphics, iconX, iconY, alpha * pulse);
+		word(graphics, font, words, textX, textY, alpha);
 	}
 
 	private static float ramp(long sinceMillis) {
 		return Math.min(1.0F, sinceMillis / (float) RAMP_MILLIS);
 	}
 
-	private static void icon(GuiGraphicsExtractor graphics, float alpha) {
+	private static void icon(GuiGraphicsExtractor graphics, int x, int y, float alpha) {
 		if (alpha < FAINT) {
 			return;
 		}
 
-		graphics.blit(RenderPipelines.GUI_TEXTURED, COMPILE_ICON, ICON_MARGIN, ICON_MARGIN,
+		graphics.blit(RenderPipelines.GUI_TEXTURED, COMPILE_ICON, x, y,
 				0.0F, 0.0F, ICON_EDGE, ICON_EDGE, ICON_TEXTURE, ICON_TEXTURE, ICON_TEXTURE,
 				ICON_TEXTURE, ARGB.colorFromFloat(alpha, 1.0F, 1.0F, 1.0F));
 	}

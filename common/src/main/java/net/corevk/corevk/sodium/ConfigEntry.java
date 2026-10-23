@@ -35,7 +35,7 @@ public final class ConfigEntry implements ConfigEntryPoint {
 	private static final Identifier ICON =
 			Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, "textures/gui/config-icon.png");
 
-	private static final int THEME = 0xFF2E6FD9;
+	private static final int THEME = 0xFF87CEEB;
 
 	private static final Identifier FILTERING = Identifier.parse("sodium:quality.filtering_mode");
 
