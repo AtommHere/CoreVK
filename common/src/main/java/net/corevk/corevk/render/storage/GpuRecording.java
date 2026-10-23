@@ -21,7 +21,6 @@ public final class GpuRecording {
 	private GpuRecording() {
 	}
 
-	
 	public static void endPass(CommandEncoder encoder) {
 		CommandEncoderBackend backend = ((CommandEncoderAccessor) encoder).corevk$backend();
 		if (!(backend instanceof VulkanCommandEncoder vulkan)) {
@@ -33,7 +32,6 @@ public final class GpuRecording {
 		}
 	}
 
-	
 	public static void destroyLater(Runnable destruction) {
 		GpuDevice device = RenderSystem.tryGetDevice();
 		CommandEncoderBackend backend = device == null
@@ -44,7 +42,6 @@ public final class GpuRecording {
 		}
 	}
 
-	
 	static void beforeTransfer(VkCommandBuffer commands, MemoryStack stack) {
 		VkMemoryBarrier2.Buffer barrier = VkMemoryBarrier2.calloc(1, stack).sType$Default();
 		barrier.srcStageMask(VK13.VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
@@ -62,7 +59,6 @@ public final class GpuRecording {
 		KHRSynchronization2.vkCmdPipelineBarrier2KHR(commands, dependency);
 	}
 
-	
 	static void afterTransfer(VkCommandBuffer commands, MemoryStack stack) {
 		VkMemoryBarrier2.Buffer barrier = VkMemoryBarrier2.calloc(1, stack).sType$Default();
 		barrier.srcStageMask(VK13.VK_PIPELINE_STAGE_2_TRANSFER_BIT);
@@ -77,7 +73,6 @@ public final class GpuRecording {
 		KHRSynchronization2.vkCmdPipelineBarrier2KHR(commands, dependency);
 	}
 
-	
 	static void betweenTransfers(VkCommandBuffer commands, MemoryStack stack) {
 		VkMemoryBarrier2.Buffer barrier = VkMemoryBarrier2.calloc(1, stack).sType$Default();
 		barrier.srcStageMask(VK13.VK_PIPELINE_STAGE_2_TRANSFER_BIT);

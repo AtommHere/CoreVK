@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(ClientLevel.class)
 public abstract class ClientLevelMixin {
 
-	
 	@ModifyVariable(method = "tickWeatherEffects", at = @At("STORE"), require = 1)
 	private ParticleStatus corevk$splashes(ParticleStatus status) {
 		return WeatherDraw.splashes() ? status : ParticleStatus.MINIMAL;

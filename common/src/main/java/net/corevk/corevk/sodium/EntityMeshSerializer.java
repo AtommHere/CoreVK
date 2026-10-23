@@ -15,21 +15,16 @@ import java.util.Objects;
 
 public final class EntityMeshSerializer implements VertexSerializer {
 
-	
 	private static final int WRITTEN = DefaultVertexFormat.ENTITY.getVertexSize();
 
-	
 	private static final int CARRIED = EntityMesh.format().getVertexSize();
 
-	
 	private static final int IDENTIFIERS = carried(EntityVertex.IDENTIFIERS);
 
-	
 	private static final int MID_TEX_COORD = carried(EntityVertex.MID_TEX_COORD);
 
 	private static final int TANGENT = carried(EntityVertex.TANGENT);
 
-	
 	private static final int POSITION = written("Position");
 
 	private static final int TEX_COORD = written("UV0");
@@ -39,25 +34,21 @@ public final class EntityMeshSerializer implements VertexSerializer {
 	private EntityMeshSerializer() {
 	}
 
-	
 	private static int carried(String element) {
 		return Objects.requireNonNull(EntityMesh.format().getElement(element),
 				"The entity mesh was built without " + element).offset();
 	}
 
-	
 	private static int written(String element) {
 		return Objects.requireNonNull(DefaultVertexFormat.ENTITY.getElement(element),
 				"The game's entity format has no " + element).offset();
 	}
 
-	
 	public static void register() {
 		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.ENTITY,
 				EntityMesh.format(), new EntityMeshSerializer());
 	}
 
-	
 	@Override
 	public void serialize(long written, long carried, int vertices) {
 		short entity = (short) EntityIdentifiers.entity();
@@ -119,7 +110,6 @@ public final class EntityMeshSerializer implements VertexSerializer {
 		}
 	}
 
-	
 	private static void copy(long from, long into, short entity, short blockEntity, short item) {
 		MemoryUtil.memCopy(from, into, WRITTEN);
 		MemoryUtil.memPutShort(into + IDENTIFIERS, entity);

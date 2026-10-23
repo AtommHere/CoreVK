@@ -30,8 +30,6 @@ import java.util.function.Supplier;
 @Mixin(value = DefaultChunkRenderer.class, remap = false)
 public abstract class MixinDefaultChunkRenderer {
 
-	// require, because a silently unapplied probe prints the same zeros as an empty rotate, and
-	// the whole point of the clock is telling those two apart.
 	@Inject(method = "rotate", at = @At("HEAD"), require = 1)
 	private void corevk$rotateBegin(CallbackInfo ci) {
 		RingTimings.beginRotate();
@@ -42,7 +40,6 @@ public abstract class MixinDefaultChunkRenderer {
 		RingTimings.endRotate();
 	}
 
-	
 	@WrapOperation(
 			method = "render",
 			require = 2,
@@ -59,7 +56,6 @@ public abstract class MixinDefaultChunkRenderer {
 		return minecraft == null ? original.call(pass) : minecraft.gameRenderer.mainRenderTarget();
 	}
 
-	
 	@WrapOperation(
 			method = "render",
 			at = @At(value = "FIELD",

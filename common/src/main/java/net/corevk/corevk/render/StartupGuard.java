@@ -14,10 +14,8 @@ public final class StartupGuard {
 	private StartupGuard() {
 	}
 
-	
 	public static boolean startedCleanly(Options options, boolean cleanly) {
-		// Before anything below can move the backend: CoreVK read the same file before the game was
-		// built, and which engine draws this session follows that value and nothing written after it.
+
 		CoreVKBeside.loaded(options);
 		if (cleanly) {
 			return true;
@@ -28,11 +26,6 @@ public final class StartupGuard {
 			return false;
 		}
 
-		// Beside CoreVK the backend is not this mod's to move. CoreVK took its hooks for the backend the
-		// file names before the game was built, so putting the API back to Vulkan here would leave
-		// CoreVK hooked for OpenGL on a Vulkan device. Kept as the file has it, and the resets are
-		// still refused, for the reason below. A player who chose the game's own rescue still has it,
-		// above: that one is theirs to take whatever it does to CoreVK.
 		if (CoreVKBeside.installed()) {
 			CoreVK.logger().warn("The last startup ended badly. The game was about to reset the "
 					+ "graphics API and the fullscreen mode; both are kept as they were, {}, and the API "
@@ -46,8 +39,7 @@ public final class StartupGuard {
 		PreferredGraphicsApi wanted = asked == GraphicsApiChoice.OPENGL
 				? PreferredGraphicsApi.OPENGL
 				: PreferredGraphicsApi.VULKAN;
-		// Set rather than merely kept: a launch that already walked the setting down to Default, or
-		// on to OpenGL, would otherwise stay there for good. Coming BACK is what was asked for.
+
 		if (options.preferredGraphicsBackend().get() != wanted) {
 			options.preferredGraphicsBackend().set(wanted);
 		}
@@ -58,12 +50,9 @@ public final class StartupGuard {
 				+ "Video Settings, in this mod's page, or in corevk/graphics-api.txt",
 				wanted.getSerializedName());
 
-		// True, so neither reset runs. The game still wrote the flag false and saved it just before
-		// this, so the marker itself goes on working for whatever else reads it.
 		return true;
 	}
 
-	
 	private static GraphicsApiChoice asked() {
 		GraphicsApiChoice known = choice;
 		if (known == null) {
@@ -74,7 +63,6 @@ public final class StartupGuard {
 		return known;
 	}
 
-	
 	public static void forget() {
 		choice = null;
 	}

@@ -38,8 +38,7 @@ public final class TargetDirectives {
 	private TargetDirectives(Builder builder) {
 		Map<Integer, Setting> copied = new TreeMap<>();
 		builder.settings.forEach((index, setting) -> copied.put(index, setting.copy()));
-		// Not Map.copyOf: these are read to print an inventory, and an index that jumps about
-		// makes two runs of the same pack look like two different packs.
+
 		this.settings = Collections.unmodifiableMap(copied);
 
 		Map<String, Set<Integer>> mipmaps = new TreeMap<>();
@@ -77,7 +76,6 @@ public final class TargetDirectives {
 		private Builder() {
 		}
 
-		
 		public Builder accept(String program, IncludeExpander.ExpandedUnit fragment) {
 			List<String> lines = fragment.lines();
 
@@ -109,7 +107,6 @@ public final class TargetDirectives {
 					return;
 				}
 
-				// CoreVK looks the old name up first, so a pack writing both gets the old one.
 				boolean legacy = !buffer.equals(TargetName.canonical(index.get()));
 				if (legacy || !wanted.containsKey(index.get())) {
 					wanted.put(index.get(), value);
@@ -139,9 +136,6 @@ public final class TargetDirectives {
 			String type = directive.type();
 			String suffix = split.suffix();
 
-			// CoreVK carries the format as a const int, GLSL having no string type, and checks the
-			// declared type on every one of these. A pack writing the wrong type is ignored there
-			// and has to be ignored here, or the two disagree on a pack neither of us has seen.
 			boolean known = switch (suffix) {
 				case FORMAT -> type.equals("int");
 				case CLEAR, MIPMAP -> type.equals("bool");
@@ -156,8 +150,7 @@ public final class TargetDirectives {
 			String where = program + ":" + (line + 1);
 
 			if (suffix.equals(FORMAT)) {
-				// Counted by declaration rather than by appearance: one shared include reaches
-				// this method once per program that pulls it in, and BSL has thirty of those.
+
 				this.formatsSeen.add(directive.name() + "=" + directive.value());
 				if (live) {
 					this.formatsApplied.add(directive.name() + "=" + directive.value());
@@ -202,7 +195,6 @@ public final class TargetDirectives {
 			}
 		}
 
-		
 		private void noteConflict(ConstDirectives.Directive directive, String where) {
 			String previous = this.lastValue.put(directive.name(), directive.value());
 			String source = this.lastSource.put(directive.name(), where);
@@ -221,7 +213,6 @@ public final class TargetDirectives {
 		}
 	}
 
-	
 	public Set<Integer> declared() {
 		return this.settings.keySet();
 	}
@@ -232,7 +223,6 @@ public final class TargetDirectives {
 		return setting == null || setting.format == null ? TargetFormat.defaultFormat() : setting.format;
 	}
 
-	
 	public String formatSource(int index) {
 		Setting setting = this.settings.get(index);
 
@@ -245,7 +235,6 @@ public final class TargetDirectives {
 		return setting == null || setting.clear;
 	}
 
-	
 	public Colour clearColour(int index) {
 		Setting setting = this.settings.get(index);
 		if (setting != null && setting.clearColour != null) {
@@ -263,7 +252,6 @@ public final class TargetDirectives {
 		return format(index).alphaAdded() ? OPAQUE_BLACK : TRANSPARENT_BLACK;
 	}
 
-	
 	public boolean declaresClearColour(int index) {
 		Setting setting = this.settings.get(index);
 
@@ -276,12 +264,10 @@ public final class TargetDirectives {
 		return setting == null || setting.size == null ? TargetSize.ofScreen() : setting.size;
 	}
 
-	
 	public Map<String, Set<Integer>> mipmapRequests() {
 		return this.mipmapRequests;
 	}
 
-	
 	public Set<Integer> mipmapped() {
 		Set<Integer> targets = new TreeSet<>();
 		this.mipmapRequests.values().forEach(targets::addAll);
@@ -289,12 +275,10 @@ public final class TargetDirectives {
 		return Collections.unmodifiableSet(targets);
 	}
 
-	
 	public List<String> conflicts() {
 		return this.conflicts;
 	}
 
-	
 	public int formatsSeen() {
 		return this.formatsSeen;
 	}
@@ -307,7 +291,6 @@ public final class TargetDirectives {
 		return this.notes;
 	}
 
-	
 	static Optional<Colour> parseColour(String value) {
 		String text = value.trim();
 		if (!text.startsWith("vec4")) {
@@ -319,15 +302,6 @@ public final class TargetDirectives {
 			return Optional.empty();
 		}
 
-		// Limit 0, the one-argument reading: the empty field at the end of vec4(1,1,1,1,) goes, so
-		// the count below sees four and the colour applies. CoreVK reads it the same way, splitting
-		// at the default limit in DispatchingDirectiveHolder.processDirective.
-		//
-		// Refusing it instead would not leave the target with no clear at all. The engine default
-		// takes over, and which one depends on the target: the frame's fog colour on colortex0,
-		// opaque white on colortex1, and black elsewhere, transparent or not according to the
-		// format, as clearColour below spells out. A full screen of one of those, in place of the
-		// colour the pack wrote and CoreVK shows.
 		String[] parts = arguments.substring(1, arguments.length() - 1).split(",", 0);
 		if (parts.length != 4) {
 			return Optional.empty();
@@ -342,7 +316,6 @@ public final class TargetDirectives {
 		}
 	}
 
-	
 	private static String bareName(String program) {
 		String name = TargetName.bareName(program);
 		int dot = name.lastIndexOf('.');

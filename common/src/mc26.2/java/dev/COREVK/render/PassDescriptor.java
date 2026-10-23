@@ -18,48 +18,40 @@ public final class PassDescriptor {
 		this.descriptor = RenderPassDescriptor.create(label);
 	}
 
-	
 	public static PassDescriptor create(Supplier<String> label) {
 		return new PassDescriptor(label);
 	}
 
-	
 	public PassDescriptor withColorAttachment(GpuTextureView view) {
 		this.descriptor.withColorAttachment(view);
 		return this;
 	}
 
-	
 	public PassDescriptor withColorAttachment(GpuTextureView view, Optional<Vector4fc> clear) {
 		this.descriptor.withColorAttachment(view, clear);
 		return this;
 	}
 
-	
 	public PassDescriptor withUnusedColorAttachment() {
 		this.descriptor.withUnusedColorAttachment();
 		return this;
 	}
 
-	
 	public PassDescriptor withDepthAttachment(GpuTextureView view) {
 		this.descriptor.withDepthAttachment(view);
 		return this;
 	}
 
-	
 	public PassDescriptor withDepthAttachment(GpuTextureView view, OptionalDouble clear) {
 		this.descriptor.withDepthAttachment(view, clear);
 		return this;
 	}
 
-	
 	public PassDescriptor withRenderArea(RenderPass.RenderArea area) {
 		this.descriptor.withRenderArea(area);
 		return this;
 	}
 
-	
 	public RenderPassDescriptor build() {
 		return this.descriptor;
 	}

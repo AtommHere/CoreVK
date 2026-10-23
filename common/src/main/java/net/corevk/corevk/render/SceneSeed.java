@@ -40,36 +40,28 @@ final class SceneSeed {
 
 	private static final String SAMPLER = "InSampler";
 
-	
 	private static final String COVERAGE = "CoverageSampler";
 
-	
 	private static final String DEPTH = "DepthSampler";
 
-	
 	private static final String DISTANT = "DistantSampler";
 
 	private static final String LABEL = "CoreVK scene seed";
 
 	private static final String EMPTY_LABEL = "CoreVK scene seed gbuffer";
 
-	
 	private static final int SLACK_EPSILONS = 4;
 
-	
 	private static final String IN_FRONT = String.format(Locale.ROOT, """
 			bool ofInFront(float live, float mask) {
 				return %s > abs(mask) * (%d.0 * 1.1920929e-7);
 			}
 			""", ClipSpace.REVERSED.z < 0.0F ? "live - mask" : "mask - live", SLACK_EPSILONS);
 
-	
 	private static final String WRITTEN = ClipSpace.REVERSED.z < 0.0F ? ">= 0.0" : "<= 1.0";
 
-	
 	private static final String REAL = ClipSpace.REVERSED.z < 0.0F ? "> 0.0" : "< 1.0";
 
-	
 	private static final int VERTICES = 6;
 
 	private static final String VERTEX = """
@@ -86,7 +78,6 @@ final class SceneSeed {
 			}
 			""";
 
-	
 	private static final String FRAGMENT = String.format(Locale.ROOT, """
 			#version 460 core
 
@@ -117,32 +108,26 @@ final class SceneSeed {
 			}
 			""", IN_FRONT, REAL, REAL);
 
-	
 	record Extra(int target, TargetSchedule.Side side, GpuFormat format, Vector4fc empty) {
 	}
 
 	private final ChainPlan.Seed seed;
 
-	
 	private final List<Extra> extras;
 
 	private final RenderPipeline pipeline;
 
-	
 	private final RenderPipeline empties;
 
 	private final ShaderSource source;
 
-	
 	private final String emptyFragment;
 
-	
 	private boolean emptying;
 
 	private boolean reported;
 	private boolean saidNoEmptying;
 
-	
 	SceneSeed(ChainPlan.Seed seed, GpuFormat destination, List<Extra> extras) {
 		this.seed = seed;
 		this.extras = List.copyOf(extras);
@@ -166,9 +151,7 @@ final class SceneSeed {
 				.withBindGroupLayout(BindGroupLayouts.GLOBALS)
 				.withBindGroupLayout(GraphicsApi.samplers(SAMPLER, COVERAGE, DEPTH, DISTANT))
 				.withVertexBinding(0, DefaultVertexFormat.POSITION_TEX)
-				// The format of the target as the pack declared it, not the one of the main
-				// target: setting a pipeline whose colour state disagrees with the attachment
-				// throws, and the message names both formats, which is the useful failure.
+
 				.withColorTargetState(new ColorTargetState(Optional.empty(), destination,
 						ColorTargetState.WRITE_ALL))
 				.withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
@@ -178,7 +161,6 @@ final class SceneSeed {
 		this.empties = this.extras.isEmpty() ? null : emptiesPipeline(this.extras);
 	}
 
-	
 	private static RenderPipeline emptiesPipeline(List<Extra> extras) {
 		RenderPipeline.Builder builder = RenderPipeline.builder()
 				.withLocation(Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, "pipeline/seed_empty"))
@@ -190,9 +172,6 @@ final class SceneSeed {
 				.withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
 				.withCull(false);
 
-		// By slot and never by append: the builder holds the states in an array and the argumentless
-		// form writes slot nought every time, so three targets would leave one state and a pipeline
-		// the pass refuses to bind, by name and in the middle of the world.
 		for (int slot = 0; slot < extras.size(); slot++) {
 			builder.withColorTargetState(slot, new ColorTargetState(Optional.empty(),
 					extras.get(slot).format(), ColorTargetState.WRITE_ALL));
@@ -201,7 +180,6 @@ final class SceneSeed {
 		return builder.build();
 	}
 
-	
 	private static String emptyFragmentOf(List<Extra> extras) {
 		StringBuilder outputs = new StringBuilder();
 		StringBuilder empties = new StringBuilder();
@@ -234,18 +212,15 @@ final class SceneSeed {
 				""", outputs, IN_FRONT, WRITTEN, empties);
 	}
 
-	
 	private static String literal(Vector4fc colour) {
 		return String.format(Locale.ROOT, "vec4(%s, %s, %s, %s)", colour.x(), colour.y(), colour.z(),
 				colour.w());
 	}
 
-	
 	List<Integer> emptied() {
 		return this.extras.stream().map(Extra::target).toList();
 	}
 
-	
 	boolean prepare(GpuDevice device) {
 		if (!GraphicsApi.valid(GraphicsApi.compile(device, this.pipeline, this.source))) {
 			if (!this.reported) {
@@ -260,10 +235,6 @@ final class SceneSeed {
 		this.emptying = this.empties != null
 				&& GraphicsApi.valid(GraphicsApi.compile(device, this.empties, this.source));
 
-		// The scene still goes in when the second pass will not compile: half a repair is what the
-		// seed did before that pass existed and it is worth more than no picture at all. Said all
-		// the same, because the gbuffer it leaves behind is what the pass is there for and nothing
-		// on screen says so.
 		if (this.empties != null && !this.emptying && !this.saidNoEmptying) {
 			this.saidNoEmptying = true;
 			CoreVK.logger().error("The scene seed's gbuffer pass did not compile, so {} keep what "
@@ -275,7 +246,6 @@ final class SceneSeed {
 		return true;
 	}
 
-	
 	boolean draw(CommandEncoder encoder, GpuBuffer quad, GpuTextureView scene,
 			GpuTextureView covered, GpuTextureView live, GpuTextureView distant,
 			ColorTargets targets) {
@@ -285,19 +255,13 @@ final class SceneSeed {
 			return false;
 		}
 
-		// Loaded rather than cleared: the clears have already run, and the draw no longer covers the
-		// target whole in any case.
 		try (RenderPass pass = encoder.createRenderPass(() -> LABEL, into, Optional.empty())) {
 			GraphicsApi.setPipeline(pass, this.pipeline);
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setVertexBuffer(0, quad.slice());
 			GraphicsApi.bindTexture(pass, SAMPLER, scene,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
-			// NEAREST on both, and it matters more here than anywhere: the mask is the size of the
-			// screen, so a texel is a pixel and the answer is the one the geometry wrote, and the
-			// two depths are compared for having moved. Filtered, either read would move by a
-			// fraction of a texel along every silhouette in the picture, and the pack's own geometry
-			// would be repainted along all of them.
+
 			GraphicsApi.bindTexture(pass, COVERAGE, covered,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 			GraphicsApi.bindTexture(pass, DEPTH, live,
@@ -310,7 +274,6 @@ final class SceneSeed {
 		return !this.emptying || empty(encoder, quad, covered, live, targets);
 	}
 
-	
 	private boolean empty(CommandEncoder encoder, GpuBuffer quad, GpuTextureView covered,
 			GpuTextureView live, ColorTargets targets) {
 		PassDescriptor descriptor = PassDescriptor.create(() -> EMPTY_LABEL);
@@ -338,8 +301,7 @@ final class SceneSeed {
 			GraphicsApi.setPipeline(pass, this.empties);
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setVertexBuffer(0, quad.slice());
-			// NEAREST on both, and for the reason the draw above gives: a texel of the mask is a
-			// pixel, and the two depths are compared for having moved.
+
 			GraphicsApi.bindTexture(pass, COVERAGE, covered,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 			GraphicsApi.bindTexture(pass, DEPTH, live,

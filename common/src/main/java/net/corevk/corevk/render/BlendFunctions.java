@@ -12,13 +12,11 @@ import java.util.Set;
 
 final class BlendFunctions {
 
-	
 	private static final Set<String> REFUSED = new LinkedHashSet<>();
 
 	private BlendFunctions() {
 	}
 
-	
 	static Optional<BlendFunction> of(BlendMode mode, Optional<BlendFunction> fallback) {
 		if (mode == null) {
 			return fallback;

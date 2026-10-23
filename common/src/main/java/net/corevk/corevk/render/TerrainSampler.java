@@ -14,21 +14,17 @@ import java.util.OptionalDouble;
 
 public final class TerrainSampler {
 
-	
 	private static final Map<Integer, GpuSampler> BY_ANISOTROPY = new HashMap<>();
 
-	
 	private static volatile boolean breaksAnisotropy;
 
 	private TerrainSampler() {
 	}
 
-	
 	public static void breaksAnisotropy(boolean breaks) {
 		breaksAnisotropy = breaks;
 	}
 
-	
 	public static GpuSampler get() {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft == null || RenderSystem.tryGetDevice() == null) {
@@ -46,7 +42,6 @@ public final class TerrainSampler {
 						OptionalDouble.empty()));
 	}
 
-	
 	public static void release() {
 		BY_ANISOTROPY.values().forEach(GpuSampler::close);
 		BY_ANISOTROPY.clear();

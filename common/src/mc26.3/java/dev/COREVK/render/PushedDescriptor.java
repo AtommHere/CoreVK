@@ -17,7 +17,6 @@ public final class PushedDescriptor {
 	private PushedDescriptor() {
 	}
 
-	
 	public static void begin(String name) {
 		PushedDescriptor current = CURRENT.get();
 		current.name = name;
@@ -25,22 +24,18 @@ public final class PushedDescriptor {
 		current.buffer = StorageBuffers.bound(name);
 	}
 
-	
 	public static PushedDescriptor current() {
 		return CURRENT.get();
 	}
 
-	
 	public @Nullable String name() {
 		return this.name;
 	}
 
-	
 	public StorageImages.@Nullable Bound image() {
 		return this.image;
 	}
 
-	
 	public StorageBuffers.@Nullable Bound buffer() {
 		return this.buffer;
 	}

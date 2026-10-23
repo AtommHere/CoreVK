@@ -5,7 +5,6 @@ import java.util.List;
 
 public final class GlslLexer {
 
-	
 	private static final String[] OPERATORS = new String[128];
 
 	static {
@@ -26,19 +25,15 @@ public final class GlslLexer {
 		SPACE,
 		NEWLINE,
 
-		
 		HASH,
 
-		
 		RAW
 	}
 
-	
 	public record Token(Kind kind, String text, String directive, boolean macroName) {
 
 		public static final Token BLANK = new Token(Kind.SPACE, "", null);
 
-		
 		public Token(Kind kind, String text, String directive) {
 			this(kind, text, directive, false);
 		}
@@ -59,7 +54,6 @@ public final class GlslLexer {
 			return new Token(this.kind, replacement, this.directive, this.macroName);
 		}
 
-		
 		public Token naming() {
 			return new Token(this.kind, this.text, this.directive, true);
 		}
@@ -84,9 +78,6 @@ public final class GlslLexer {
 				continue;
 			}
 
-			// A backslash before a line break splices the two lines together before anything else
-			// reads them. That is how a macro body runs past its own line, so the break has to be
-			// swallowed here rather than end the directive.
 			if (c == '\\' && index + 1 < length && (source.charAt(index + 1) == '\n' || source.charAt(index + 1) == '\r')) {
 				int end = index + 2;
 				if (source.charAt(index + 1) == '\r' && end < length && source.charAt(end) == '\n') {
@@ -146,8 +137,6 @@ public final class GlslLexer {
 				continue;
 			}
 
-			// One character per operator token. The translator only ever asks about brackets,
-			// commas and semicolons, and single characters make joining the stream back exact.
 			tokens.add(new Token(Kind.OPERATOR, c < OPERATORS.length ? OPERATORS[c] : String.valueOf(c),
 					null));
 			index++;
@@ -165,7 +154,6 @@ public final class GlslLexer {
 		return text.toString();
 	}
 
-	
 	private static List<Token> markDirectives(List<Token> tokens) {
 		List<Token> marked = new ArrayList<>(tokens.size());
 		boolean lineStart = true;
@@ -233,7 +221,6 @@ public final class GlslLexer {
 				continue;
 			}
 
-			// The sign of an exponent, the only place an operator belongs inside a number.
 			if ((c == '+' || c == '-') && end > start) {
 				char previous = source.charAt(end - 1);
 				if (previous == 'e' || previous == 'E') {
@@ -256,7 +243,6 @@ public final class GlslLexer {
 		return c >= '0' && c <= '9';
 	}
 
-	
 	private static boolean isIdentifierStart(char c) {
 		return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 	}

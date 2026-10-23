@@ -13,16 +13,14 @@ import java.util.concurrent.Executors;
 
 public final class FileDialog {
 
-	
 	private static final ExecutorService DIALOGS = Executors.newSingleThreadExecutor(runnable -> {
 		Thread thread = new Thread(runnable, "CoreVK file dialog");
-		// Daemon, so that a dialog nobody answered cannot keep the game from closing.
+
 		thread.setDaemon(true);
 
 		return thread;
 	});
 
-	
 	private static final String FILTER = "*.txt";
 	private static final String FILTER_LABEL = "Shader Pack Settings (.txt)";
 
@@ -33,7 +31,6 @@ public final class FileDialog {
 	private FileDialog() {
 	}
 
-	
 	public static CompletableFuture<Optional<Path>> choose(Kind kind, String title, Path origin) {
 		CompletableFuture<Optional<Path>> answer = new CompletableFuture<>();
 
@@ -41,9 +38,7 @@ public final class FileDialog {
 			try {
 				answer.complete(Optional.ofNullable(ask(kind, title, origin)).map(Paths::get));
 			} catch (RuntimeException | LinkageError e) {
-				// A platform with no dialog to offer is not a broken screen, so the failure goes back
-				// through the future and the caller says it once rather than throwing on this thread,
-				// where nothing would see it.
+
 				answer.completeExceptionally(e);
 			}
 		});

@@ -26,7 +26,6 @@ public final class TextSink implements UniformSink {
 		return this;
 	}
 
-	
 	public String text() {
 		return this.text.toString();
 	}
@@ -93,7 +92,6 @@ public final class TextSink implements UniformSink {
 				{ m.m30(), m.m31(), m.m32(), m.m33() } });
 	}
 
-	
 	private UniformSink rows(float[][] columns) {
 		StringBuilder block = new StringBuilder();
 		for (float[] column : columns) {
@@ -119,7 +117,6 @@ public final class TextSink implements UniformSink {
 		return this;
 	}
 
-	
 	private static String num(float v) {
 		return String.format(Locale.ROOT, "%.6g", v);
 	}

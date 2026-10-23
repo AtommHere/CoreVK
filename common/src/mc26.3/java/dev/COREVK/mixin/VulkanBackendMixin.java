@@ -37,11 +37,6 @@ import java.util.Set;
 @Mixin(VulkanBackend.class)
 public abstract class VulkanBackendMixin {
 
-	// Every feature through the constructor that works out its own offset. On this game a
-	// Vulkan 1.0 feature is found in VkPhysicalDeviceFeatures2 and its offset counts from there,
-	// which the constructor adds; the bare offset of the field in VkPhysicalDeviceFeatures would
-	// land four fields early, reading and enabling robustBufferAccess for geometryShader and
-	// nothing for independentBlend.
 	@Unique
 	private static final VulkanFeature VERTEX_STORES = new VulkanFeature(
 			VulkanFeatureSets.VK10_FEATURES_STRUCT, "vertexPipelineStoresAndAtomics");
@@ -62,18 +57,6 @@ public abstract class VulkanBackendMixin {
 	private static final VulkanFeature INDEPENDENT_BLEND = new VulkanFeature(
 			VulkanFeatureSets.VK10_FEATURES_STRUCT, "independentBlend");
 
-	// The narrow arithmetic a pack written for a recent card asks for. RenderPearl computes in
-	// float16_t, int16_t and int8_t throughout and keeps a half in its storage buffers, so its
-	// modules carry the Float16, Int16, Int8 and 16 and 8 bit storage capabilities, each of which
-	// is only valid on a device that enabled the matching feature. The game enables none, so a
-	// module carrying one of them is invalid on the device it was built for, which the validation
-	// layer refuses and no driver is bound to run. OpenGL, where CoreVK runs, exposes the same
-	// arithmetic through GL_EXT_shader_explicit_arithmetic_types with nothing to enable.
-	//
-	// storageInputOutput16 is not asked for: GeForce does not have it, and the translator
-	// declares a 16 bit fragment output under its 32 bit type on every card rather than answer
-	// it per device (LegacyGlsl.widened). A 16 bit varying is left as the pack wrote it, and no
-	// pack of the corpus declares one.
 	@Unique
 	private static final VulkanFeature SHADER_FLOAT16 = new VulkanFeature(
 			VulkanFeatureSets.VK12_FEATURES_STRUCT, "shaderFloat16");
@@ -86,8 +69,6 @@ public abstract class VulkanBackendMixin {
 	private static final VulkanFeature SHADER_INT16 = new VulkanFeature(
 			VulkanFeatureSets.VK10_FEATURES_STRUCT, "shaderInt16");
 
-	// Subgroup operations over those types, which the pack reaches through the extended types
-	// subgroup extensions: a reduction over a half vector is refused without this one.
 	@Unique
 	private static final VulkanFeature SUBGROUP_EXTENDED = new VulkanFeature(
 			VulkanFeatureSets.VK12_FEATURES_STRUCT, "shaderSubgroupExtendedTypes");
@@ -108,14 +89,10 @@ public abstract class VulkanBackendMixin {
 	private static final VulkanFeature UNIFORM_STORAGE_8 = new VulkanFeature(
 			VulkanFeatureSets.VK12_FEATURES_STRUCT, "uniformAndStorageBuffer8BitAccess");
 
-	// The stage a pack puts between its vertex and its fragment stage. CoreVK links a .gsh whenever
-	// the pack ships one and OpenGL asks nothing of the driver for it; Vulkan makes it an optional
-	// feature, and the game, which has no geometry stage of its own, never asks for it.
 	@Unique
 	private static final VulkanFeature GEOMETRY_SHADER = new VulkanFeature(
 			VulkanFeatureSets.VK10_FEATURES_STRUCT, "geometryShader");
 
-	// The Vulkan stage bit of each stage a pack ships, to read the stages a device names.
 	@Unique
 	private static final Map<ProgramStage, Integer> STAGE_BITS = Map.of(
 			ProgramStage.VERTEX, VK10.VK_SHADER_STAGE_VERTEX_BIT,
@@ -125,11 +102,6 @@ public abstract class VulkanBackendMixin {
 			ProgramStage.TESSELLATION_CONTROL, VK10.VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
 			ProgramStage.TESSELLATION_EVALUATION, VK10.VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
 
-	// On a device that only promises the portability subset, MoltenVK among them, a sampler made to
-	// compare may only be written into a descriptor once this is enabled, and the shadow lookups a
-	// pack asks the hardware to compare are bound through exactly such a sampler (ShadowCompare).
-	// The game enables triangleFans alone out of that struct. Asked only where the extension is
-	// there, since every other device honours a comparison sampler with nothing to enable.
 	@Unique
 	private static final VulkanFeature MUTABLE_COMPARISON = new VulkanFeature(
 			VulkanFeatureSets.PORTABILITY_SUBSET_FEATURES_STRUCT, "mutableComparisonSamplers");
@@ -168,9 +140,7 @@ public abstract class VulkanBackendMixin {
 							+ "Lorg/lwjgl/vulkan/VkDevice;"))
 	private static VkDevice corevk$deviceFeatures(FeatureSet enabledSets,
 			VulkanPhysicalDevice physical, Operation<VkDevice> original) {
-		// 26.3 hands the device one composite feature set rather than a set to add to, so what
-		// this engine enables is gathered here and composed onto it at the end, under a name of
-		// its own that the game's log of enabled sets will not mistake for one of its own.
+
 		Set<VulkanFeature> features = new HashSet<>();
 		Set<String> extensions = new HashSet<>();
 		List<String> enabled = new ArrayList<>();
@@ -183,25 +153,21 @@ public abstract class VulkanBackendMixin {
 		if (physical.hasDeviceExtension(PORTABILITY_EXTENSION)) {
 			enable(physical, features, MUTABLE_COMPARISON, enabled, COMPARISON);
 		}
-		// Not a feature, but asked of the same device at the same moment: the physical device is
-		// closed once the game's own device has read what it keeps of it.
+
 		boolean moltenVk =
 				physical.vkPhysicalDeviceDriverProperties().driverID() == VK12.VK_DRIVER_ID_MOLTENVK;
 		WideSamplerSets.serve(moltenVk,
 				physical.vkPhysicalDeviceProperties().limits().maxPerStageDescriptorSamplers(),
 				moltenVk ? tableSamplers(physical) : 0);
 		VendorExtensions.serveMoltenVk(moltenVk);
-		// And Metal's cap on the threadgroup memory of a compute, which Vulkan has no limit to name.
+
 		SharedMemory.serve(moltenVk);
-		// The vendor extensions a pack may gate a vendor instruction on, answered by the device
-		// and not by the compiler, which defines the macro of every one it knows; the ones the
-		// device has are enabled on it here, since a module using one needs it enabled.
+
 		List<String> vendor = VendorExtensions.serve(physical::hasDeviceExtension, extensions::add);
 		if (!vendor.isEmpty()) {
 			CoreVK.logger().info("Vulkan vendor extensions: {}", String.join(", ", vendor));
 		}
-		// And the stages the device runs subgroup operations in, which the compiler does not know
-		// either: MoltenVK leaves the vertex stage out, where SPIRV-Cross refuses a module using them.
+
 		Set<ProgramStage> noSubgroups = VendorExtensions.serveSubgroupStages(subgroupStages(physical));
 		if (!noSubgroups.isEmpty()) {
 			CoreVK.logger().info("Vulkan subgroup operations absent from stages: {}", noSubgroups);
@@ -258,8 +224,6 @@ public abstract class VulkanBackendMixin {
 		}
 	}
 
-	// The samplers one stage of an allocated set may read, which MoltenVK raises past the pushed
-	// sixteen only while it binds sets through tier 2 argument buffers.
 	@Unique
 	private static int tableSamplers(VulkanPhysicalDevice physical) {
 		try (MemoryStack stack = MemoryStack.stackPush()) {

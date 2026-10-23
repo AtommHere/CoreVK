@@ -38,15 +38,6 @@ public class CallExpression implements Expression {
 
 	@Override
 	public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-		// the dirty way would be this
-		/*
-			try{
-				this.evaluateTo(context, functionReturn);
-				return this.function.getReturnType().createConstant(functionReturn);
-			}catch(Exception e){
-				return this;
-			}
-		 */
 
 		if (this.function.isPure() && isConstant()) {
 			this.evaluateTo(context, functionReturn);

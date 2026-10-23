@@ -15,7 +15,6 @@ public abstract class Type {
 	public static final Parameter FloatParameter = new Parameter(Float);
 	public static final Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
 
-	
 	public static UniformShape convert(Type type) {
 		if (type == Type.Int || type == Type.Boolean) return UniformShape.INT;
 		else if (type == Type.Float) return UniformShape.FLOAT;
@@ -30,7 +29,6 @@ public abstract class Type {
 		else return null;
 	}
 
-	
 	public static Type of(UniformShape shape) {
 		return switch (shape) {
 			case FLOAT -> Type.Float;

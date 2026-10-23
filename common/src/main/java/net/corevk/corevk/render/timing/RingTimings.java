@@ -40,13 +40,11 @@ public final class RingTimings {
 
 	private static boolean loggedBackend;
 
-	
 	private static Boolean keepFromFile;
 
 	private RingTimings() {
 	}
 
-	
 	public static boolean keepSecondRotate() {
 		if (KEEP) {
 			return true;

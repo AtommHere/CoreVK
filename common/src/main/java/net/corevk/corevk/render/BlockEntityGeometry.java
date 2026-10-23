@@ -2,13 +2,10 @@ package net.corevk.corevk.render;
 
 public final class BlockEntityGeometry {
 
-	
 	private static volatile boolean submitting;
 
-	
 	private static volatile boolean building;
 
-	
 	private static volatile boolean drawing;
 
 	private BlockEntityGeometry() {
@@ -38,7 +35,6 @@ public final class BlockEntityGeometry {
 		return drawing;
 	}
 
-	
 	static void clear() {
 		submitting = false;
 		building = false;

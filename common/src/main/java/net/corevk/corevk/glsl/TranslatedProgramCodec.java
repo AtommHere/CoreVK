@@ -16,7 +16,6 @@ import java.util.Set;
 
 final class TranslatedProgramCodec {
 
-	
 	static final String FORMAT = "corevk-translation-6";
 
 	private TranslatedProgramCodec() {
@@ -48,7 +47,6 @@ final class TranslatedProgramCodec {
 		return bytes.toByteArray();
 	}
 
-	
 	static ProgramTranslator.TranslatedProgram read(byte[] raw, int length, VertexInputs inputs)
 			throws IOException {
 		try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(raw, 0, length))) {
@@ -74,8 +72,7 @@ final class TranslatedProgramCodec {
 			return new ProgramTranslator.TranslatedProgram(Map.copyOf(stages), uniforms, samplers,
 					sampled, Map.copyOf(synthesized), inputs);
 		} catch (IllegalArgumentException | NullPointerException e) {
-			// A stage name no enum has, or a null where the format promised a string. Both are a
-			// damaged blob and neither is worth its own catch upstream.
+
 			throw new IOException(e);
 		}
 	}
@@ -210,7 +207,6 @@ final class TranslatedProgramCodec {
 		out.write(raw);
 	}
 
-	
 	private static String text(DataInputStream in) throws IOException {
 		int length = in.readInt();
 		if (length < 0 || length > in.available()) {

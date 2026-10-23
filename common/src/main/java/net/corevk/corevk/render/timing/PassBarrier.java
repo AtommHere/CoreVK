@@ -12,7 +12,6 @@ public final class PassBarrier {
 
 	private static final String ARM_FILE = "full-pass-barrier";
 
-	
 	private static Boolean armed;
 
 	private static boolean announced;
@@ -20,7 +19,6 @@ public final class PassBarrier {
 	private PassBarrier() {
 	}
 
-	
 	public static boolean full() {
 		if (PROPERTY) {
 			announce();
@@ -45,7 +43,6 @@ public final class PassBarrier {
 		return armed;
 	}
 
-	
 	private static void announce() {
 		if (announced) {
 			return;

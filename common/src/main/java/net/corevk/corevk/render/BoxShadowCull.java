@@ -12,7 +12,6 @@ public final class BoxShadowCull {
 
 	private static final String ARM_FILE = "box-shadow-cull";
 
-	
 	private static Boolean armed;
 
 	private static boolean announced;
@@ -20,7 +19,6 @@ public final class BoxShadowCull {
 	private BoxShadowCull() {
 	}
 
-	
 	public static boolean asked() {
 		boolean box = PROPERTY || file();
 		announce(box);
@@ -28,7 +26,6 @@ public final class BoxShadowCull {
 		return box;
 	}
 
-	
 	private static void announce(boolean box) {
 		if (announced) {
 			return;

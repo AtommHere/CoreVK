@@ -17,7 +17,6 @@ public final class RawImage {
 		this.components = components;
 	}
 
-	
 	public static RawImage of(PackTexture.Raw raw) {
 		if (!serves(raw)) {
 			throw new IllegalArgumentException("A texture of " + raw.sizeX() + "x" + raw.sizeY()
@@ -29,19 +28,16 @@ public final class RawImage {
 				raw.pixelFormat().components());
 	}
 
-	
 	public static boolean serves(PackTexture.Raw raw) {
 		return raw.shape() == PackTexture.Shape.TEXTURE_2D
 				&& raw.sizeX() > 0 && raw.sizeY() > 0
 				&& RawTexels.holds(raw.pixelType(), raw.pixelFormat());
 	}
 
-	
 	public boolean fits() {
 		return RawTexels.fits(this.width, this.height, texelBytes());
 	}
 
-	
 	public byte[] widen(byte[] blob) {
 		int in = this.components * channelBytes();
 		int texels = this.width * this.height;
@@ -72,22 +68,18 @@ public final class RawImage {
 		return this.height;
 	}
 
-	
 	public PixelType type() {
 		return this.type;
 	}
 
-	
 	public int components() {
 		return this.components;
 	}
 
-	
 	public int channelBytes() {
 		return this.type.channelBytes();
 	}
 
-	
 	public int texelBytes() {
 		return RawTexels.CHANNELS * channelBytes();
 	}

@@ -22,10 +22,8 @@ import java.util.function.Function;
 
 public final class WidgetRow {
 
-	
 	private static final int DEFAULT_SPACING = 1;
 
-	
 	private final Map<Element, Integer> widths = new LinkedHashMap<>();
 
 	private final int spacing;
@@ -43,15 +41,13 @@ public final class WidgetRow {
 		this(DEFAULT_SPACING);
 	}
 
-	
 	public int width() {
 		return this.width;
 	}
 
 	public WidgetRow add(Element element, int width) {
 		Integer had = this.widths.put(element, width);
-		// Adding an element twice sets its width rather than counting it twice, which is what lets
-		// setWidth go through here.
+
 		this.width += width + this.spacing - (had == null ? 0 : had + this.spacing);
 
 		return this;
@@ -63,7 +59,6 @@ public final class WidgetRow {
 		}
 	}
 
-	
 	public void draw(GuiGraphicsExtractor graphics, int x, int y, int height, int mouseX, int mouseY,
 			float a, boolean rowHovered) {
 		this.x = x;
@@ -79,7 +74,6 @@ public final class WidgetRow {
 		}
 	}
 
-	
 	public void drawRightAligned(GuiGraphicsExtractor graphics, int x, int y, int height, int mouseX,
 			int mouseY, float a, boolean rowHovered) {
 		draw(graphics, x - this.width, y, height, mouseX, mouseY, a, rowHovered);
@@ -127,7 +121,6 @@ public final class WidgetRow {
 		return List.copyOf(new ArrayList<>(this.widths.keySet()));
 	}
 
-	
 	public abstract static class Element implements GuiEventListener {
 
 		public boolean disabled;
@@ -139,11 +132,7 @@ public final class WidgetRow {
 		public void draw(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
 				int mouseX, int mouseY, float a, boolean hovered) {
 			this.bounds = new ScreenRectangle(x, y, width, height);
-			// Taken on BEFORE the face is drawn, where CoreVK assigns it after,
-			// {@code CoreVKElementRow.java:162-164}. Its face therefore lights from the previous frame's
-			// reading while its label lights from this one, so entering and leaving an element shows one
-			// frame of the two disagreeing. Nothing about a pack depends on it and the fix is the order
-			// of two statements.
+
 			this.hovered = hovered;
 
 			ScreenDraw.button(graphics, x, y, width, height, this.hovered || isFocused(),
@@ -179,7 +168,6 @@ public final class WidgetRow {
 		}
 	}
 
-	
 	public abstract static class Pressable<T extends Pressable<T>> extends Element {
 
 		private final Function<T, Boolean> onClick;
@@ -210,7 +198,6 @@ public final class WidgetRow {
 		}
 	}
 
-	
 	public static final class IconElement extends Pressable<IconElement> {
 
 		private final ScreenDraw.Icon icon;
@@ -238,10 +225,8 @@ public final class WidgetRow {
 		}
 	}
 
-	
 	public static final class TextElement extends Pressable<TextElement> {
 
-		
 		private static final int LINE = 8;
 
 		private final Font font = Minecraft.getInstance().font;

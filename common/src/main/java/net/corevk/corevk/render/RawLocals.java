@@ -18,10 +18,8 @@ public final class RawLocals {
 
 	private static volatile boolean armed;
 
-	
 	private static final ThreadLocal<Boolean> SNAPSHOT = new ThreadLocal<>();
 
-	
 	private static final AtomicLong WALKED = new AtomicLong();
 	private static final AtomicLong ZEROED = new AtomicLong();
 	private static final AtomicLong VALUES = new AtomicLong();
@@ -29,13 +27,11 @@ public final class RawLocals {
 	private RawLocals() {
 	}
 
-	
 	public static void read(Path gameDirectory) {
 		armed = PROPERTY
 				|| Files.isRegularFile(gameDirectory.resolve(CoreVK.MOD_ID).resolve(ARM_FILE));
 	}
 
-	
 	public static void begin() {
 		SNAPSHOT.set(armed);
 	}
@@ -50,12 +46,10 @@ public final class RawLocals {
 		return snapshot != null ? snapshot : armed;
 	}
 
-	
 	public static String cacheWord() {
 		return raw() ? "raw-locals" : "zeroed-locals";
 	}
 
-	
 	public static ByteBuffer patch(String filename, ByteBuffer spirv) {
 		if (raw() || !ours(filename)) {
 			return spirv;
@@ -69,8 +63,6 @@ public final class RawLocals {
 			return spirv;
 		}
 
-		// The same allocator and the same zeroing as the game's own copy, since the module closes
-		// this buffer exactly as it would have closed that one.
 		ByteBuffer zeroed = MemoryUtil.memCalloc(result.words().length * 4);
 		zeroed.order(ByteOrder.nativeOrder()).asIntBuffer().put(result.words());
 		MemoryUtil.memFree(spirv);
@@ -80,12 +72,10 @@ public final class RawLocals {
 		return zeroed;
 	}
 
-	
 	public static boolean ours(String filename) {
 		return filename.startsWith(CoreVK.MOD_ID + "_") || filename.startsWith("pack/");
 	}
 
-	
 	public static void say(long compiled) {
 		long walked = WALKED.getAndSet(0L);
 		long zeroed = ZEROED.getAndSet(0L);

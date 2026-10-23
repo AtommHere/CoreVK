@@ -23,7 +23,6 @@ public enum PixelFormat {
 		this.components = components;
 	}
 
-	
 	public static Optional<PixelFormat> parse(String name) {
 		for (PixelFormat format : values()) {
 			if (format.name().equalsIgnoreCase(name.trim())) {

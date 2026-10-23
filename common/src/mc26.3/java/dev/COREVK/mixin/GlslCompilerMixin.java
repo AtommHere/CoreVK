@@ -27,7 +27,6 @@ import java.util.Map;
 @Mixin(GlslCompiler.class)
 public abstract class GlslCompilerMixin {
 
-	
 	@WrapOperation(method = "createBaseShaderOptions", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/util/shaderc/Shaderc;"
@@ -39,7 +38,6 @@ public abstract class GlslCompilerMixin {
 		}
 	}
 
-	
 	@WrapOperation(method = "compileToSpv", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/renderpearl/frontend/shaders/GlslCompiler;"
@@ -58,7 +56,6 @@ public abstract class GlslCompilerMixin {
 		return options;
 	}
 
-	
 	@WrapOperation(method = "compileToSpv", require = 1,
 			at = @At(value = "NEW",
 					target = "com/mojang/renderpearl/frontend/shaders/SPIRVModule"))
@@ -67,14 +64,12 @@ public abstract class GlslCompilerMixin {
 		String filename = debugName(name);
 		ByteBuffer patched = PackNames.patch(filename, RawLocals.patch(filename, spirv));
 		SPIRVModule module = original.call(patched, type);
-		// Read off the words the module was just made of, which it now owns and frees at its
-		// close, and before anything has asked for its reflection.
+
 		SamplerReach.narrow(filename, patched, module);
 
 		return module;
 	}
 
-	
 	@WrapMethod(method = "compileToSpv", require = 1)
 	private SpvModule corevk$module(String name, String source, ShaderType type,
 			ShaderDefines defines, ShaderSource shaderSource, Operation<SpvModule> original) {
@@ -91,9 +86,6 @@ public abstract class GlslCompilerMixin {
 				return module;
 			}
 
-			// Counted before the call and not after it: a unit a pack broke throws out of the
-			// compile, and counting on the way back would leave that load short by exactly the
-			// units somebody is reading the log to find.
 			ModuleCache.building(filename);
 			SpvModule built = original.call(name, source, type, defines, shaderSource);
 			ModuleCache.store(key, built.spv());
@@ -105,7 +97,6 @@ public abstract class GlslCompilerMixin {
 		}
 	}
 
-	
 	@Unique
 	private static String corevk$defines(ShaderDefines defines) {
 		StringBuilder described = new StringBuilder();
@@ -118,7 +109,6 @@ public abstract class GlslCompilerMixin {
 		return described.toString();
 	}
 
-	
 	@Unique
 	private static String debugName(String name) {
 		return name.replace('/', '_').replace(':', '_');

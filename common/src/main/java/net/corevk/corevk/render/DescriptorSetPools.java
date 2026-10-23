@@ -16,20 +16,16 @@ import java.util.List;
 
 public final class DescriptorSetPools {
 
-	
 	private static final int SETS_PER_POOL = 64;
 
-	
 	private static final int TYPES = VK10.VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1;
 
 	private final VulkanDevice device;
 
 	private final List<List<Long>> slots = new ArrayList<>();
 
-	
 	private final int[] cursors;
 
-	
 	public DescriptorSetPools(VulkanDevice device, int slots) {
 		this.device = device;
 		this.cursors = new int[slots];
@@ -38,7 +34,6 @@ public final class DescriptorSetPools {
 		}
 	}
 
-	
 	public long allocate(int slot, long setLayout, VkWriteDescriptorSet.Buffer writes) {
 		List<Long> pools = this.slots.get(slot);
 		try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -58,8 +53,6 @@ public final class DescriptorSetPools {
 					return set.get(0);
 				}
 
-				// Only a full pool is moved past, and never one just sized off this very set: a pool
-				// that refuses the set it was made for would otherwise be followed by another, forever.
 				boolean full = result == VK11.VK_ERROR_OUT_OF_POOL_MEMORY
 						|| result == VK10.VK_ERROR_FRAGMENTED_POOL;
 				if (!full || fresh) {
@@ -73,7 +66,6 @@ public final class DescriptorSetPools {
 		}
 	}
 
-	
 	public void reset(int slot) {
 		for (long pool : this.slots.get(slot)) {
 			VK10.vkResetDescriptorPool(this.device.vkDevice(), pool, 0);
@@ -82,7 +74,6 @@ public final class DescriptorSetPools {
 		this.cursors[slot] = 0;
 	}
 
-	
 	public void destroy() {
 		for (int slot = 0; slot < this.slots.size(); slot++) {
 			for (long pool : this.slots.get(slot)) {
@@ -94,7 +85,6 @@ public final class DescriptorSetPools {
 		}
 	}
 
-	
 	private long create(VkWriteDescriptorSet.Buffer writes) {
 		int[] counts = new int[TYPES];
 		int kinds = 0;

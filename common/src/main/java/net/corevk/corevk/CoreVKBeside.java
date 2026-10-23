@@ -6,18 +6,15 @@ import net.minecraft.client.PreferredGraphicsApi;
 
 public final class CoreVKBeside {
 
-	
 	private static final String MARKER = "net/corevkshaders/corevk/CoreVK.class";
 
 	private static volatile Boolean installed;
 
-	
 	private static volatile Boolean askedVulkan;
 
 	private CoreVKBeside() {
 	}
 
-	
 	public static boolean installed() {
 		Boolean known = installed;
 		if (known == null) {
@@ -28,14 +25,12 @@ public final class CoreVKBeside {
 		return known;
 	}
 
-	
 	public static void loaded(Options options) {
 		if (askedVulkan == null) {
 			askedVulkan = options.preferredGraphicsBackend().get() == PreferredGraphicsApi.VULKAN;
 		}
 	}
 
-	
 	public static boolean draws() {
 		if (!installed()) {
 			return false;

@@ -34,20 +34,16 @@ import java.util.zip.InflaterOutputStream;
 
 public final class TranslationCache {
 
-	
 	private static final String DIRECTORY_PROPERTY = "corevk.translationDir";
 
 	private static final String FOLDER = "translations";
 	private static final String SUFFIX = ".tr";
 	private static final String PART_SUFFIX = ".part";
 
-	
 	private static final String EDITION_SEPARATOR = "_";
 
-	
 	private static final int DIGEST_BYTES = 32;
 
-	
 	private static final long MOST_BYTES = 64L * 1024L * 1024L;
 
 	private static final long CEILING_BYTES = 256L * 1024L * 1024L;
@@ -59,26 +55,19 @@ public final class TranslationCache {
 	private static final AtomicLong TRANSLATED = new AtomicLong();
 	private static final AtomicLong BYTES = new AtomicLong();
 
-	
 	private static final AtomicReference<String> REFUSAL = new AtomicReference<>("");
 
-	
 	private static final Object LOCK = new Object();
 
-	
 	private static volatile Path directory;
 	private static volatile String problem = "";
 
-	
 	private static volatile long nextSweepNanos;
 
-	
 	private static volatile boolean refused;
 
 	static {
-		// Inside the try and not beside it: Path.of refuses a name Windows will not have, and an
-		// exception out of a static initialiser is an Error, which goes straight past every catch
-		// that turns a bad pack into a report and takes the pack load down with it.
+
 		try {
 			String outside = System.getProperty(DIRECTORY_PROPERTY, "");
 			if (!outside.isEmpty()) {
@@ -92,12 +81,10 @@ public final class TranslationCache {
 	private TranslationCache() {
 	}
 
-	
 	public static void install(Path parent, String edition, String family) {
 		open(parent.resolve(FOLDER).resolve(plain(edition)), plain(family));
 	}
 
-	
 	private static void open(Path mine, String family) {
 		synchronized (LOCK) {
 			try {
@@ -117,7 +104,6 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	public static String problem() {
 		return problem;
 	}
@@ -126,12 +112,10 @@ public final class TranslationCache {
 		return directory != null;
 	}
 
-	
 	public static String takeRefusal() {
 		return REFUSAL.getAndSet("");
 	}
 
-	
 	private static void refuse(String what) {
 		if (!refused) {
 			refused = true;
@@ -147,13 +131,11 @@ public final class TranslationCache {
 		return TRANSLATED.get();
 	}
 
-	
 	public static void reset() {
 		SERVED.set(0L);
 		TRANSLATED.set(0L);
 	}
 
-	
 	static ProgramTranslator.TranslatedProgram lookup(String key, VertexInputs inputs) {
 		Path root = directory;
 		if (key == null || root == null) {
@@ -163,9 +145,7 @@ public final class TranslationCache {
 		Path file = root.resolve(key + SUFFIX);
 		byte[] raw;
 		try {
-			// Asked before the read and not after it: the digest sits behind the blob, so nothing
-			// can answer for a file that is not already whole in the heap, and a file that grew
-			// past what a translation is would be read before anything could refuse it.
+
 			if (Files.size(file) > MOST_BYTES) {
 				refuse("a stored translation is larger than any translation is");
 
@@ -174,12 +154,10 @@ public final class TranslationCache {
 
 			raw = Files.readAllBytes(file);
 		} catch (IOException e) {
-			// Absent is the ordinary case and unreadable the rare one. What follows either way is
-			// the translation that would have happened anyway.
+
 			return null;
 		} catch (OutOfMemoryError e) {
-			// The size was asked for above, so this is a heap that was already at its edge rather
-			// than a file that lied about itself. It is still a miss and never a dead load.
+
 			refuse("there was no room to read a stored translation");
 
 			return null;
@@ -197,10 +175,7 @@ public final class TranslationCache {
 		} catch (IOException | RuntimeException e) {
 			return null;
 		} catch (OutOfMemoryError e) {
-			// Not the damaged file: the digest above answers for the bytes on disk, so damage is
-			// already a miss by the time the inflate begins. What the digest says nothing about is
-			// what those bytes unpack to, which leaves a file written to inflate far past the size
-			// it was refused on, or a heap that was already at its edge.
+
 			refuse("a stored translation did not fit the heap once it was unpacked");
 
 			return null;
@@ -212,7 +187,6 @@ public final class TranslationCache {
 		return program;
 	}
 
-	
 	static void store(String key, ProgramTranslator.TranslatedProgram program) {
 		TRANSLATED.incrementAndGet();
 
@@ -233,21 +207,17 @@ public final class TranslationCache {
 				+ Long.toHexString(Thread.currentThread().threadId()) + PART_SUFFIX);
 
 		try {
-			// The blob, then the digest that answers for it, then the move. A process killed
-			// halfway through leaves a neighbour and never half a translation under a whole name.
+
 			Files.write(part, raw);
 			Files.write(part, sha256(raw), StandardOpenOption.APPEND);
 			move(part, file);
-			// Added whether or not this replaced a blob already under the same key, which happens
-			// whenever a lookup refused one and the translation wrote over it. The count then runs
-			// ahead of the directory until a sweep rescans and puts it right, which is what the
-			// sweep does before it deletes anything.
+
 			BYTES.addAndGet(raw.length + (long) DIGEST_BYTES);
 		} catch (IOException e) {
 			try {
 				Files.deleteIfExists(part);
 			} catch (IOException ignored) {
-				// The next install collects it: that scan deletes the neighbours it comes across.
+
 			}
 
 			return;
@@ -258,7 +228,6 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	static String keyOf(Map<ProgramStage, ExpandedUnit> units,
 			VertexInputs inputs, List<String> boundElements, AlphaTest alphaTest, boolean coverage,
 			String program, Map<String, VolumeAtlas> volumes) {
@@ -268,20 +237,11 @@ public final class TranslationCache {
 
 		MessageDigest digest = sha256();
 		feed(digest, TranslatedProgramCodec.FORMAT);
-		// The switches of the translator itself, which are the one input that is not an argument:
-		// the trig substitution and the shadow comparison both change what it emits and neither
-		// says so in the text it was handed.
+
 		feed(digest, GlslTranslator.emissionSwitches());
-		// And the device's answer on the vendor extensions, on the stages it runs subgroup
-		// operations in and on whether its driver is MoltenVK, which decide which branch of a pack
-		// compiles and what a float packing call becomes: a card that has one of them translates
-		// differently from a card that has not.
+
 		feed(digest, VendorExtensions.key());
 
-		// The whole table, in its own order, which is fixed by the code that builds it. It carries
-		// the game version, the operating system, the driver's vendor and renderer, the mipmap
-		// level and every other symbol the machine decides, and a define added to it later is in
-		// the key from that day without a line here.
 		for (Map.Entry<String, String> define
 				: EngineDefines.table(EngineDefines.machine()).entrySet()) {
 			feed(digest, define.getKey());
@@ -299,17 +259,13 @@ public final class TranslationCache {
 			feed(digest, element);
 		}
 
-		// IN THE MAP'S OWN ORDER, and not sorted, because the order is not decoration: the
-		// translator walks this map to flatten the lookups and emits one helper body per volume in
-		// the order it walked, so two maps holding the same entries in a different order are two
-		// different texts. Sorting here would have given them one key.
 		digest.update(intBytes(volumes.size()));
 		for (Map.Entry<String, VolumeAtlas> volume : volumes.entrySet()) {
 			feed(digest, volume.getKey());
 			digest.update(intBytes(volume.getValue().width()));
 			digest.update(intBytes(volume.getValue().height()));
 			digest.update(intBytes(volume.getValue().depth()));
-			// The helper's text differs between a volume that repeats and one that clamps.
+
 			digest.update(new byte[] {(byte) (volume.getValue().clamp() ? 1 : 0)});
 		}
 
@@ -323,9 +279,7 @@ public final class TranslationCache {
 			feed(digest, unit.entry());
 			feed(digest, unit.version());
 			feedLines(digest, unit.lines());
-			// The lines the preprocessor left live, which the translator reads on nearly every walk
-			// it makes: two texts that differ only in which of their lines are dead translate
-			// differently and would otherwise share a key.
+
 			byte[] live = unit.live().toByteArray();
 			digest.update(intBytes(live.length));
 			digest.update(live);
@@ -334,7 +288,6 @@ public final class TranslationCache {
 		return HexFormat.of().formatHex(digest.digest());
 	}
 
-	
 	private static byte[] deflate(byte[] blob) throws IOException {
 		ByteArrayOutputStream packed = new ByteArrayOutputStream();
 		Deflater deflater = new Deflater(Deflater.BEST_SPEED);
@@ -372,7 +325,6 @@ public final class TranslationCache {
 		digest.update(raw);
 	}
 
-	
 	private static void feedLines(MessageDigest digest, List<String> lines) {
 		int length = Math.max(0, lines.size() - 1);
 		for (String line : lines) {
@@ -389,7 +341,6 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	private static int utf8Length(String text) {
 		int length = 0;
 		for (int at = 0; at < text.length(); at++) {
@@ -438,16 +389,14 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	private static void touch(Path file) {
 		try {
 			Files.setLastModifiedTime(file, FileTime.from(Instant.now()));
 		} catch (IOException ignored) {
-			// A stamp that cannot be set costs a worse choice at the next sweep and nothing now.
+
 		}
 	}
 
-	
 	private static void dropOtherEditions(Path root, Path mine, String family) throws IOException {
 		List<Path> entries;
 		try (Stream<Path> found = Files.list(root)) {
@@ -464,7 +413,6 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	private static String newestSibling(List<Path> entries, Path mine, String family)
 			throws IOException {
 		String newest = "";
@@ -486,12 +434,10 @@ public final class TranslationCache {
 		return newest;
 	}
 
-	
 	private static boolean ofFamily(String name, String family) {
 		return name.equals(family) || name.startsWith(family + EDITION_SEPARATOR);
 	}
 
-	
 	private static String plain(String text) {
 		return text.replaceAll("[^A-Za-z0-9._-]", "_");
 	}
@@ -504,7 +450,6 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	private static List<Blob> scan(Path root, boolean prunePartials) throws IOException {
 		List<Blob> blobs = new ArrayList<>();
 
@@ -519,8 +464,7 @@ public final class TranslationCache {
 						blobs.add(new Blob(entry, Files.getLastModifiedTime(entry).toMillis(),
 								Files.size(entry)));
 					} catch (IOException ignored) {
-						// Gone, or momentarily unreadable. One blob uncounted, and the next sweep
-						// counts it.
+
 					}
 				}
 			}
@@ -540,7 +484,6 @@ public final class TranslationCache {
 		return sum;
 	}
 
-	
 	private static void sweep(Path root) {
 		synchronized (LOCK) {
 			if (System.nanoTime() < nextSweepNanos) {
@@ -561,10 +504,7 @@ public final class TranslationCache {
 					total -= blob.size();
 				}
 			} catch (IOException e) {
-				// The ceiling is a courtesy and a refusal here is not worth a load. What it must not
-				// do is come straight back: a scan that throws leaves the count where it was, which
-				// is over the ceiling, and every later write would then walk the directory again
-				// under this lock for the rest of the session.
+
 				nextSweepNanos = System.nanoTime() + SWEEP_BACKOFF_NANOS;
 			} finally {
 				BYTES.set(total);
@@ -572,7 +512,6 @@ public final class TranslationCache {
 		}
 	}
 
-	
 	private record Blob(Path path, long stamp, long size) {
 	}
 }

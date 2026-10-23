@@ -35,24 +35,19 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 
 	private static final String VERSION = "#version 460 core";
 
-	
 	private static final String UNIFORM_BLOCK = "OfGlobals";
 
-	
 	private static final Set<String> INTEGER_MEMBER_TYPES = Set.of(
 			"int", "ivec2", "ivec3", "ivec4", "uint", "uvec2", "uvec3", "uvec4",
 			"double", "dvec2", "dvec3", "dvec4");
 
-	
 	private static final String OVERLAY_TEXEL = "ofOverlayTexel";
 
 	private static final String FOG_STRUCT =
 			"struct OfFog { vec4 color; float density; float start; float end; float scale; };";
 
-	
 	private static final String COVERAGE = "ofCoverage";
 
-	
 	private static final String FAR_PLANE = ClipSpace.REVERSED.z < 0.0F ? "0.0" : "1.0";
 
 	String header(List<TranslatedUnit.Uniform> block, List<TranslatedUnit.Uniform> samplers,
@@ -60,9 +55,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 		List<String> lines = new ArrayList<>();
 		lines.add(VERSION);
 
-		// Straight after the version, which is the only place the language takes them, and as
-		// enable rather than require. GlslTranslator.dropVersionAndExtensions carries why they are
-		// hoisted here instead of staying where the pack wrote them, and what a lost one costs.
 		this.extensions.forEach(extension -> lines.add("#extension " + extension + " : enable"));
 
 		for (Map.Entry<String, String> define : this.engineDefines.entrySet()) {
@@ -71,8 +63,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 					: "#define " + define.getKey() + " " + define.getValue());
 		}
 
-		// The block is written in the order it was handed over, and nothing sorts it: a std140
-		// buffer is filled by walking the members, so a different order is a different buffer.
 		if (block.stream().anyMatch(member -> member.name().equals("of_Fog"))) {
 			lines.add(FOG_STRUCT);
 		}
@@ -86,22 +76,14 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			lines.add("};");
 		}
 
-		// The game's own block, beside ours and never merged into it: this one is filled by the game
-		// once per draw and ours is written once per run, which is the whole reason a matrix that
-		// changes with the draw is read from over there.
 		if (this.gameTextureMatrix > 0 || this.gameModelView > 0) {
 			lines.addAll(GameTransforms.BLOCK);
 		}
 
-		// Written here, in the order the program handed over, rather than left in the body. The
-		// compiler numbers a sampler by the order it first meets the name, and MoltenVK turns that
-		// number into a Metal slot that only accepts 0 through 15. Sampled names come first.
 		for (TranslatedUnit.Uniform sampler : samplers) {
 			lines.add(declareOpaque(sampler));
 		}
 
-		// Attributes stay a matter for the stage that has them. Only a vertex shader has inputs
-		// from a buffer, so there is no other side to agree with.
 		if (this.stage == ProgramStage.VERTEX) {
 			switch (this.inputs) {
 				case FULLSCREEN -> {
@@ -148,67 +130,9 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 				}
 			}
 
-			// Two programs of a pack that place the same vertex with the same code have to land it at
-			// the same depth to the last bit: a banner's pattern is tested GREATER_THAN_OR_EQUAL
-			// against the depth its base wrote through another program. MoltenVK compiles with fast
-			// math unless a stage says otherwise, and Metal is then free to fold each program's
-			// arithmetic its own way; on an M4 the pattern lost that test in hatched patches across a
-			// village's banners, and with this line it does not. SPIRV-Cross reports the qualifier as
-			// position invariance and MoltenVK compiles the stage with preserveInvariance, which
-			// every vertex stage now pays, the shadow and full screen ones included.
 			lines.add("invariant gl_Position;");
 		}
 
-		// The four taps a hardware comparison blends, for the lookups the road decision sent here:
-		// GpuSampler carries no compare mode, so when the comparison cannot ride the binding, what
-		// the hardware does is done in arithmetic instead. The hardware compares each of the four
-		// texels a bilinear filter would have taken and blends the four RESULTS, so that is what
-		// this does: textureGather brings the four back whatever filter is bound, the comparison is
-		// made on each, and the blend uses the weights of the filter. Comparing an already filtered
-		// depth is the one thing it must not do, and that is the difference: the average of four
-		// depths is a surface standing nowhere, while the average of four comparisons is a fraction
-		// of the light, which is the whole point of the thing. CoreVK binds GL_LINEAR plus
-		// GL_COMPARE_REF_TO_TEXTURE for it, in ShadowRenderTargets.getSamplerFor, and the hardware
-		// road binds the same pair through the descriptor instead of coming here.
-		//
-		// Not conditioned on shadowHardwareFiltering, and nothing here could condition it: the
-		// header is written per stage, before any of the pack's directives are folded. Without that
-		// directive CoreVK leaves the comparison mode off and what a sampler2DShadow reads is
-		// undefined, so the declaration this translation found is the only live meaning the
-		// directive has. What it would cost is the harder shape the pair can ask for, NEAREST_HW,
-		// which needs a nearest directive beside the hardware one, and no pack of the corpus
-		// declares both live: the one that asks for NEAREST asks for no hardware filtering. Named
-		// in ShadowCompare, which is where the unconditional LINEAR of the comparison sampler
-		// lives.
-		//
-		// The sense is LEQUAL, which is what OptiFine sets on a shadow texture and therefore what
-		// every pack is written against: one where the fragment is no further from the light than
-		// what the map holds, and the map holds the forward window where nearer is smaller.
-		//
-		// The level of detail is dropped, which is what a comparison sampler with no mipmaps would
-		// have done with it anyway: nothing ever fills a chain on the shadow map.
-		//
-		// An OFFSET is not dropped, and that is the difference between the two. A pack taps the
-		// neighbourhood of a texel through offsets, so an offset left out would take the same tap
-		// over and over and hand back a shadow with no filtering in it, which on screen looks
-		// exactly like one that has it. RenderPearl is the pack that asks: its shadow compute reads
-		// the map as textureLodOffset, a name the arithmetic road used to leave standing over a
-		// declaration it had already rewritten to an ordinary sampler, so the unit did not compile
-		// and the compute never ran.
-		//
-		// It is carried in the COORDINATE and not in a textureGatherOffset, which would be the
-		// natural spelling and asks for a feature nothing here requests: an offset that is a
-		// function parameter is not a constant expression, so that call lowers to an Offset operand
-		// and needs the ImageGatherExtended capability, which this device does not even enable.
-		// The weights are taken off the SHIFTED coordinate, so the arithmetic below is the same
-		// arithmetic at every offset, and at an offset of nought it is the plain gather this
-		// printed before down to the last operation.
-		//
-		// What it does not close is the disagreement this helper was born with: the texture unit
-		// picks its four texels off a coordinate it has quantised to its own subtexel bits, and the
-		// fract beside it is computed at full precision, so a coordinate sitting exactly on a texel
-		// boundary can be rounded the two ways. That is true of the offsetless form as it stands on
-		// dev and the offset neither widens it nor repairs it.
 		if (this.softRewrites > 0) {
 			lines.add("float " + GlslTranslator.SHADOW_COMPARE
 					+ "(sampler2D ofMap, vec3 ofAt, ivec2 ofOffset) {"
@@ -226,29 +150,12 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			lines.add("float " + GlslTranslator.SHADOW_COMPARE
 					+ "(sampler2D ofMap, vec3 ofAt, float ofLod, ivec2 ofOffset) {"
 					+ " return " + GlslTranslator.SHADOW_COMPARE + "(ofMap, ofAt, ofOffset); }");
-			// The bias form of the offset lookup, which a fragment stage may write and which takes
-			// its two trailing arguments the other way round.
+
 			lines.add("float " + GlslTranslator.SHADOW_COMPARE
 					+ "(sampler2D ofMap, vec3 ofAt, ivec2 ofOffset, float ofBias) {"
 					+ " return " + GlslTranslator.SHADOW_COMPARE + "(ofMap, ofAt, ofOffset); }");
 		}
 
-		// One overload per shape the builtins take, and no driver sine anywhere in it. The turn
-		// count is taken out through two constants whose sum carries two pi to thirty-three bits,
-		// so the residue keeps its low bits where a single fp32 two-pi would shed them; the residue
-		// is folded to a quarter turn and fed to the odd polynomial. Measured on the hash's own
-		// yardstick: a single-constant reduction leaves a field the uniformity test rejects at 427
-		// where white noise scores 15, and this form scores 11 to 14, alongside the reference.
-		//
-		// The result is clamped to one, because the reduction only keeps the residue within a half
-		// turn up to arguments of some tens of millions. Past that the residue grows with the
-		// argument, the polynomial returns values above one, and further out its square overflows
-		// and the sine is infinite, where the driver's own stays within one. A parallax march
-		// comparing against a wave height built on such a sine then runs for billions of turns or
-		// forever, and the device is lost: Photon's water at a grazing view, whose step divides by
-		// the view's tiny component along the normal. Every value the helper already gave within
-		// one is left as it was; the others, which carry nothing of the argument any more, become
-		// plus or minus one.
 		if (this.trigCalls > 0) {
 			for (String shape : new String[] {"float", "vec2", "vec3", "vec4"}) {
 				lines.add(shape + " " + GlslTranslator.REDUCED_SIN + "(" + shape + " ofX) {"
@@ -265,8 +172,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			}
 		}
 
-		// One overload per vector the idiom hashes. The bits are hashed rather than the sine of a
-		// huge argument, which is the whole of rewriteGoldbergHash.
 		if (this.hashCalls > 0) {
 			lines.add("float " + GlslTranslator.HASH + "(vec2 ofP) {"
 					+ " uvec2 ofV = floatBitsToUint(ofP);"
@@ -288,41 +193,24 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 					+ " return float(ofN) * 2.3283064365386963e-10; }");
 		}
 
-		// Only the helpers a call was sent to, which happens on MoltenVK alone. See PackBuiltins.
 		lines.addAll(PackBuiltins.definitions(this.packBuiltinCalls));
 
-		// Only where a lookup was moved. A stage carrying the declaration and never reading it, which
-		// is most of them, has its declaration flattened and owes no helper.
 		this.readVolumes.forEach((name, atlas) -> lines.addAll(VolumeFlattening.helper(name, atlas)));
 
-		// Declared on both sides or on neither, whether this stage reads it or not. A varying the
-		// vertex writes and the fragment never mentions is accepted in silence and shifts the
-		// location of everything declared after it.
 		if (varyings.contains(GlslTranslator.FOG_COORD)) {
 			lines.add((this.stage == ProgramStage.VERTEX ? "out" : "in") + " float "
 					+ GlslTranslator.FOG_COORD + ";");
 		}
 
-		// A global and not a varying, which is why it is asked of this stage's own names rather than
-		// of the union: the fragment stage never sees it, so there is no other side to agree with.
-		// GlslTranslator.FRONT_COLOUR says what it is and why writing it is enough.
 		if (this.stage == ProgramStage.VERTEX && this.used.contains(GlslTranslator.FRONT_COLOUR)) {
 			lines.add("vec4 " + GlslTranslator.FRONT_COLOUR + ";");
 		}
 
-		// The same rule for the overlay colour, and it arrives here by the same road: the union says
-		// yes, so both sides declare it whichever of them reads it. No interpolation qualifier, which
-		// is CoreVK's answer too: every vertex of one model part carries the same overlay coordinate,
-		// so what is interpolated between them is one value.
 		if (varyings.contains(GlslTranslator.ENTITY_COLOR)) {
 			lines.add((this.stage == ProgramStage.VERTEX ? "out" : "in") + " vec4 "
 					+ GlslTranslator.ENTITY_COLOR + ";");
 		}
 
-		// And the same rule again for the three identifiers, with the qualifier the language demands
-		// rather than one chosen: an integer varying may not be interpolated, so flat is not a
-		// decision here. CoreVK writes flat on its own ivec3 for the same reason
-		// (EntityPatcher.java:159).
 		for (String identifier : GlslTranslator.ENTITY_IDS) {
 			if (varyings.contains(identifier)) {
 				lines.add("flat " + (this.stage == ProgramStage.VERTEX ? "out" : "in") + " int "
@@ -341,10 +229,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			}
 		}
 
-		// The struct's definition, once per type, then the global of the pack's name, then one
-		// varying per member in the order the struct lists them, so that both stages number them
-		// alike. The definition is written from the members read off the body, whose own copy is
-		// blank by now.
 		Set<String> defined = new HashSet<>();
 		for (SplitStruct split : this.splits.structs()) {
 			if (defined.add(split.structType())) {
@@ -360,9 +244,7 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			lines.add(split.structType() + " " + split.name() + ";");
 			String storage = split.input() ? "in" : "out";
 			for (StructMember member : split.members()) {
-				// An integer member is flat whatever the pack wrote on the struct, as the entity
-				// identifiers are: the language allows nothing else, and a struct of floats may
-				// legally carry no qualifier at all.
+
 				String qualifier = split.qualifier();
 				if (INTEGER_MEMBER_TYPES.contains(member.type()) && !qualifier.contains("flat")) {
 					qualifier = qualifier.isEmpty() ? "flat" : "flat " + qualifier;
@@ -376,8 +258,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			}
 		}
 
-		// The array as a global of the pack's name, then one varying per element in index order,
-		// flat where the element may not be interpolated.
 		for (SplitArray split : this.splits.arrays()) {
 			lines.add(split.type() + " " + split.name() + "[" + split.size() + "];");
 			String storage = split.input() ? "in" : "out";
@@ -394,16 +274,12 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			}
 		}
 
-		// From zero up with no gaps, because a location the game finds nothing declared at is not
-		// left empty: it renumbers what is there and everything above the gap moves down one.
 		for (int slot = 0; slot <= this.maxFragmentOutput; slot++) {
 			Output output = this.packOutputs.get(slot);
 			lines.add("layout(location = " + slot + ") out "
 					+ (output == null ? "vec4" : output.type()) + " " + outputName(slot, shadowed) + ";");
 		}
 
-		// Above everything the pack declared, dead branches included, because the rank is what
-		// becomes the location and the ranks below this one are already spoken for.
 		if (this.covers) {
 			lines.add("layout(location = " + (this.maxFragmentOutput + 1) + ") out float "
 					+ COVERAGE + ";");
@@ -422,32 +298,16 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 			lines.add(order.append(" }").toString());
 		}
 
-		// The same rule as the varying above, read from the other end: a varying the NEXT stage
-		// declares and this one never wrote is not a silence but a refusal, so it is declared here
-		// rather than taken out there. The qualifier travels with it, the two sides having to agree
-		// on that as well.
-		//
-		// BELOW the colour outputs and below the ascending function, for the reason the next block
-		// gives about itself: on a stage that has colour outputs, a plain out declaration met first
-		// would take location nought from the one the game writes back. Only the last stage of a
-		// pipeline has those and only a stage that is not last is ever owed anything, so the two do
-		// not meet today. They are ordered anyway rather than left to that argument holding.
 		this.owedOutputs.forEach((name, qualified) -> lines.add(outDeclaration(name, qualified)));
 
 		return String.join("\n", lines) + "\n";
 	}
 
-	
 	String wrapper(Set<String> varyings, Set<String> shadowed) {
 		if (!this.mainWrapped) {
 			return "";
 		}
 
-		// The lines mesh runs the pack's main twice, the far end of the edge first and the vertex
-		// itself second, so that every varying holds the vertex's own value when the epilogues
-		// below read them, and widens between the two clip positions: CoreVK's own order
-		// (VanillaTransformer.java:215-223). The depth conversion still lands after, on the widened
-		// position, whose z the widening leaves alone.
 		String body = this.linesWrapped
 				? LinesVertex.OFFSET + " = Normal.xyz; " + GlslTranslator.PACK_MAIN
 						+ "(); vec4 of_LineEnd = "
@@ -455,8 +315,7 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 						+ " = vec3(0.0); " + GlslTranslator.PACK_MAIN + "(); " + LinesVertex.WIDEN
 						+ "(gl_Position, of_LineEnd);"
 				: GlslTranslator.PACK_MAIN + "();";
-		// The mask goes last of all, after the discard: a fragment the alpha test threw away
-		// covered nothing, and marking it covered would leave a hole where a leaf was.
+
 		return "void main() { "
 				+ (this.terrainPrologue ? SodiumVertex.PROLOGUE + "(); " : "")
 				+ (this.distantPrologue ? DistantVertex.PROLOGUE + "(); " : "")
@@ -483,12 +342,10 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 				+ " }\n";
 	}
 
-	
 	private boolean owesInitialisers() {
 		return this.mainWrapped && !this.owedOutputs.isEmpty();
 	}
 
-	
 	private String owedPrologue() {
 		if (!owesInitialisers()) {
 			return "";
@@ -501,19 +358,16 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 		return assignments.toString();
 	}
 
-	
 	private String writtenDepth() {
 		return this.namesFragDepth ? "gl_FragDepth" : "gl_FragCoord.z";
 	}
 
-	
 	private String coveragePrologue() {
 		return this.covers && this.namesFragDepth && this.inputs != VertexInputs.SKY
 				? "gl_FragDepth = gl_FragCoord.z; "
 				: "";
 	}
 
-	
 	private String overlayPrologue() {
 		if (!this.makesOverlayColour) {
 			return "";
@@ -526,7 +380,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 				+ ".a != 0.0); ";
 	}
 
-	
 	private String identifierPrologue(Set<String> varyings) {
 		if (!this.entityWrapped) {
 			return "";
@@ -544,19 +397,15 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 		return written.toString();
 	}
 
-	
 	private String outputName(int slot, Set<String> shadowed) {
 		Output output = this.packOutputs.get(slot);
 		if (output == null) {
 			return "ofFragData" + slot;
 		}
 
-		// Renamed here as well as in the body, since the declaration has moved up out of it and
-		// the two halves of one name have to keep agreeing.
 		return shadowed.contains(output.name()) ? "ofOwn_" + output.name() : output.name();
 	}
 
-	
 	private String declareOpaque(TranslatedUnit.Uniform sampler) {
 		String memory = this.memoryQualifiers.getOrDefault(sampler.name(), "");
 		String tail = (memory.isEmpty() ? "" : memory + " ") + "uniform " + sampler.declaration()
@@ -571,7 +420,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 				.orElse(tail);
 	}
 
-	
 	private static String outDeclaration(String name, String qualified) {
 		int type = qualified.lastIndexOf(' ');
 
@@ -580,7 +428,6 @@ record Emitter(ProgramStage stage, VertexInputs inputs, List<String> bound, Alph
 				: qualified.substring(0, type) + " out " + qualified.substring(type + 1) + " " + name + ";";
 	}
 
-	
 	private static String initialiser(String name, String qualified) {
 		int type = qualified.lastIndexOf(' ');
 

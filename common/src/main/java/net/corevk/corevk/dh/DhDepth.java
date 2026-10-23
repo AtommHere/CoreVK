@@ -9,14 +9,11 @@ import java.lang.reflect.Method;
 
 public final class DhDepth {
 
-	
 	private static final String DELAYED = "com.seibel.distanthorizons.api.DhApi$Delayed";
 
-	
 	private static final String CLIENT_API =
 			"com.seibel.distanthorizons.core.api.internal.ClientApi";
 
-	
 	private static Field renderParamsField;
 	private static Field dhProjectionField;
 	private static Field projectionScaleField;
@@ -28,19 +25,16 @@ public final class DhDepth {
 	private static Method renderingEnabledMethod;
 	private static Method valueMethod;
 
-	
 	private static final int CHUNK = 16;
 
 	private static boolean resolved;
 	private static boolean usable;
 
-	
 	private static boolean distanceUsable = true;
 
 	private DhDepth() {
 	}
 
-	
 	public static boolean zRow(Vector2f dest) {
 		if (!resolved) {
 			resolve();
@@ -59,16 +53,14 @@ public final class DhDepth {
 
 			float offset = projectionOffsetField.getFloat(matrix);
 			if (offset == 0.0F) {
-				// Still the identity it was made as: DH has not rendered a frame of this world yet.
+
 				return false;
 			}
 
 			dest.set(projectionScaleField.getFloat(matrix), offset);
 
 			return true;
-			// The error is caught with the rest and on purpose: the first read of that field is what
-			// loads DH's client entry point, and a class of DH's that will not load is a far terrain
-			// this engine goes without rather than a frame this engine drops.
+
 		} catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
 			usable = false;
 			CoreVK.logger().warn("Distant Horizons' projection cannot be read, so its depth cannot be "
@@ -77,7 +69,6 @@ public final class DhDepth {
 		}
 	}
 
-	
 	public static boolean planes(float scale, float offset, Vector2f dest) {
 		if (scale <= 0.0F) {
 			return false;
@@ -88,7 +79,6 @@ public final class DhDepth {
 		return true;
 	}
 
-	
 	public static int renderDistanceBlocks() {
 		if (!resolved) {
 			resolve();
@@ -118,12 +108,10 @@ public final class DhDepth {
 		}
 	}
 
-	
 	public static boolean usable() {
 		return usable;
 	}
 
-	
 	public static boolean present() {
 		if (!resolved) {
 			resolve();
@@ -132,7 +120,6 @@ public final class DhDepth {
 		return usable && renderingEnabled();
 	}
 
-	
 	private static boolean renderingEnabled() {
 		try {
 			Object configs = configsField.get(null);
@@ -170,7 +157,7 @@ public final class DhDepth {
 			CoreVK.logger().info("Distant Horizons found, its far terrain's volume, planes and "
 					+ "switch will be read");
 		} catch (ClassNotFoundException e) {
-			// The ordinary case: DH is simply not installed. Not worth a line above debug.
+
 			usable = false;
 		} catch (ReflectiveOperationException | RuntimeException e) {
 			usable = false;
@@ -179,21 +166,14 @@ public final class DhDepth {
 		}
 	}
 
-	
 	private static void resolveProjection() throws ReflectiveOperationException {
-		// Without initialising it, which matters: the symbols are wanted before the first pack is
-		// read and that class builds its render parameter out of DH's own injector as it loads. The
-		// first read of the field below is what runs it, and that read is a frame being drawn, by
-		// which time DH is up.
+
 		Class<?> clientApi = Class.forName(CLIENT_API, false, DhDepth.class.getClassLoader());
 		renderParamsField = clientApi.getDeclaredField("RENDER_PARAMS");
 		renderParamsField.setAccessible(true);
 
 		dhProjectionField = renderParamsField.getType().getField("dhProjectionMatrix");
 
-		// Named for what they do and not for what they are called, because the two conventions
-		// disagree: this is m22 and m23 of DH's own matrix class, which numbers the row first where
-		// JOML numbers the column first and calls the same pair m22 and m32.
 		Class<?> matrixType = dhProjectionField.getType();
 		projectionScaleField = matrixType.getField("m22");
 		projectionOffsetField = matrixType.getField("m23");

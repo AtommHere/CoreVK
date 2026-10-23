@@ -37,7 +37,6 @@ public abstract class VulkanCommandEncoderSetsMixin implements WideSamplerSets.S
 		return this.corevk$setPools.allocate(corevk$slot(), setLayout, writes);
 	}
 
-	
 	@Inject(method = "submit", require = 1,
 			at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vulkan/VulkanCommandPool;reset()V"))
 	private void corevk$resetSets(CallbackInfo callback) {
@@ -46,7 +45,6 @@ public abstract class VulkanCommandEncoderSetsMixin implements WideSamplerSets.S
 		}
 	}
 
-	
 	@Inject(method = "destroy", at = @At("TAIL"), require = 1)
 	private void corevk$destroySets(CallbackInfo callback) {
 		if (this.corevk$setPools != null) {
@@ -55,7 +53,6 @@ public abstract class VulkanCommandEncoderSetsMixin implements WideSamplerSets.S
 		}
 	}
 
-	
 	@Unique
 	private int corevk$slot() {
 		return (int) (this.currentSubmitIndex % VulkanCommandEncoder.MAX_SUBMITS_IN_FLIGHT);

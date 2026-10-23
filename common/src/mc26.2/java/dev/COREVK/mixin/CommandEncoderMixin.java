@@ -30,8 +30,7 @@ public abstract class CommandEncoderMixin {
 		}
 
 		if (!GeometryHold.opening()) {
-			// The pass's own label is the cause, and it is already a supplier: naming it costs
-			// nothing until a census asks, which is why the prefix is added there and not here.
+
 			GeometryHold.flush(descriptor.label());
 		}
 	}
@@ -88,7 +87,6 @@ public abstract class CommandEncoderMixin {
 		PassTimings.censusCopy();
 	}
 
-	
 	@Inject(method = {
 			"writeToBuffer(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Ljava/nio/ByteBuffer;)V",
 			"copyToBuffer(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V",

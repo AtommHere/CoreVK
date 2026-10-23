@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public final class ToggleWidget extends OptionWidget {
 
-	
 	private static final int VALUE_WIDTH = 28;
 
 	private static final String ON = "on";
@@ -65,7 +64,6 @@ public final class ToggleWidget extends OptionWidget {
 		host().values().queue(this.option.name(), this.value ? ON : OFF);
 	}
 
-	
 	@Override
 	protected boolean nextValue() {
 		this.value = !this.value;

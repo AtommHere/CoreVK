@@ -11,16 +11,13 @@ import java.util.List;
 
 final class TokenStream implements Iterable<Token> {
 
-	
 	private static final int MAX_STATEMENT_TOKENS = 4096;
 
 	private final List<Token> tokens;
 
-	
 	private int functionEndFor = -1;
 	private int functionEndAt;
 
-	
 	private int[] lineTable;
 
 	TokenStream(List<Token> tokens) {
@@ -35,31 +32,25 @@ final class TokenStream implements Iterable<Token> {
 		return this.tokens.get(index);
 	}
 
-	
 	@Override
 	public Iterator<Token> iterator() {
 		return Collections.unmodifiableList(this.tokens).iterator();
 	}
 
-	
 	String join() {
 		return GlslLexer.join(this.tokens);
 	}
 
-	
 	void naming(int index) {
 		set(index, this.tokens.get(index).naming());
 	}
 
-	
 	record Closing(int at, String text, String directive) {
 	}
 
-	
 	record Insertion(int at, Token token) {
 	}
 
-	
 	void insertTokens(List<Insertion> insertions) {
 		if (insertions.isEmpty()) {
 			return;
@@ -86,7 +77,6 @@ final class TokenStream implements Iterable<Token> {
 		this.tokens.addAll(rebuilt);
 	}
 
-	
 	void insertClosings(List<Closing> closings) {
 		if (closings.isEmpty()) {
 			return;
@@ -95,11 +85,6 @@ final class TokenStream implements Iterable<Token> {
 		this.functionEndFor = -1;
 		this.lineTable = null;
 
-		// One walk that copies the list with the closings dropped in, rather than one shift of
-		// every later token per closing: a stage carries hundreds of thousands of tokens and a
-		// few hundred closings, and the shifts were the whole cost of the pass. The order is the
-		// one the shifts produced: closings sharing a position land latest first, because each
-		// shift pushed the one inserted before it along.
 		closings.sort(Comparator.comparingInt(Closing::at));
 		List<Token> rebuilt = new ArrayList<>(this.tokens.size() + closings.size());
 		int next = 0;
@@ -127,7 +112,6 @@ final class TokenStream implements Iterable<Token> {
 		set(index, this.tokens.get(index).as(text));
 	}
 
-	
 	void inject(int index, String text) {
 		set(index, new Token(Kind.RAW, text, this.tokens.get(index).directive()));
 	}
@@ -138,7 +122,6 @@ final class TokenStream implements Iterable<Token> {
 		}
 	}
 
-	
 	void blankRange(int start, int end) {
 		for (int index = start; index <= end; index++) {
 			if (this.tokens.get(index).kind() != Kind.NEWLINE) {
@@ -147,7 +130,6 @@ final class TokenStream implements Iterable<Token> {
 		}
 	}
 
-	
 	void blankDirective(int hash) {
 		for (int index = hash; index < this.tokens.size(); index++) {
 			if (this.tokens.get(index).kind() == Kind.NEWLINE) {
@@ -158,7 +140,6 @@ final class TokenStream implements Iterable<Token> {
 		}
 	}
 
-	
 	private static Token blanked(Token token) {
 		int breaks = breaks(token.text());
 
@@ -167,7 +148,6 @@ final class TokenStream implements Iterable<Token> {
 				: new Token(Kind.SPACE, "\n".repeat(breaks), token.directive());
 	}
 
-	
 	private void set(int index, Token token) {
 		this.functionEndFor = -1;
 		if (breaks(this.tokens.get(index).text()) != breaks(token.text())) {
@@ -188,7 +168,6 @@ final class TokenStream implements Iterable<Token> {
 		return breaks;
 	}
 
-	
 	int significantAfter(int index) {
 		if (index < 0) {
 			return -1;
@@ -215,7 +194,6 @@ final class TokenStream implements Iterable<Token> {
 		return -1;
 	}
 
-	
 	int macroNameAfter(int hash) {
 		boolean keywordSeen = false;
 
@@ -240,7 +218,6 @@ final class TokenStream implements Iterable<Token> {
 		return -1;
 	}
 
-	
 	int significantBefore(int index) {
 		for (int scan = index - 1; scan >= 0; scan--) {
 			Token token = this.tokens.get(scan);
@@ -254,7 +231,6 @@ final class TokenStream implements Iterable<Token> {
 		return -1;
 	}
 
-	
 	int[] lineNumbers() {
 		if (this.lineTable != null) {
 			return this.lineTable;
@@ -273,7 +249,6 @@ final class TokenStream implements Iterable<Token> {
 		return lines;
 	}
 
-	
 	int callOpener(int index) {
 		int next = significantAfter(index);
 
@@ -312,11 +287,8 @@ final class TokenStream implements Iterable<Token> {
 		return -1;
 	}
 
-	
 	int functionEnd(int parameters) {
-		// Asked once per parameter of a list and answered once per list: the walk to the
-		// function's closing brace is the same for every parameter, and every edit of a token
-		// forgets this first.
+
 		if (parameters == this.functionEndFor) {
 			return this.functionEndAt;
 		}
@@ -340,7 +312,6 @@ final class TokenStream implements Iterable<Token> {
 		return end < 0 ? this.tokens.size() - 1 : end;
 	}
 
-	
 	int statementStart(int index) {
 		int limit = Math.max(0, index - MAX_STATEMENT_TOKENS);
 		int start = -1;
@@ -356,7 +327,7 @@ final class TokenStream implements Iterable<Token> {
 		}
 
 		if (start < 0) {
-			// Reaching the first token is a real answer; running out of budget is not.
+
 			if (limit > 0) {
 				return -1;
 			}
@@ -376,7 +347,6 @@ final class TokenStream implements Iterable<Token> {
 		return start;
 	}
 
-	
 	int statementEnd(int index) {
 		int depth = 0;
 		int last = Math.min(this.tokens.size(), index + MAX_STATEMENT_TOKENS);

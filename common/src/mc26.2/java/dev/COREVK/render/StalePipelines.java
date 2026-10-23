@@ -7,9 +7,7 @@ import java.util.List;
 
 public interface StalePipelines {
 
-	
 	List<RenderPipeline> corevk$dropEntityPipelines();
 
-	
 	boolean corevk$adopt(RenderPipeline pipeline, VulkanRenderPipeline compiled);
 }

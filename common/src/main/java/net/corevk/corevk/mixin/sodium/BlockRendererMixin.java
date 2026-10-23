@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(value = BlockRenderer.class, remap = false)
 public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 
-	
 	@ModifyArg(
 			method = "bufferQuad",
 			at = @At(value = "INVOKE",
@@ -27,7 +26,6 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 		return corevk$stamp(vertices);
 	}
 
-	
 	@ModifyArg(
 			method = "bufferQuad",
 			at = @At(value = "INVOKE",
@@ -41,7 +39,6 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 		return corevk$stamp(vertices);
 	}
 
-	
 	@Unique
 	private BlockState corevk$stampedState;
 
@@ -54,18 +51,9 @@ public abstract class BlockRendererMixin extends AbstractBlockRenderContext {
 	@Unique
 	private int corevk$stampedOrigin;
 
-	
 	@Unique
 	private ChunkVertexEncoder.Vertex[] corevk$stamp(ChunkVertexEncoder.Vertex[] vertices) {
-		// Both are written on EVERY quad, including the one that knows neither. The array is
-		// Sodium's own, one instance reused for every face of every block, so a field left alone
-		// keeps what the block before wrote: an offset measured against another block, which wraps
-		// into its byte without a word. A quad that knows one of the two still gets that one.
-		//
-		// Worked out once per block and not once per quad: the id is a table lookup and the origin
-		// a light emission and a pack, and a block hands the same two to every one of its faces.
-		// The position is compared by value, the context reusing one mutable position for every
-		// block of a section.
+
 		BlockState state = this.state;
 		long at = this.pos == null ? Long.MIN_VALUE : this.pos.asLong();
 		if (state != this.corevk$stampedState || at != this.corevk$stampedAt) {

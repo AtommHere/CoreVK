@@ -28,32 +28,25 @@ import org.joml.Matrix4f;
 
 public final class ShadowGeometry {
 
-	
 	private static RenderBuffers buffers;
 	private static SubmitNodeStorage storage;
 	private static FeatureRenderDispatcher dispatcher;
 
-	
 	private static boolean broken;
 
-	
 	private static final LevelRenderState STATE = new LevelRenderState();
 
-	
 	private static int counted = -1;
 
-	
 	private static int gathered;
 	private static int gatheredBlocks;
 
-	
 	private static boolean blockEntitiesAsked;
 	private static boolean emittersOnly;
 
 	private ShadowGeometry() {
 	}
 
-	
 	public static void gather(Matrix4f light, Vec3 camera, ShadowCasters casters) {
 		STATE.reset();
 		gathered = 0;
@@ -61,17 +54,6 @@ public final class ShadowGeometry {
 		blockEntitiesAsked = false;
 		emittersOnly = false;
 
-		// The entity switch and not one of its own, which is the convention: what enters the map here
-		// is the same geometry that door serves, read from the same tables, and a family does not take
-		// a second switch without a reason. It is also what keeps the walk honest when the switch is
-		// off: the door would refuse every draw, and refusing inside this walk means dropping it, so
-		// the walk would cost a full extraction and a submission to draw nothing and say so once per
-		// row of the shadow table.
-		// The player is in the guard because the extraction below dereferences it without one
-		// (Camera.java:124), and what an exception here costs is out of all proportion to the frame
-		// that threw it: ShadowTerrain hands it to TerrainDraw.shadowStageFailed, which lowers the
-		// stage for the whole session. One frame drawn before the player exists would end the
-		// shadows for the rest of the run.
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft == null || minecraft.level == null || minecraft.player == null
 				|| !EntityDraw.wanted() || !casters.anyFeature()) {
@@ -83,44 +65,9 @@ public final class ShadowGeometry {
 			return;
 		}
 
-		// The light's frustum with the pack's reach cut out of it, prepared about the camera because
-		// that is what the whole map is built around: the terrain is culled against this very
-		// matrix, and an entity measured against another one would be dropped out of a map its own
-		// shadow belongs in. The reach is the pack's bound on the casters that move, read once for
-		// the walk, and Reached says what it is tested on.
-		//
-		// It is one bound and not two: the shadow distance the player set is folded into this same
-		// number rather than applied beside it, because CoreVK builds the entity frustum out of the
-		// PRODUCT of the two multipliers (shadows/ShadowRenderer.java:540) and the world's own is
-		// negative whenever the player governs. PackValues.entityShadowDistance carries that
-		// arithmetic and its sign.
 		Frustum frustum = new Reached(light, TerrainDraw.entityShadowDistance());
 		frustum.prepare(camera.x, camera.y, camera.z);
 
-		// The light's own camera, built the way CoreVK builds it and NOT the frame's borrowed: a state
-		// extracted fresh from the player camera (shadows/ShadowRenderer.java:390) and then
-		// overwritten on the two matrices that make it a camera at all, the view rotation with the
-		// light's model view (:418) and the projection with the light's ortho (:431). The rest of
-		// the state stays the camera's, position and orientation included, because that is what the
-		// submissions are posed relative to.
-		//
-		// WHAT IT FIXES TODAY IS THE ALIAS AND NOT THE MATRICES. The old line assigned the frame's
-		// own object, which then outlived the frame it was borrowed from. The two matrices are
-		// nobody's business at this moment: in 26.2 the only readers of viewRotationMatrix and
-		// projectionMatrix are LevelRenderer and GameRenderer, and no entity, block entity or feature
-		// renderer touches either. They are written to CoreVK's shape so that a reader added later
-		// finds the light's answer rather than the camera's.
-		//
-		// The z sense is the one thing to know before adding such a reader: the game fills that field
-		// from Projection.getMatrix, which SWAPS the two planes (Projection.java:70-71) and so hands
-		// out a reversed volume, while what goes in here is the pack's shadow pair as it is published,
-		// a forward ortho. A consumer that assumes the field's usual convention would read this one
-		// inside out.
-		//
-		// The partial tick is the camera's own accessor, which is what the game passes for this same
-		// extraction (GameRenderer.java:391); CoreVK passes its captured tick delta. It reaches only the
-		// hurt and death timers of the camera entity's state (Camera.java:143-144). 26.3 takes the
-		// tracker and asks the same accessor itself, which GameRender carries.
 		GameRender.extractCamera(view, STATE.cameraRenderState, minecraft.getDeltaTracker());
 		if (!TerrainDraw.drawnShadowPair(STATE.cameraRenderState.viewRotationMatrix,
 				STATE.cameraRenderState.projectionMatrix)) {
@@ -129,14 +76,10 @@ public final class ShadowGeometry {
 
 		gathered = extractEntities(minecraft, view, frustum, casters);
 
-		// The block entities are not taken here, and it is not an order this walk chose: the list
-		// they are read off does not exist yet at this point of the stage. What the pack asked is
-		// left for the half that runs once it does.
 		blockEntitiesAsked = casters.anyBlockEntity();
 		emittersOnly = casters.emittersOnly();
 	}
 
-	
 	public static void gatherBlockEntities(BlockEntityWalk walk) {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (!blockEntitiesAsked || minecraft == null || minecraft.level == null) {
@@ -152,31 +95,22 @@ public final class ShadowGeometry {
 		gatheredBlocks = STATE.blockEntityRenderStates.size();
 	}
 
-	
 	private static void keepEmitters(Level level) {
 		STATE.blockEntityRenderStates
 				.removeIf(state -> level.getBlockState(state.blockPos).getLightEmission() == 0);
 	}
 
-	
 	public static void draw(Vec3 camera) {
 		try {
 			walk(camera);
 		} finally {
-			// THE FRAME OF THIS FAMILY'S OWN BUFFERS ENDS HERE whether anything was drawn or not,
-			// and it is not tidiness: RenderBuffers.endFrame is the ONLY path that recycles what
-			// StagedVertexBuffer took, so without it every frame's acquire misses the pool and falls
-			// through to a fresh device allocation that nothing ever hands back. The cost is per
-			// FRAME and not per caster, so a world holding two entities pays it in full, and it is
-			// large enough to be the first thing seen rather than something to look for.
-			// HandDraw.drawTranslucent ends its own on both paths for the same reason.
+
 			if (buffers != null) {
 				buffers.endFrame();
 			}
 		}
 	}
 
-	
 	public static void close() {
 		FeatureRenderDispatcher held = dispatcher;
 		RenderBuffers owned = buffers;
@@ -203,20 +137,15 @@ public final class ShadowGeometry {
 
 		EntityDraw.shadowFeatures(true);
 		try {
-			// Through the seam because 26.3 wants the pass from its caller where 26.2 let every draw
-			// open its own; GameRender says which pass that is on each game.
+
 			GameRender.renderAllFeatures(dispatcher, storage, () -> "CoreVK shadow casters");
 		} finally {
-			// Lowered whatever happened, and this is the one flag of the three that nothing else
-			// would lower: the other two are closed by the game's own events, and there is no event
-			// after this one. Left standing, every entity of the next frame would be drawn with the
-			// shadow program into the picture.
+
 			EntityDraw.shadowFeatures(false);
 			STATE.reset();
 		}
 	}
 
-	
 	private static boolean ensure(Minecraft minecraft) {
 		if (dispatcher != null) {
 			return true;
@@ -254,7 +183,6 @@ public final class ShadowGeometry {
 		}
 	}
 
-	
 	private static int extractEntities(Minecraft minecraft, Camera view, Frustum frustum,
 			ShadowCasters casters) {
 		EntityRenderDispatcher entities = minecraft.levelRenderer.entityRenderDispatcher();
@@ -264,7 +192,7 @@ public final class ShadowGeometry {
 
 		if (casters.entities()) {
 			for (Entity entity : minecraft.level.entitiesForRendering()) {
-				// The entity's own tick, which extract takes too and 26.3's culling box is built at.
+
 				float partial = delta.getGameTimeDeltaPartialTick(!ticks.isEntityFrozen(entity));
 				if (visible(minecraft, entities, entity, frustum, at, partial)) {
 					STATE.entityRenderStates.add(extract(entities, delta, ticks, entity));
@@ -273,19 +201,11 @@ public final class ShadowGeometry {
 		} else if (casters.player()) {
 			Player player = minecraft.player;
 
-			// COREVK'S OWN CONSTANT HERE, and not the entity's own tick. Its player
-			// branch takes one getGameTimeDeltaPartialTick(false) for the pair
-			// (shadows/ShadowRenderer.java:553) where its entity branch asks per caster (:712). The
-			// split is CoreVK's and it is not ours to tidy: made uniform, a frozen world poses the
-			// player one way here and another way there, and the packs are written against there.
 			float partial = delta.getGameTimeDeltaPartialTick(false);
 			if (!player.isSpectator() && !player.isInvisible()) {
 				STATE.entityRenderStates.add(entities.extractEntity(player, partial));
 			}
 
-			// What carries the player, extracted beside it as CoreVK extracts it (:557-560) and
-			// outside the test above, as there too: a rider whose own shadow falls on a horse
-			// casting none is worse than neither casting one.
 			Entity vehicle = player.getVehicle();
 			if (vehicle != null) {
 				STATE.entityRenderStates.add(entities.extractEntity(vehicle, partial));
@@ -295,7 +215,6 @@ public final class ShadowGeometry {
 		return STATE.entityRenderStates.size();
 	}
 
-	
 	private static EntityRenderState extract(EntityRenderDispatcher entities, DeltaTracker delta,
 			TickRateManager ticks, Entity entity) {
 		if (entity.tickCount == 0) {
@@ -308,7 +227,6 @@ public final class ShadowGeometry {
 				delta.getGameTimeDeltaPartialTick(!ticks.isEntityFrozen(entity)));
 	}
 
-	
 	private static boolean visible(Minecraft minecraft, EntityRenderDispatcher entities, Entity entity,
 			Frustum frustum, Vec3 at, float partial) {
 		if (entity instanceof Player spectator && spectator.isSpectator()) {
@@ -327,7 +245,6 @@ public final class ShadowGeometry {
 				|| GameRender.sectionShown(minecraft.levelRenderer, block);
 	}
 
-	
 	private static void submit(Minecraft minecraft, Vec3 camera) {
 		PoseStack pose = new PoseStack();
 
@@ -346,7 +263,6 @@ public final class ShadowGeometry {
 		}
 	}
 
-	
 	private static void say(int entities, int blockEntities) {
 		if (counted != BlockStateIds.generation()) {
 			counted = BlockStateIds.generation();
@@ -356,10 +272,8 @@ public final class ShadowGeometry {
 		}
 	}
 
-	
 	private static final class Reached extends Frustum {
 
-		
 		private final float reach;
 
 		Reached(Matrix4f light, float reach) {
@@ -372,7 +286,6 @@ public final class ShadowGeometry {
 			return !culled(box) && super.isVisible(box);
 		}
 
-		
 		private boolean culled(AABB box) {
 			if (this.reach < 0.0F) {
 				return false;
@@ -388,11 +301,9 @@ public final class ShadowGeometry {
 		}
 	}
 
-	
 	@FunctionalInterface
 	public interface BlockEntityWalk {
 
-		
 		void into(LevelRenderState state, float partialTick);
 	}
 }

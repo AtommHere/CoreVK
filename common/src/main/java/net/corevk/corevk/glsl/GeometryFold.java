@@ -12,34 +12,26 @@ import java.util.Set;
 
 public final class GeometryFold {
 
-	
 	private static final String RATE = "ofEdgeRate";
 
-	
 	private static final List<String> RATE_NAMES =
 			List.of(RATE, "ofAx", "ofAy", "ofBx", "ofBy", "ofXx", "ofXy", "ofYy");
 
-	
 	private static final Set<String> QUALIFIERS = Set.of("flat", "smooth", "noperspective",
 			"centroid", "highp", "mediump", "lowp");
 
-	
 	private static final Set<String> RATE_OF = Set.of("float", "vec2", "vec3", "vec4");
 
-	
 	private static final Set<String> RATE_OVER = Set.of("vec2", "vec3", "vec4");
 
-	
 	private static final String[] EDGE = {"abs", "(", null, "[", null, "]", "-", null, "[", null, "]",
 		")", "/", "distance", "(", null, "[", null, "]", ",", null, "[", null, "]", ")"};
 
-	
 	private static final int RATE_TOKENS = 4 + 3 * EDGE.length + 4;
 
 	private GeometryFold() {
 	}
 
-	
 	public record Result(String fragment, String refusal) {
 
 		public static Result refused(String refusal) {
@@ -51,7 +43,6 @@ public final class GeometryFold {
 		}
 	}
 
-	
 	public static Result fold(String geometry, String fragment) {
 		try {
 			return new Result(rewrite(new Stage(new Code(geometry)), new Code(fragment)), null);
@@ -60,7 +51,6 @@ public final class GeometryFold {
 		}
 	}
 
-	
 	private static final class Refused extends Exception {
 
 		private Refused(String clause) {
@@ -68,27 +58,21 @@ public final class GeometryFold {
 		}
 	}
 
-	
 	private record Varying(String type, List<String> qualifiers) {
 	}
 
-	
 	private record Rate(String type, String of, String over, String overType) {
 	}
 
-	
 	private record Edge(String of, String over, int first, int second) {
 	}
 
-	
 	private record Statement(int start, int end, int body) {
 	}
 
-	
 	private record Edit(int from, int to, String text) {
 	}
 
-	
 	private static final class Code {
 
 		private final List<GlslLexer.Token> all;
@@ -123,7 +107,6 @@ public final class GeometryFold {
 					&& this.all.get(this.at.get(index)).kind() == GlslLexer.Kind.IDENTIFIER;
 		}
 
-		
 		private int closing(int open) {
 			String opening = text(open);
 			String close = switch (opening) {
@@ -147,7 +130,6 @@ public final class GeometryFold {
 			return -1;
 		}
 
-		
 		private String join(int from, int to) {
 			StringBuilder text = new StringBuilder();
 			for (int index = from; index < to; index++) {
@@ -161,7 +143,6 @@ public final class GeometryFold {
 			return text.toString();
 		}
 
-		
 		private String source(int from, int to) {
 			StringBuilder text = new StringBuilder();
 			for (int index = this.at.get(from); index < this.at.get(to); index++) {
@@ -171,7 +152,6 @@ public final class GeometryFold {
 			return text.toString();
 		}
 
-		
 		private Map<String, String> uniforms() throws Refused {
 			Map<String, String> uniforms = new HashMap<>();
 			for (Statement statement : fileScope()) {
@@ -211,7 +191,6 @@ public final class GeometryFold {
 			return uniforms;
 		}
 
-		
 		private List<Statement> fileScope() throws Refused {
 			List<Statement> statements = new ArrayList<>();
 			int start = 0;
@@ -248,7 +227,6 @@ public final class GeometryFold {
 		}
 	}
 
-	
 	private static final class Stage {
 
 		private final Code code;
@@ -257,31 +235,22 @@ public final class GeometryFold {
 
 		private final Map<String, Varying> outputs = new LinkedHashMap<>();
 
-		
 		private final Map<String, String> copies = new LinkedHashMap<>();
 
-		
 		private final Set<String> wide = new LinkedHashSet<>();
 
-		
 		private final Map<String, Rate> rates = new LinkedHashMap<>();
 
-		
 		private String counter;
 
-		
 		private String positionLocal;
 
-		
 		private final List<String> prologue = new ArrayList<>();
 
-		
 		private final Map<String, String> uniforms;
 
-		
 		private final Map<String, String> reads = new LinkedHashMap<>();
 
-		
 		private final Set<String> declared = new HashSet<>();
 
 		private Stage(Code code) throws Refused {
@@ -352,7 +321,6 @@ public final class GeometryFold {
 			main(body, end);
 		}
 
-		
 		private static int strip(String layout) {
 			boolean strip = false;
 			int vertices = -1;
@@ -370,7 +338,6 @@ public final class GeometryFold {
 			return strip ? vertices : -1;
 		}
 
-		
 		private void declare(Statement statement) {
 			int start = statement.start();
 			if (this.code.is(start, "struct")) {
@@ -393,14 +360,12 @@ public final class GeometryFold {
 			}
 		}
 
-		
 		private static boolean plain(Varying varying) {
 			List<String> qualifiers = varying.qualifiers();
 			return !qualifiers.contains("flat") && !qualifiers.contains("noperspective")
 					&& !qualifiers.contains("centroid");
 		}
 
-		
 		private void varying(Statement statement) throws Refused {
 			int start = statement.start();
 			int end = statement.end();
@@ -450,7 +415,6 @@ public final class GeometryFold {
 			}
 		}
 
-		
 		private void main(int body, int end) throws Refused {
 			int index = body;
 			while (!this.code.is(index, "for")) {
@@ -477,7 +441,6 @@ public final class GeometryFold {
 			}
 		}
 
-		
 		private int statementEnd(int from, int end) throws Refused {
 			for (int index = from; index < end; index++) {
 				if (this.code.is(index, "(") || this.code.is(index, "[")) {
@@ -495,9 +458,8 @@ public final class GeometryFold {
 			throw new Refused("does more before its loop than work out a value for the whole triangle");
 		}
 
-		
 		private void before(int from, int semicolon) throws Refused {
-			// The counter of the loop that follows, declared without a value: it holds nothing yet.
+
 			if (this.counter == null && this.code.is(from, "int") && this.code.identifier(from + 1)
 					&& from + 2 == semicolon) {
 				this.counter = this.code.text(from + 1);
@@ -559,7 +521,6 @@ public final class GeometryFold {
 			this.prologue.add(this.code.source(from, semicolon) + ";");
 		}
 
-		
 		private Rate rate(int from, int to) {
 			if (to - from != RATE_TOKENS || !this.code.is(from, "max") || !this.code.is(from + 1, "(")
 					|| !this.code.is(from + 2, "max") || !this.code.is(from + 3, "(")) {
@@ -588,7 +549,7 @@ public final class GeometryFold {
 
 			Varying of = this.inputs.get(edges[0].of());
 			Varying over = this.inputs.get(edges[0].over());
-			// The three edges of the triangle, each once: corners 0 and 1, 0 and 2, 1 and 2.
+
 			int triangle = (1 << 1) | (1 << 2) | (1 << 5);
 			if (spanned != triangle || of == null || over == null || !plain(of) || !plain(over)
 					|| edges[0].of().equals(edges[0].over()) || !RATE_OF.contains(of.type())
@@ -599,7 +560,6 @@ public final class GeometryFold {
 			return new Rate(of.type(), edges[0].of(), edges[0].over(), over.type());
 		}
 
-		
 		private Edge edge(int at) {
 			for (int index = 0; index < EDGE.length; index++) {
 				if (EDGE[index] != null && !this.code.is(at + index, EDGE[index])) {
@@ -636,7 +596,6 @@ public final class GeometryFold {
 			};
 		}
 
-		
 		private int loop(int at, int end) throws Refused {
 			boolean declaredHere = this.code.is(at + 2, "int");
 			int first = declaredHere ? at + 3 : at + 2;
@@ -672,8 +631,6 @@ public final class GeometryFold {
 					continue;
 				}
 
-				// The same hand on through a local: the corner's position is read into it and
-				// written out of it with nothing in between, anything else being refused below.
 				if (!position && this.positionLocal == null && this.code.is(index, "vec4")
 						&& this.code.identifier(index + 1) && this.code.join(index + 2, index + 10)
 								.equals("= gl_in [ " + counter + " ] . gl_Position ;")) {
@@ -716,7 +673,6 @@ public final class GeometryFold {
 		}
 	}
 
-	
 	private static String rewrite(Stage stage, Code code) throws Refused {
 		Set<String> spelled = new HashSet<>();
 		for (GlslLexer.Token token : code.all) {
@@ -726,8 +682,7 @@ public final class GeometryFold {
 		}
 
 		for (String name : stage.inputs.keySet()) {
-			// Copied into an output of its own name, which is the fragment stage's input already:
-			// the vertex stage's output reaches it under that name with nothing to rename.
+
 			if (spelled.contains(name) && !name.equals(stage.copies.get(name))) {
 				throw new Refused("hands on " + name + ", a name the fragment stage already spells");
 			}
@@ -799,8 +754,7 @@ public final class GeometryFold {
 
 			String input = stage.copies.get(name);
 			if (name.equals(input)) {
-				// The stage hands the corner on under the name it came in by, as a block of one
-				// name on both sides flattens to (Eclipse's DATA): the declaration stands as it is.
+
 				continue;
 			}
 
@@ -813,8 +767,6 @@ public final class GeometryFold {
 			}
 		}
 
-		// A copied input is interpolated under the fragment stage's declaration of the name it is
-		// copied to, so that declaration is the one a rate over it has to find plain.
 		for (Rate rate : stage.rates.values()) {
 			for (Map.Entry<String, String> copy : stage.copies.entrySet()) {
 				if (!copy.getValue().equals(rate.of()) && !copy.getValue().equals(rate.over())) {
@@ -841,8 +793,7 @@ public final class GeometryFold {
 
 			String type = input.getValue().type();
 			List<String> qualifiers = input.getValue().qualifiers();
-			// An integer reaching a fragment stage has to be flat, which a stage between the two
-			// was free not to say.
+
 			if (!qualifiers.contains("flat") && (type.startsWith("int") || type.startsWith("uint")
 					|| type.startsWith("ivec") || type.startsWith("uvec"))) {
 				head.append("flat ");
@@ -858,9 +809,7 @@ public final class GeometryFold {
 		}
 
 		for (Rate rate : signatures.values()) {
-			// The length of the gradient of the first varying over the plane the second one spans,
-			// from how far one pixel step moves each: the step pair's Gram matrix inverted, as a
-			// quadratic form of the first varying's two steps.
+
 			String of = rate.type();
 			String over = rate.overType();
 			head.append(of).append(' ').append(RATE).append('(').append(of).append(" ofAx, ")

@@ -23,10 +23,6 @@ public abstract class BlockEntityRenderDispatcherMixin {
 			SubmitNodeCollector collector, CameraRenderState camera, CallbackInfo callback) {
 		BlockEntityGeometry.submitting(true);
 
-		// The number is the pack's for the BLOCK STATE this thing stands in, out of block.properties
-		// and not out of a table of its own, which is CoreVK's answer as well
-		// (MixinBlockEntityRenderDispatcher.java:61). Raw, where the terrain mesh carries the same
-		// table packed: the shader unpacks the terrain's own word and reads this one as it stands.
 		EntityIdentifiers.blockEntity(
 				BlockStateIds.id(((BlockEntityRenderStateAccessor) state).corevk$blockState()));
 	}

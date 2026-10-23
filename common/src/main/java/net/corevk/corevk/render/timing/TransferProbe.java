@@ -24,7 +24,6 @@ public final class TransferProbe {
 
 	private static final Map<String, int[]> COUNTS = new HashMap<>();
 
-	
 	private static Boolean armed;
 
 	private static boolean announced;
@@ -34,7 +33,6 @@ public final class TransferProbe {
 	private TransferProbe() {
 	}
 
-	
 	public static void seen(String call, Supplier<String> open) {
 		if (!armed()) {
 			return;

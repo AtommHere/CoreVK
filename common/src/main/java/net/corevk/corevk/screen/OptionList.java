@@ -38,14 +38,11 @@ import java.util.Properties;
 
 public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 
-	
 	private static final int ROW_HEIGHT = 24;
 
-	
 	private static final int ROW_WIDTH = 400;
 	private static final int ROW_MARGIN = 12;
 
-	
 	private static final Identifier IN_WORLD_BACKGROUND =
 			Identifier.withDefaultNamespace("textures/gui/inworld_menu_background.png");
 
@@ -71,12 +68,10 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 				getBottom() + (int) scrollAmount(), getWidth(), getHeight(), 32, 32);
 	}
 
-	
 	@Override
 	protected void extractListSeparators(GuiGraphicsExtractor graphics) {
 	}
 
-	
 	public void show(PackMenu menu, String pageName) {
 		clearEntries();
 		setScrollAmount(0);
@@ -86,9 +81,7 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 		MenuPage page = sub
 				? menu.page(pageName).orElseGet(menu::main)
 				: menu.main();
-		// The pack's own name in bold on its first page, its own name for the page on any other, which
-		// is what CoreVK puts here. A page the pack no longer lays out keeps the back button, since that
-		// button is then the only way off it.
+
 		Component heading = sub
 				? ScreenText.fromPack(this.host.lang().page(pageName))
 				: ScreenText.fromPack(menu.packName()).withStyle(ChatFormatting.BOLD);
@@ -97,7 +90,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 		addCells(page.columns(), page.slots(), menu.profileNames());
 	}
 
-	
 	public void refresh() {
 		this.cells.forEach(cell -> cell.init(this.host));
 	}
@@ -112,7 +104,7 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 
 			if (row.size() >= columns) {
 				addEntry(new RowEntry(this.host, row));
-				// A new list rather than a cleared one: the entry above keeps the one it was given.
+
 				row = new ArrayList<>();
 			}
 		}
@@ -121,7 +113,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			return;
 		}
 
-		// Padded out to a full row, so that a last row of one does not draw one cell across the page.
 		while (row.size() < columns) {
 			row.add(new BlankWidget());
 		}
@@ -143,17 +134,14 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 		};
 	}
 
-	
 	public abstract static class BaseEntry extends ContainerObjectSelectionList.Entry<BaseEntry> {
 
 		protected BaseEntry() {
 		}
 	}
 
-	
 	public static final class RowEntry extends BaseEntry {
 
-		
 		private static final int CELL_GAP = 2;
 		private static final int ROW_TRIM = 3;
 
@@ -189,7 +177,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			}
 		}
 
-		
 		private int under(int mouseX) {
 			float across = (float) Mth.clamp(mouseX - this.lastX, 0, this.lastWidth) / this.lastWidth;
 
@@ -217,13 +204,11 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 		}
 	}
 
-	
 	public static final class HeaderEntry extends BaseEntry {
 
 		private static final Component BACK = Component.literal("< ")
 				.append(CommonComponents.GUI_BACK.copy().withStyle(ChatFormatting.ITALIC));
 
-		
 		private static final MutableComponent RESET = Component
 				.translatable(ScreenText.RESET).withStyle(ChatFormatting.YELLOW);
 
@@ -236,14 +221,11 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 				.translatable(ScreenText.EXPORT_TOOLTIP)
 				.withStyle(style -> style.withColor(TextColor.fromRgb(0xFFfc7d3d)));
 
-		
 		private static final int MIN_BUTTON_WIDTH = 42;
 		private static final int BUTTON_HEIGHT = 16;
 
-		
 		private static final int ICON_BUTTON_WIDTH = 15;
 
-		
 		private static final int DIVIDER = 0x66BEBEBE;
 
 		private final ScreenHost host;
@@ -286,8 +268,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 
 			graphics.fill(x - 3, bottom - 2, x + width, bottom - 1, DIVIDER);
 
-			// Scrolled rather than cut, which is what the game does with a name that will not fit and
-			// what keeps a pack's own long page names readable.
 			graphics.textRenderer().acceptScrolling(this.heading, x + width / 2, x + 5,
 					(x + width) - 10 - this.tools.width(), y + 5, y + 15);
 
@@ -304,7 +284,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			tooltip(graphics, font, this.exportButton, EXPORT_TOOLTIP);
 		}
 
-		
 		private void tooltip(GuiGraphicsExtractor graphics, Font font, WidgetRow.Element element,
 				Component text) {
 			if (!element.isHovered() && !element.isFocused()) {
@@ -323,7 +302,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			return true;
 		}
 
-		
 		private boolean reset() {
 			ScreenDraw.clickSound();
 			this.host.resetSettings();
@@ -331,7 +309,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			return true;
 		}
 
-		
 		private boolean importSettings() {
 			ScreenDraw.clickSound();
 			if (!canOpenDialog()) {
@@ -360,7 +337,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			return true;
 		}
 
-		
 		private boolean exportSettings() {
 			ScreenDraw.clickSound();
 			if (!canOpenDialog()) {
@@ -402,7 +378,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			}
 		}
 
-		
 		private boolean canOpenDialog() {
 			if (!Desktop.fullscreen()) {
 				return true;
@@ -440,7 +415,6 @@ public final class OptionList extends WidgetList<OptionList.BaseEntry> {
 			return this.tools.keyPressed(event);
 		}
 
-		
 		@Override
 		public List<? extends NarratableEntry> narratables() {
 			return List.of();

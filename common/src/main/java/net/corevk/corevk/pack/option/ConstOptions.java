@@ -10,7 +10,6 @@ public final class ConstOptions {
 	private ConstOptions() {
 	}
 
-	
 	public static boolean isOption(String name) {
 		return NAMES.contains(name);
 	}

@@ -10,12 +10,10 @@ import java.util.Optional;
 
 public class ValueWidget extends OptionWidget {
 
-	
 	private static final int VALUE_BLUE = 0xFF6688ff;
 
 	protected final MenuOption option;
 
-	
 	protected int index;
 
 	private String applied = "";
@@ -37,8 +35,6 @@ public class ValueWidget extends OptionWidget {
 		measure(0);
 		drawWithValue(graphics, hovered || isFocused());
 
-		// Off the cell's own corner when the keyboard brought us here, since there is no mouse to
-		// hang it on and it would otherwise be drawn wherever the mouse was last left.
 		if (this.usedKeyboard) {
 			tryTooltip(graphics, bounds().right(), bounds().position().y(), hovered);
 		} else {
@@ -51,7 +47,6 @@ public class ValueWidget extends OptionWidget {
 		return this.option.name();
 	}
 
-	
 	protected final String value() {
 		return this.option.at(this.index);
 	}
@@ -67,7 +62,6 @@ public class ValueWidget extends OptionWidget {
 		host().values().queue(this.option.name(), value());
 	}
 
-	
 	private void step(int by) {
 		this.index = Math.floorMod(this.index + by, Math.max(1, this.option.size()));
 		queue();

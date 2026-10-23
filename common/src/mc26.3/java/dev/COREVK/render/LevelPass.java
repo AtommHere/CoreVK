@@ -22,7 +22,6 @@ import java.util.function.Supplier;
 
 public final class LevelPass implements RenderPass {
 
-	
 	private static @Nullable LevelPass current;
 
 	private final @Nullable LevelPass under;
@@ -43,7 +42,6 @@ public final class LevelPass implements RenderPass {
 		this.opener = opener;
 	}
 
-	
 	public static RenderPass open(RenderPass first, GpuTextureView colour,
 			@Nullable GpuTextureView depth, Supplier<RenderPass> opener) {
 		LevelPass pass = new LevelPass(current, first, colour, depth, opener);
@@ -51,17 +49,14 @@ public final class LevelPass implements RenderPass {
 		return pass;
 	}
 
-	
 	public GpuTextureView colour() {
 		return this.colour;
 	}
 
-	
 	public @Nullable GpuTextureView depth() {
 		return this.depth;
 	}
 
-	
 	public static void suspendCurrent() {
 		LevelPass pass = current;
 		if (pass != null) {
@@ -69,7 +64,6 @@ public final class LevelPass implements RenderPass {
 		}
 	}
 
-	
 	public static boolean holding() {
 		LevelPass pass = current;
 		return pass != null && pass.real != null;
@@ -241,8 +235,7 @@ public final class LevelPass implements RenderPass {
 		suspend();
 		this.closed = true;
 		if (current == this) {
-			// The one it was opened over, unless that one has been closed meanwhile, which a
-			// storage drawn across the level's end would see.
+
 			LevelPass next = this.under;
 			while (next != null && next.closed) {
 				next = next.under;

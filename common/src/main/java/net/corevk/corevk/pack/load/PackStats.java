@@ -56,8 +56,6 @@ public final class PackStats {
 		this.lines = builder.lines;
 		this.options = index.count();
 
-		// A setting only counts as gating code if some conditional actually tests it. Packs
-		// declare a good many that nothing reads.
 		int binary = 0;
 		int multi = 0;
 		int max = 0;
@@ -88,8 +86,6 @@ public final class PackStats {
 			builder.files++;
 			builder.filesByExtension.merge(extensionOf(source.rel(file)), 1, Integer::sum);
 
-			// Nesting is counted from the top of each file. A file that opens a conditional and
-			// leaves it open does not leak that state into the next one.
 			int depth = 0;
 			for (String raw : source.readLines(file)) {
 				builder.lines++;
@@ -153,7 +149,7 @@ public final class PackStats {
 		Matcher identifier = IDENTIFIER.matcher(stripComment(expression));
 		while (identifier.find()) {
 			String name = identifier.group();
-			// "defined" is the operator, not something the pack declares.
+
 			if (!name.equals("defined")) {
 				builder.symbols.add(name);
 			}
@@ -226,7 +222,6 @@ public final class PackStats {
 		return new TreeMap<>(this.filesByExtension);
 	}
 
-	
 	public int stageFiles() {
 		return this.filesByExtension.entrySet().stream()
 				.filter(entry -> ProgramStage.fromExtension(entry.getKey()).isPresent())
@@ -234,12 +229,10 @@ public final class PackStats {
 				.sum();
 	}
 
-	
 	public int includeFiles() {
 		return this.filesByExtension.getOrDefault("glsl", 0);
 	}
 
-	
 	public String majorityVersion() {
 		return this.versions.entrySet().stream()
 				.max(Map.Entry.comparingByValue())
@@ -247,7 +240,6 @@ public final class PackStats {
 				.orElse("none");
 	}
 
-	
 	public String tsvLine(String packName) {
 		return String.join("\t", List.of(packName,
 				Integer.toString(this.files),

@@ -12,10 +12,8 @@ import java.util.Optional;
 
 public final class ProfileWidget extends OptionWidget {
 
-	
 	private static final String NAME = "profile";
 
-	
 	private static final int LABEL_ROOM = 16;
 
 	private static final Component LABEL = Component.translatable(ScreenText.PROFILE);
@@ -24,7 +22,6 @@ public final class ProfileWidget extends OptionWidget {
 			.translatable(ScreenText.PROFILE_CUSTOM)
 			.withStyle(ChatFormatting.YELLOW);
 
-	
 	private final List<String> profiles;
 
 	private Component profileLabel = CUSTOM;
@@ -60,7 +57,6 @@ public final class ProfileWidget extends OptionWidget {
 		return this.profileLabel;
 	}
 
-	
 	private boolean step(int by) {
 		if (this.profiles.isEmpty()) {
 			return false;

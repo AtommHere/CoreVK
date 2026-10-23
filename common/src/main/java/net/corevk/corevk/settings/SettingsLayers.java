@@ -14,7 +14,6 @@ import java.util.Set;
 
 public final class SettingsLayers {
 
-	
 	private static final String DIRECTORY = "corevk";
 
 	private static final String OPTIONS = "options.txt";
@@ -22,12 +21,10 @@ public final class SettingsLayers {
 	private SettingsLayers() {
 	}
 
-	
 	public static Path file(Path gameDirectory) {
 		return gameDirectory.resolve(DIRECTORY).resolve(OPTIONS);
 	}
 
-	
 	public static Map<String, OptionValue> forced(Path gameDirectory) throws IOException {
 		Path file = file(gameDirectory);
 		if (!Files.isRegularFile(file)) {
@@ -49,14 +46,12 @@ public final class SettingsLayers {
 		return Collections.unmodifiableMap(chosen);
 	}
 
-	
 	private static String text(Path file) throws IOException {
 		String text = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
 
 		return text.startsWith("\uFEFF") ? text.substring(1) : text;
 	}
 
-	
 	public static Resolved resolve(SettingsFile.Stored saved, Map<String, OptionValue> forced) {
 		Map<String, OptionValue> chosen = new LinkedHashMap<>();
 		saved.values().forEach((name, value) -> chosen.put(name, OptionValue.parse(value)));
@@ -75,7 +70,6 @@ public final class SettingsLayers {
 				Collections.unmodifiableSet(forcedNames));
 	}
 
-	
 	public record Resolved(Map<String, OptionValue> chosen, String profile,
 			Set<String> forcedNames) {
 	}

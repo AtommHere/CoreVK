@@ -37,14 +37,9 @@ public abstract class EntityRenderDispatcherMixin {
 			CallbackInfo callback) {
 		EntityIdentifiers.entity(0);
 
-		// The held item goes down with the entity that was holding it, and not at the end of the item
-		// itself: an item is submitted inside this call and its own window closes first, so leaving
-		// this out would keep the last item's number over everything after it. CoreVK drops the two
-		// together here for the same reason (MixinEntityRenderDispatcher.java:88-89).
 		EntityIdentifiers.item(0);
 	}
 
-	
 	@WrapWithCondition(method = "submit",
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;"
@@ -55,7 +50,6 @@ public abstract class EntityRenderDispatcherMixin {
 		return !TerrainDraw.shadowMapServed();
 	}
 
-	
 	private static int corevk$identify(EntityRenderState state) {
 		if (state instanceof ZombieVillagerRenderState villager && villager.isConverting
 				&& PackNameIds.namesConvertingVillager()) {

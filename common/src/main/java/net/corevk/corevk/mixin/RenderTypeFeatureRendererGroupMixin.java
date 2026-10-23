@@ -29,11 +29,9 @@ public abstract class RenderTypeFeatureRendererGroupMixin {
 	@Final
 	private List<StagedVertexBuffer.Draw> draws;
 
-	
 	@Shadow
 	private StagedVertexBuffer.Draw lastDraw;
 
-	
 	@Inject(method = "getVertexBuilder", at = @At("HEAD"), require = 1)
 	private void corevk$breakTheRun(RenderType renderType,
 			CallbackInfoReturnable<VertexConsumer> callback) {
@@ -67,8 +65,6 @@ public abstract class RenderTypeFeatureRendererGroupMixin {
 			return found;
 		}
 
-		// Minus one rather than a search for a later match with the right origin: the two are the
-		// same picture and one of them is a draw more, on a pair that is rare to begin with.
 		return ((BlockEntityOrigin) this.draws.get(found)).corevk$fromBlockEntity()
 				== BlockEntityGeometry.building() ? found : -1;
 	}

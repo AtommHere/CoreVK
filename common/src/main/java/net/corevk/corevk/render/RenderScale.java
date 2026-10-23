@@ -33,7 +33,6 @@ import java.util.Optional;
 
 public final class RenderScale {
 
-	
 	private static final int SMALLEST = PackFile.MIN_RENDER_SCALE;
 	private static final int WHOLE = PackFile.MAX_RENDER_SCALE;
 
@@ -42,7 +41,6 @@ public final class RenderScale {
 
 	private static final String SAMPLER = "InSampler";
 
-	
 	private static final int VERTICES = 6;
 	private static final float[] QUAD = {
 			0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
@@ -52,7 +50,6 @@ public final class RenderScale {
 			1.0F, 1.0F, 0.0F, 1.0F, 1.0F,
 			0.0F, 1.0F, 0.0F, 0.0F, 1.0F };
 
-	
 	private static final GpuFormat FORMAT = GpuFormat.RGBA8_UNORM;
 
 	private static final Identifier VERTEX_ID =
@@ -78,7 +75,6 @@ public final class RenderScale {
 			}
 			""";
 
-	
 	private static final String UPSCALE = """
 			#version 460 core
 
@@ -206,7 +202,6 @@ public final class RenderScale {
 			}
 			""";
 
-	
 	private static final String SHARPEN = """
 			#version 460 core
 
@@ -240,7 +235,6 @@ public final class RenderScale {
 			}
 			""";
 
-	
 	private static final String BLIT = """
 			#version 460 core
 
@@ -271,7 +265,6 @@ public final class RenderScale {
 		return VERTEX_ID.equals(id) ? VERTEX : null;
 	});
 
-	
 	private static final class Pass {
 
 		private final Identifier fragment;
@@ -301,10 +294,7 @@ public final class RenderScale {
 			} catch (GpuDeviceLossException e) {
 				throw e;
 			} catch (RuntimeException e) {
-				// A stage the driver refuses throws out of precompilePipeline rather than coming back
-				// invalid, which is what MoltenVK does with one Metal will not build, and endWorld
-				// runs outside every catch of the frame. The same latch as an invalid pipeline, so the
-				// fallback and the abandonment below it take over from here.
+
 				CoreVK.logger().error("The {} pass of the render scale did not compile",
 						this.fragment.getPath(), e);
 			}
@@ -320,21 +310,16 @@ public final class RenderScale {
 	private static final Pass RCAS = new Pass(SHARPEN_ID);
 	private static final Pass BILINEAR = new Pass(BLIT_ID);
 
-	
 	private static volatile int percent = WHOLE;
 
-	
 	private static boolean worldComing;
 
-	
 	private static boolean swapped;
 
-	
 	static boolean upscaling() {
 		return swapped;
 	}
 
-	
 	private static GpuTexture fullColor;
 	private static GpuTextureView fullColorView;
 	private static GpuTexture fullDepth;
@@ -342,21 +327,16 @@ public final class RenderScale {
 	private static int fullWidth;
 	private static int fullHeight;
 
-	
 	private static TextureTarget scaled;
 
-	
 	private static TargetSurface upscaled;
 
 	private static GpuBuffer quad;
 
-	
 	private static final TemporalAccumulation TEMPORAL = new TemporalAccumulation();
 
-	
 	private static boolean outlineScaled;
 
-	
 	private static volatile boolean refusedAtSize;
 	private static int refusedWidth;
 	private static int refusedHeight;
@@ -364,12 +344,9 @@ public final class RenderScale {
 	private RenderScale() {
 	}
 
-	
 	public static void wanted(int asked) {
 		int clamped = Math.clamp(asked, SMALLEST, WHOLE);
-		// A new number is a new question, so an allocation refused at the old size does not hold
-		// the answer to this one. Lifted here and not in standDown, whose caller is sometimes the
-		// very failure that latched it: lifted there, a refused size would be retried every frame.
+
 		if (clamped != percent) {
 			refusedAtSize = false;
 		}
@@ -377,34 +354,23 @@ public final class RenderScale {
 		percent = clamped;
 	}
 
-	
 	public static void recover(RenderTarget main) {
 		if (swapped && main != null) {
 			restore(main);
 		}
 	}
 
-	
 	public static void frameIntent(boolean rendersWorld) {
 		worldComing = rendersWorld;
 	}
 
-	
 	public static boolean beginWorld(RenderTarget main) {
 		if (main == null) {
 			return false;
 		}
 
-		// One read of the volatile for the whole decision: the gate and the two sizes have to
-		// answer the same number, and three reads of a field another thread writes may not.
 		int asked = percent;
 
-		// Every road that answers no from here on stands down, and the reason is the same on each:
-		// the outline target follows the scale by hand, so a road that forgets it leaves the
-		// outline at a size nothing else will correct. The broken road is here for that reason,
-		// or the very failure that stopped scaling would freeze the outline scaled for good; and a
-		// world no pack draws stands down with them, the promise of the None road being that the
-		// game is left untouched.
 		if (asked >= WHOLE || !worldComing || !PackChain.drawingPack() || BILINEAR.refused) {
 			standDown(main);
 
@@ -447,7 +413,6 @@ public final class RenderScale {
 		return true;
 	}
 
-	
 	public static void endWorld(RenderTarget main, CommandEncoder encoder) {
 		if (!swapped || main == null) {
 			return;
@@ -461,9 +426,7 @@ public final class RenderScale {
 		RenderPipeline rcas = easu == null ? null : RCAS.get(device);
 		if (easu != null && rcas != null && upscaled != null) {
 			draw(encoder, device, easu, world, upscaled.view(), FilterMode.LINEAR, UPSCALE_LABEL);
-			// Between the two and not after the sharpen: RCAS raises local contrast, and folding a
-			// sharpened frame into a sharpened history sharpens the same edge once per frame it
-			// survives. Sharpening last is also what AMD's own chain does.
+
 			draw(encoder, device, rcas, sharpenFrom(encoder, device, main), fullColorView(main),
 					FilterMode.NEAREST, SHARPEN_LABEL);
 
@@ -478,16 +441,12 @@ public final class RenderScale {
 			return;
 		}
 
-		// Nothing compiled at all, so nothing can put the world under the interface: the scale
-		// is off for the session, BILINEAR's own latch being what beginWorld refuses on, and this
-		// frame's interface stands on whatever the window-sized colour texture held.
 		CoreVK.logger().error("The {}% render scale is abandoned for this session: no upscale "
 				+ "pipeline compiles, so a world rendered small could never reach the window again",
 				percent);
 		release();
 	}
 
-	
 	public static void close() {
 		if (swapped) {
 			Minecraft minecraft = Minecraft.getInstance();
@@ -508,7 +467,6 @@ public final class RenderScale {
 		}
 	}
 
-	
 	private static void standDown(RenderTarget main) {
 		if (outlineScaled) {
 			resizeOutline(main.width, main.height, false);
@@ -528,12 +486,9 @@ public final class RenderScale {
 			upscaled = null;
 		}
 
-		// With them and not on its own latch: the history is the size of the window, so whatever
-		// frees the window-sized pair here has the same reason to free that one.
 		TEMPORAL.release();
 	}
 
-	
 	private static void restore(RenderTarget main) {
 		RenderTargetAccessor accessor = (RenderTargetAccessor) main;
 		accessor.corevk$colorTexture(fullColor);
@@ -549,12 +504,10 @@ public final class RenderScale {
 		swapped = false;
 	}
 
-	
 	private static GpuTextureView fullColorView(RenderTarget main) {
 		return ((RenderTargetAccessor) main).corevk$colorTextureView();
 	}
 
-	
 	private static boolean ensure(int width, int height, int outWidth, int outHeight) {
 		if (refusedAtSize && (width != refusedWidth || height != refusedHeight)) {
 			refusedAtSize = false;
@@ -600,7 +553,6 @@ public final class RenderScale {
 				width, height, outWidth, outHeight, percent);
 	}
 
-	
 	private static void resizeOutline(int width, int height, boolean scaledNow) {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft == null || minecraft.levelRenderer == null) {
@@ -616,13 +568,10 @@ public final class RenderScale {
 		outlineScaled = scaledNow;
 	}
 
-	
 	private static GpuTextureView sharpenFrom(CommandEncoder encoder, GpuDevice device,
 			RenderTarget main) {
 		if (!TemporalAccumulation.wanted() || scaled == null) {
-			// Given back here and not left to the release below: that one is only reached when the
-			// scale stands down altogether, so a player who turns the fold off while still scaling
-			// would keep two window-sized images of half floats for the rest of the session.
+
 			TEMPORAL.release();
 
 			return upscaled.view();
@@ -634,7 +583,6 @@ public final class RenderScale {
 		return folded == null ? upscaled.view() : folded;
 	}
 
-	
 	private static void draw(CommandEncoder encoder, GpuDevice device, RenderPipeline pipeline,
 			GpuTextureView from, GpuTextureView into, FilterMode filter, String label) {
 		try (RenderPass pass = encoder.createRenderPass(() -> label, into, Optional.empty())) {

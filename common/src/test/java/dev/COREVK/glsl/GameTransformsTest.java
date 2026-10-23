@@ -18,7 +18,6 @@ class GameTransformsTest {
 
 	private static final String INCLUDE = "/assets/minecraft/shaders/include/dynamictransforms.glsl";
 
-	
 	private static final Pattern MEMBER = Pattern.compile("^\\s*(\\w+)\\s+\\w+\\s*;");
 
 	@Test

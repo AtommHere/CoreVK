@@ -7,12 +7,10 @@ public final class TextureUsage {
 	private TextureUsage() {
 	}
 
-	
 	public static boolean storageRequested() {
 		return STORAGE_REQUESTED.get();
 	}
 
-	
 	static void requestStorage(boolean requested) {
 		STORAGE_REQUESTED.set(requested);
 	}

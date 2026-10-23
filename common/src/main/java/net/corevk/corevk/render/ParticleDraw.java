@@ -34,28 +34,22 @@ import java.util.Set;
 
 public final class ParticleDraw extends FamilyDraw {
 
-	
 	private static volatile boolean wanted;
 
-	
 	private static final AlphaTest CUTOUT = AlphaTest.ONE_TENTH;
 
-	
 	record Element(RenderPipeline pipeline, String element, String program, boolean afterDeferred) {
 
-		
 		private PackProgram.GeometryElement asked() {
 			return new PackProgram.GeometryElement(this.element, this.program, CUTOUT,
 					VertexInputs.PARTICLE, !this.afterDeferred);
 		}
 
-		
 		RenderStage stage() {
 			return RenderStage.PARTICLES;
 		}
 	}
 
-	
 	private static final Map<Boolean, Element> ELEMENTS = new LinkedHashMap<>();
 
 	static {
@@ -77,36 +71,26 @@ public final class ParticleDraw extends FamilyDraw {
 	private final boolean chainRuns;
 	private final ColorTargets targets;
 
-	
 	private final Map<String, ParticleProgram> programs = new LinkedHashMap<>();
 
-	
 	private volatile boolean read;
 
-	
 	private final Set<String> refused = new LinkedHashSet<>();
 
-	
 	private final Set<RenderPipeline> foreign = new LinkedHashSet<>();
 
-	
 	private static final String ATLAS_SAMPLER = "Sampler0";
 
-	
 	private ParticleProgram drawing;
 	private RenderPipeline standsIn;
 	private RenderPipeline bound;
 
-	
 	private RenderPass pass;
 
-	
 	private boolean binding;
 
-	
 	private boolean handedOurs;
 
-	
 	private RenderPassDescriptor descriptor;
 
 	ParticleDraw(PackChain owner, Path packPath, String place, Map<String, OptionValue> chosen,
@@ -125,22 +109,18 @@ public final class ParticleDraw extends FamilyDraw {
 		this.targets = targets;
 	}
 
-	
 	static void wanted(boolean asked) {
 		wanted = asked;
 	}
 
-	
 	static boolean wanted() {
 		return wanted;
 	}
 
-	
 	void prefetch() {
 		prefetch(null);
 	}
 
-	
 	@Override
 	void prefetch(OpenedPack shared) {
 		if (!this.read && wanted()) {
@@ -148,7 +128,6 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static RenderPipeline group(boolean translucent, GpuTextureView colour,
 			GpuTextureView depth) {
 		ParticleDraw draw = PackChain.particles();
@@ -169,14 +148,12 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static RenderPassDescriptor descriptor() {
 		ParticleDraw draw = PackChain.particles();
 
 		return draw == null ? null : draw.descriptor;
 	}
 
-	
 	public static void opened(RenderPass pass) {
 		ParticleDraw draw = PackChain.particles();
 		if (draw != null && draw.drawing != null) {
@@ -184,7 +161,6 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 	}
 
-	
 	@SuppressWarnings("ReferenceEquality")
 	public static RenderPipeline pipeline(RenderPass pass, RenderPipeline game) {
 		ParticleDraw draw = PackChain.particles();
@@ -193,7 +169,7 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 
 		draw.handedOurs = true;
-		// Ours coming back around, re-set by a caller that kept a reference: nothing to swap.
+
 		if (game == draw.bound) {
 			return game;
 		}
@@ -202,17 +178,12 @@ public final class ParticleDraw extends FamilyDraw {
 			return draw.bound;
 		}
 
-		// The pack took no draw buffer here, so the pass is the renderer's own and the draw's
-		// pipeline binds into it as it always did. Nothing is lost and nothing is said.
 		if (draw.descriptor == null) {
 			draw.handedOurs = false;
 
 			return game;
 		}
 
-		// The binding read directly rather than through the array's length: the game hands the
-		// builder's raw sixteen slots through, so the array is never short and its entries are
-		// where the nulls live.
 		GpuDevice device = RenderSystem.tryGetDevice();
 		VertexFormat layout = game.getVertexFormatBinding(0);
 		RenderPipeline reshaped = device == null || layout == null
@@ -241,15 +212,10 @@ public final class ParticleDraw extends FamilyDraw {
 		return reshaped == null ? draw.bound : reshaped;
 	}
 
-	
 	public static void texture(RenderPass pass, String name, GpuTextureView view,
 			GpuSampler sampler) {
 		ParticleDraw draw = PackChain.particles();
-		// What the pass really got decides, as it does for the weather and for the sky. A foreign
-		// draw keeps its own pipeline wherever the pass allows it, which pipeline() answers just
-		// above and this would otherwise ignore: binding the pack's block over the game's shader is
-		// harmless in itself, the descriptor flush walking the layout of the pipeline really bound,
-		// but it makes this engine announce a first draw for a program that drew nothing.
+
 		if (draw == null || draw.drawing == null || draw.bound == null || !draw.handedOurs
 				|| pass != draw.pass || draw.binding || !ATLAS_SAMPLER.equals(name)) {
 			return;
@@ -264,7 +230,6 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static void endGroup() {
 		ParticleDraw draw = PackChain.particles();
 		if (draw != null) {
@@ -272,7 +237,6 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 	}
 
-	
 	private void forget() {
 		this.drawing = null;
 		this.standsIn = null;
@@ -282,7 +246,6 @@ public final class ParticleDraw extends FamilyDraw {
 		this.handedOurs = false;
 	}
 
-	
 	private boolean shown() {
 		return !this.chainRuns || this.owner.drawable();
 	}
@@ -299,10 +262,6 @@ public final class ParticleDraw extends FamilyDraw {
 			return null;
 		}
 
-		// The refusal this family shares with the weather, and here it applies to the translucent half
-		// alone: that is the only one the game sends to a target of its own, and only where the game's
-		// transparency chain is running. Beside a target the game composes itself afterwards, the
-		// pack's colour targets would be attached to a picture this engine has not got.
 		if (element.afterDeferred() && GameRender.particlesApart()) {
 			return refuse("fabulous", "the game's improved transparency is on, so it draws its "
 					+ "translucent particles into a target of its own that it composes afterwards, "
@@ -319,18 +278,13 @@ public final class ParticleDraw extends FamilyDraw {
 
 		RenderPipeline pipeline = program.prepare(device);
 		if (pipeline == null) {
-			// Lasting, and it is GeometryProgram that makes it so: a program that would not compile
-			// latches broken and answers null for the rest of the load. Keyed by the half, the two
-			// being two files on most packs.
+
 			return refuse("prepare:" + element.element(), "the " + element.element() + " program "
 					+ "refused to prepare, which it says on its own line above. That is settled for "
 					+ "as long as this pack is loaded, so it paints steadily rather than as a "
 					+ "flicker");
 		}
 
-		// Beside the pipeline and never as a second question, for the reason
-		// WeatherDraw.descriptor gives: a null descriptor is a pass this engine did not need or a
-		// pass it could not build, and only the first is safe to bind a pipeline of ours into.
 		RenderPassDescriptor pass = program.descriptor(colour, depth);
 		if (pass == null && !program.plain()) {
 			return refuse("unallocated:" + element.element(), "one of the pack's colour targets had "
@@ -346,7 +300,6 @@ public final class ParticleDraw extends FamilyDraw {
 		return pipeline;
 	}
 
-	
 	private RenderPipeline refuse(String reason, String why) {
 		if (this.refused.add(reason)) {
 			CoreVK.logger().warn("A group of particles went back to the game's own shader because {}",
@@ -356,7 +309,6 @@ public final class ParticleDraw extends FamilyDraw {
 		return null;
 	}
 
-	
 	private void read(OpenedPack shared) {
 		try {
 			List<PackProgram.GeometryElement> asked = ELEMENTS.values().stream().map(Element::asked).toList();
@@ -373,10 +325,6 @@ public final class ParticleDraw extends FamilyDraw {
 
 			announceOrdering();
 
-			// One half at a time, and it really is one at a time: they land on different sides of the
-			// deferred stage and share no target, so a place that cannot answer for one can answer
-			// for the other, and taking both down would be a choice nothing forced. Which one may go
-			// missing is settled by the fallback tree and is written at the head of this class.
 			for (Element element : ELEMENTS.values()) {
 				PackProgram.Loaded one = loaded.get(element.element());
 				if (one == null) {
@@ -402,7 +350,6 @@ public final class ParticleDraw extends FamilyDraw {
 		}
 	}
 
-	
 	private void announceOrdering() {
 		this.values.particleOrdering()
 				.filter(ordering -> !ordering.equalsIgnoreCase("mixed"))
@@ -413,7 +360,6 @@ public final class ParticleDraw extends FamilyDraw {
 						this.packPath.getFileName(), ordering));
 	}
 
-	
 	private List<ChainPlan.Attachment> writes(Element element, PackProgram.Loaded loaded) {
 		String servedBy = loaded.path().substring(loaded.path().lastIndexOf('/') + 1);
 		Optional<ChainPlan.Pass> geometry = this.plan.geometryOf(servedBy, element.afterDeferred());
@@ -433,13 +379,11 @@ public final class ParticleDraw extends FamilyDraw {
 		return pass.attachments();
 	}
 
-	
 	@Override
 	Collection<ParticleProgram> programs() {
 		return this.programs.values();
 	}
 
-	
 	@Override
 	void rotate() {
 		forget();

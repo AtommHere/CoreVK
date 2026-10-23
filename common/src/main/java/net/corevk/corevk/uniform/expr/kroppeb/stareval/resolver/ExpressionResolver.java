@@ -72,7 +72,7 @@ public class ExpressionResolver {
 				ExpressionElement paramExpression = inner.get(i);
 				Parameter param = paramTypes[i];
 				if (param.constant() && !(paramExpression instanceof NumberToken)) {
-					// not a constant
+
 					continue functions;
 				}
 
@@ -82,7 +82,7 @@ public class ExpressionResolver {
 					continue functions;
 				params[i] = expression;
 			}
-			// FIXME
+
 			if (result != null && f.priority() == resultFunction.priority()) {
 				throw new RuntimeException("Ambiguity, \n\told: " + TypedFunction.format(resultFunction, "") + "\n\tnew: " + TypedFunction.format(f, ""));
 			} else if (resultFunction == null || f.priority() >= resultFunction.priority()) {
@@ -195,7 +195,7 @@ public class ExpressionResolver {
 					this.log("[DEBUG] resolved constant %s to type %s", token.getNumber(), targetType);
 					return exp;
 				}
-				// TODO: implicit casting is split up too much
+
 				if (!allowImplicit) {
 					this.log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts",
 						token.getNumber(), exp.getType(), targetType);
@@ -213,8 +213,7 @@ public class ExpressionResolver {
 					throw new RuntimeException("Unknown variable: " + name);
 				if (type.equals(targetType)) {
 					log("[DEBUG] resolved variable %s to type %s", name, targetType);
-					// TODO: We should add a variable provider (and have this as default)
-					//       doing so would remove the need for a FunctionContext.
+
 					return new VariableExpression() {
 						@Override
 						public void evaluateTo(FunctionContext c, FunctionReturn r) {
@@ -232,7 +231,7 @@ public class ExpressionResolver {
 						name, type, targetType);
 					return null;
 				}
-				// TODO duplicate of above
+
 				castable = new VariableExpression() {
 					@Override
 					public void evaluateTo(FunctionContext c, FunctionReturn r) {

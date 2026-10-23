@@ -29,15 +29,12 @@ import org.jspecify.annotations.Nullable;
 @Mixin(WeatherEffectRenderer.class)
 public abstract class WeatherEffectRendererMixin {
 
-	
 	@Unique
 	private @Nullable RenderPipeline corevk$pipeline;
 
-	
 	@Unique
 	private @Nullable RenderPass corevk$opened;
 
-	
 	@Inject(method = "render(Lnet/minecraft/client/renderer/state/level/WeatherRenderState;"
 			+ "Lcom/mojang/renderpearl/api/commands/RenderPass;"
 			+ "Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)V",
@@ -48,7 +45,6 @@ public abstract class WeatherEffectRendererMixin {
 		}
 	}
 
-	
 	@ModifyVariable(method = "render(Lnet/minecraft/client/renderer/state/level/WeatherRenderState;"
 			+ "Lcom/mojang/renderpearl/api/commands/RenderPass;"
 			+ "Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)V",
@@ -62,8 +58,6 @@ public abstract class WeatherEffectRendererMixin {
 			return pass;
 		}
 
-		// The pipeline the pack's program is made from: the one that writes depth where the pack
-		// asks for it, which the game would have picked on 26.2 and no longer keeps.
 		RenderPipeline asked = WeatherDraw.depth() ? GamePipelines.weatherDepthWrite() : game;
 		this.corevk$pipeline = WeatherDraw.element(asked, level.colour(), level.depth());
 		RenderPassDescriptor descriptor =
@@ -78,7 +72,6 @@ public abstract class WeatherEffectRendererMixin {
 		return this.corevk$opened;
 	}
 
-	
 	@Inject(method = "render(Lnet/minecraft/client/renderer/state/level/WeatherRenderState;"
 			+ "Lcom/mojang/renderpearl/api/commands/RenderPass;"
 			+ "Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)V",
@@ -105,7 +98,6 @@ public abstract class WeatherEffectRendererMixin {
 		original.call(pass, chosen == null ? compiled : chosen);
 	}
 
-	
 	@WrapOperation(method = "renderWeather", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/renderpearl/api/commands/RenderPass;setUniform("

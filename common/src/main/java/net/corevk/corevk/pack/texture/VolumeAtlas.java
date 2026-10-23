@@ -5,7 +5,6 @@ import net.corevk.corevk.pack.model.PixelType;
 
 public final class VolumeAtlas {
 
-	
 	public static final int GUTTER = 1;
 
 	private final int width;
@@ -29,7 +28,6 @@ public final class VolumeAtlas {
 		this.clamp = clamp;
 	}
 
-	
 	public static VolumeAtlas of(PackTexture.Raw raw, boolean clamp) {
 		if (!serves(raw)) {
 			throw new IllegalArgumentException("A volume of " + raw.sizeX() + "x" + raw.sizeY() + "x"
@@ -41,24 +39,20 @@ public final class VolumeAtlas {
 				raw.pixelFormat().components(), clamp);
 	}
 
-	
 	public static boolean serves(PackTexture.Raw raw) {
 		return raw.shape() == PackTexture.Shape.TEXTURE_3D
 				&& raw.sizeX() > 0 && raw.sizeY() > 0 && raw.sizeZ() > 0
 				&& RawTexels.holds(raw.pixelType(), raw.pixelFormat());
 	}
 
-	
 	public boolean fits() {
 		return RawTexels.fits(atlasWidth(), atlasHeight(), texelBytes());
 	}
 
-	
 	public int index(int x, int y, int z) {
 		return x + y * this.width + z * this.width * this.height;
 	}
 
-	
 	public int texel(int x, int y, int z) {
 		int column = (z % this.tilesPerRow) * tileStride() + GUTTER + x;
 		int row = (z / this.tilesPerRow) * tileHeight() + GUTTER + y;
@@ -66,7 +60,6 @@ public final class VolumeAtlas {
 		return row * atlasWidth() + column;
 	}
 
-	
 	public byte[] spread(byte[] blob) {
 		int in = this.components * channelBytes();
 		long texels = (long) this.width * this.height * this.depth;
@@ -80,8 +73,7 @@ public final class VolumeAtlas {
 		byte[] one = RawTexels.one(this.type);
 		byte[] atlas = new byte[atlasWidth() * atlasHeight() * out];
 		for (int z = 0; z < this.depth; z++) {
-			// From -1 to width inclusive: the two extra columns and rows are the gutter, and they
-			// are filled by the same walk rather than patched on afterwards.
+
 			for (int v = -GUTTER; v < this.height + GUTTER; v++) {
 				for (int u = -GUTTER; u < this.width + GUTTER; u++) {
 					int x = past(u, this.width);
@@ -98,17 +90,14 @@ public final class VolumeAtlas {
 		return atlas;
 	}
 
-	
 	private int past(int at, int size) {
 		return this.clamp ? Math.clamp(at, 0, size - 1) : Math.floorMod(at, size);
 	}
 
-	
 	public int tileStride() {
 		return this.width + 2 * GUTTER;
 	}
 
-	
 	public int tileHeight() {
 		return this.height + 2 * GUTTER;
 	}
@@ -137,27 +126,22 @@ public final class VolumeAtlas {
 		return this.depth;
 	}
 
-	
 	public PixelType type() {
 		return this.type;
 	}
 
-	
 	public int components() {
 		return this.components;
 	}
 
-	
 	public boolean clamp() {
 		return this.clamp;
 	}
 
-	
 	public int channelBytes() {
 		return this.type.channelBytes();
 	}
 
-	
 	public int texelBytes() {
 		return RawTexels.CHANNELS * channelBytes();
 	}

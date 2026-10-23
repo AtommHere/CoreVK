@@ -18,12 +18,10 @@ public final class SliderWidget extends ValueWidget {
 	private static final int PREVIEW_WIDTH = 4;
 	private static final int HANDLE_WIDTH = 6;
 
-	
 	private static final int VALUE_WIDTH = 35;
 
 	private static final int WHITE = 0xFFFFFFFF;
 
-	
 	private static final int TEXT_INSET = 7;
 
 	private boolean dragging;
@@ -32,7 +30,6 @@ public final class SliderWidget extends ValueWidget {
 		super(option);
 	}
 
-	
 	private int steps() {
 		return Math.max(1, this.option.size() - 1);
 	}
@@ -56,8 +53,6 @@ public final class SliderWidget extends ValueWidget {
 			drawSlider(graphics);
 		}
 
-		// The whole name, always, and not only when it had to be cut: the value box takes most of the
-		// cell here, so the name is nearly always the part that gave way. CoreVK's rule too.
 		int tipX = this.usedKeyboard ? bounds().right() : mouseX;
 		int tipY = this.usedKeyboard ? bounds().position().y() : mouseY;
 		if (Minecraft.getInstance().hasShiftDown()) {
@@ -100,7 +95,6 @@ public final class SliderWidget extends ValueWidget {
 				y + TEXT_INSET, WHITE);
 	}
 
-	
 	private void drag(int mouseX) {
 		ScreenRectangle at = bounds();
 		float across = Mth.clamp(
@@ -123,8 +117,7 @@ public final class SliderWidget extends ValueWidget {
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-			// Deliberately not the cell's own answer: a right click walks a value backwards, and there
-			// is nothing to walk backwards on a track.
+
 			return false;
 		}
 
@@ -148,7 +141,6 @@ public final class SliderWidget extends ValueWidget {
 		return true;
 	}
 
-	
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (forced()) {

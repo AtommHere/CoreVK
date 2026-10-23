@@ -12,12 +12,10 @@ public final class ConditionStack {
 		push(condition, false);
 	}
 
-	
 	public void ifDirective(BooleanSupplier condition) {
 		push(!active() || condition.getAsBoolean(), false);
 	}
 
-	
 	public void rewrittenIfDirective(boolean condition) {
 		push(condition, true);
 	}
@@ -27,12 +25,10 @@ public final class ConditionStack {
 		this.levels.push(new Level(parent && condition, condition, parent, rewritten));
 	}
 
-	
 	public void rewrittenElifDirective(boolean condition) {
 		elifDirective(() -> condition);
 	}
 
-	
 	public void elifDirective(BooleanSupplier condition) {
 		Level level = this.levels.peek();
 		if (level == null) {
@@ -59,7 +55,6 @@ public final class ConditionStack {
 		level.taken = true;
 	}
 
-	
 	public void endifDirective() {
 		this.levels.poll();
 	}
@@ -74,7 +69,6 @@ public final class ConditionStack {
 		return this.levels.size();
 	}
 
-	
 	public int unclosedRewritten() {
 		return (int) this.levels.stream().filter(level -> level.rewritten).count();
 	}

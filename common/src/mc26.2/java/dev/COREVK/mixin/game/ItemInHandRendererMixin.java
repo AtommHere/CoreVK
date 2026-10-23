@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
 
-	
 	@Inject(method = "submitArmWithItem", at = @At("HEAD"), cancellable = true, require = 1)
 	private void corevk$oneHalfAtATime(AbstractClientPlayer player, float frameInterp, float xRot,
 			InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight,

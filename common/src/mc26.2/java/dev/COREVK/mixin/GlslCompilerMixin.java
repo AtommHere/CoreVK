@@ -31,11 +31,9 @@ import java.util.List;
 @Mixin(GlslCompiler.class)
 public abstract class GlslCompilerMixin {
 
-	
 	@Unique
 	private static final String GEOMETRY_STAGE = "GEOMETRY/shaderc-kind3";
 
-	
 	@Unique
 	private static final int GEOMETRY_KIND = Shaderc.shaderc_glsl_geometry_shader;
 
@@ -45,7 +43,6 @@ public abstract class GlslCompilerMixin {
 		throw new AssertionError();
 	}
 
-	
 	@ModifyArg(method = "createIntermediary", require = 1, index = 2,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/util/shaderc/Shaderc;shaderc_compile_into_spv("
@@ -54,7 +51,6 @@ public abstract class GlslCompilerMixin {
 		return GeometryStage.compiling() ? GEOMETRY_KIND : kind;
 	}
 
-	
 	@WrapOperation(method = "compile", require = 1,
 			at = @At(value = "INVOKE", ordinal = 1,
 					target = "Lcom/mojang/blaze3d/vulkan/glsl/GlslCompiler;addToBindGroup("
@@ -71,7 +67,6 @@ public abstract class GlslCompilerMixin {
 		}
 	}
 
-	
 	@WrapOperation(method = "compile", require = 1,
 			at = @At(value = "INVOKE", ordinal = 1,
 					target = "Lcom/mojang/blaze3d/vulkan/glsl/IntermediaryShaderModule;rebind("
@@ -90,7 +85,6 @@ public abstract class GlslCompilerMixin {
 		original.call(fragment, GeometryStage.outputs(geometry), entries);
 	}
 
-	
 	@WrapOperation(method = "compile", require = 1,
 			at = @At(value = "INVOKE", ordinal = 1,
 					target = "Lcom/mojang/blaze3d/vulkan/glsl/IntermediaryShaderModule;"
@@ -103,7 +97,6 @@ public abstract class GlslCompilerMixin {
 		return id;
 	}
 
-	
 	@WrapOperation(method = "<init>", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/util/shaderc/Shaderc;"
@@ -115,7 +108,6 @@ public abstract class GlslCompilerMixin {
 		}
 	}
 
-	
 	@WrapOperation(method = "addToBindGroup", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/vulkan/glsl/SpvSampler;dimensions()I"))
@@ -124,7 +116,6 @@ public abstract class GlslCompilerMixin {
 		return dimension == 0 || dimension == 2 ? 1 : dimension;
 	}
 
-	
 	@WrapOperation(method = "createIntermediary", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/vulkan/glsl/IntermediaryShaderModule;createFromSpirv("
@@ -132,31 +123,18 @@ public abstract class GlslCompilerMixin {
 							+ "Lcom/mojang/blaze3d/vulkan/glsl/IntermediaryShaderModule;"))
 	private IntermediaryShaderModule corevk$zeroLocals(String filename, ByteBuffer spirv,
 			Operation<IntermediaryShaderModule> original) {
-		// Two passes over the same output, in this order and not either order. Neither depends on
-		// what the other did to the instructions, the zeroes going by opcode and storage class and
-		// the names by their target, but they are not independent of the HEADER: the zeroes raise
-		// the id bound when they mint ids, and the names pass sizes its tables from that bound, so
-		// each one has to read the bound of the module it is actually handed. Both run BEFORE the
-		// reflection, which has to read the module the driver will read. Each pass frees the buffer
-		// it replaces and neither refuses a module it failed to understand, so one buffer reaches
-		// the module and one only.
+
 		return original.call(filename, PackNames.patch(filename, RawLocals.patch(filename, spirv)));
 	}
 
-	
 	@WrapMethod(method = "createIntermediary", require = 1)
 	private IntermediaryShaderModule corevk$module(String filename, String source, ShaderType type,
 			Operation<IntermediaryShaderModule> original) {
 		long began = System.nanoTime();
-		// The state the key is hashed under is the state the bytes are patched under, taken once
-		// here: a load flipping the switch while this thread is between the two would otherwise
-		// store one state's module under the other's key.
+
 		RawLocals.begin();
 		try {
-			// A geometry stage comes past under VERTEX, the enum having no arm for it, and is
-			// keyed under its own name all the same: the two roads compile the same text to
-			// different bytes, and a blob stored under the wrong one would be served to the wrong
-			// stage.
+
 			String key = ModuleCache.keyOf(source,
 					GeometryStage.compiling() ? GEOMETRY_STAGE : type.name());
 			IntermediaryShaderModule served = ModuleCache.lookup(key, filename);
@@ -164,9 +142,6 @@ public abstract class GlslCompilerMixin {
 				return served;
 			}
 
-			// Counted before the call and not after it: a unit a pack broke throws out of the
-			// compile, and counting on the way back would leave that load short by exactly the
-			// units somebody is reading the log to find.
 			ModuleCache.building(filename);
 			IntermediaryShaderModule built = original.call(filename, source, type);
 			ModuleCache.store(key, built);

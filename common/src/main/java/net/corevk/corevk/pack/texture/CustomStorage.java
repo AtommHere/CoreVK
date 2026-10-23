@@ -9,24 +9,20 @@ public final class CustomStorage {
 
 	private static volatile BufferObject.Reading declared = BufferObject.Reading.empty();
 
-	
 	private static final Map<String, Integer> bindings = new ConcurrentHashMap<>();
 
 	private CustomStorage() {
 	}
 
-	
 	public static void install(BufferObject.Reading reading) {
 		declared = reading;
 	}
 
-	
 	public static void clear() {
 		declared = BufferObject.Reading.empty();
 		bindings.clear();
 	}
 
-	
 	public static void declare(String name, int binding) {
 		if (name == null || name.isEmpty()) {
 			return;
@@ -35,7 +31,6 @@ public final class CustomStorage {
 		bindings.put(name, binding);
 	}
 
-	
 	public static boolean named(String name) {
 		if (declared.hasName(name)) {
 			return true;
@@ -49,7 +44,6 @@ public final class CustomStorage {
 		return declared;
 	}
 
-	
 	public static int indexOf(String name) {
 		for (BufferObject buffer : declared.buffers()) {
 			if (buffer.name().filter(name::equals).isPresent()) {

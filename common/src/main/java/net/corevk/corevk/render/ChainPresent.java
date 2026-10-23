@@ -35,10 +35,8 @@ final class ChainPresent {
 
 	private static final String LABEL = "CoreVK chain present";
 
-	
 	private static final GpuFormat SCREEN_FORMAT = GpuFormat.RGBA8_UNORM;
 
-	
 	private static final int VERTICES = 6;
 
 	private static final String VERTEX = """
@@ -55,7 +53,6 @@ final class ChainPresent {
 			}
 			""";
 
-	
 	private static final String FRAGMENT = """
 			#version 460 core
 
@@ -100,12 +97,10 @@ final class ChainPresent {
 				.build();
 	}
 
-	
 	CompiledRenderPipeline compiled(GpuDevice device) {
 		return GraphicsApi.compile(device, this.pipeline, this.source);
 	}
 
-	
 	boolean prepare(GpuDevice device) {
 		if (GraphicsApi.valid(compiled(device))) {
 			return true;
@@ -121,7 +116,6 @@ final class ChainPresent {
 		return false;
 	}
 
-	
 	boolean draw(CommandEncoder encoder, GpuBuffer quad, GpuTextureView into, ColorTargets targets) {
 		GpuTextureView view = targets.view(this.from.target(), this.from.side());
 		if (quad == null || into == null || view == null) {
@@ -132,8 +126,7 @@ final class ChainPresent {
 			GraphicsApi.setPipeline(pass, this.pipeline);
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setVertexBuffer(0, quad.slice());
-			// NEAREST, the target being the size of the screen: one texel is one pixel and the
-			// value wanted is the one the chain wrote, not a blend of it with its neighbour.
+
 			GraphicsApi.bindTexture(pass, SAMPLER, view,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 			pass.draw(VERTICES, 1, 0, 0);

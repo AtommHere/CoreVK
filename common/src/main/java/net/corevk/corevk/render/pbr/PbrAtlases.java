@@ -23,14 +23,11 @@ import java.util.Properties;
 
 public final class PbrAtlases {
 
-	
 	private static final Identifier FORMAT = Identifier.withDefaultNamespace(
 			"optifine/texture.properties");
 
-	
 	private static final Map<Identifier, PbrAtlas> ATLASES = new HashMap<>();
 
-	
 	private static final String LAB_PBR = "lab-pbr";
 
 	private static EngineDefines.TextureFormat format;
@@ -38,7 +35,6 @@ public final class PbrAtlases {
 	private PbrAtlases() {
 	}
 
-	
 	public static void stitched(Identifier atlas, GpuTexture texture,
 			Collection<TextureAtlasSprite> sprites) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -48,11 +44,6 @@ public final class PbrAtlases {
 
 		ResourceManager resources = minecraft.getResourceManager();
 
-		// The record already held is kept where the file still names the same thing, rather than
-		// replaced by an equal one. What asks whether this moved is
-		// PackDefines#textureFormatMoved(), which runs once a frame: given the same object it stops
-		// at the reference, where a fresh record each stitch would have it compare two strings for
-		// the whole session.
 		EngineDefines.TextureFormat declared = format(resources);
 		if (!Objects.equals(declared, format)) {
 			format = declared;
@@ -71,15 +62,12 @@ public final class PbrAtlases {
 		} catch (GpuDeviceLossException e) {
 			throw e;
 		} catch (RuntimeException e) {
-			// Named and swallowed. Every one of these images is an improvement on a flat texel and
-			// none of them is owed: a pack that cannot get one still draws, and taking the world
-			// down over a resource pack's texture would be the worse answer by a distance.
+
 			CoreVK.logger().error("The material maps of {} could not be built, so its sprites keep "
 					+ "the flat values", atlas, e);
 		}
 	}
 
-	
 	public static GpuTextureView view(GpuTextureView atlas, PbrMap map) {
 		if (atlas == null) {
 			return null;
@@ -94,7 +82,6 @@ public final class PbrAtlases {
 		return null;
 	}
 
-	
 	public static boolean supplies(PbrMap map) {
 		for (PbrAtlas built : ATLASES.values()) {
 			if (built.view(map) != null) {
@@ -105,23 +92,19 @@ public final class PbrAtlases {
 		return false;
 	}
 
-	
 	public static boolean labPbr() {
 		return format != null;
 	}
 
-	
 	public static EngineDefines.TextureFormat format() {
 		return format;
 	}
 
-	
 	public static void close() {
 		ATLASES.values().forEach(PbrAtlas::close);
 		ATLASES.clear();
 	}
 
-	
 	static EngineDefines.TextureFormat format(ResourceManager resources) {
 		Optional<Resource> resource = resources.getResource(FORMAT);
 		if (resource.isEmpty()) {
@@ -147,7 +130,6 @@ public final class PbrAtlases {
 		return new EngineDefines.TextureFormat(LAB_PBR, version(declared, slash));
 	}
 
-	
 	private static String version(String declared, int slash) {
 		if (slash < 0) {
 			return null;

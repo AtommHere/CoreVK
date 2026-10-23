@@ -25,13 +25,10 @@ import java.util.function.Supplier;
 @Mixin(CloudRenderer.class)
 public abstract class CloudRendererMixin {
 
-	
 	private RenderPipeline corevk$pipeline;
 
-	
 	private boolean corevk$fancy;
 
-	
 	@Inject(method = "render", at = @At("HEAD"))
 	private void corevk$status(int colour, CloudStatus cloudStatus, float bottomY, int range,
 			Vec3 cameraPosition, long gameTime, float partialTicks, CallbackInfo callback) {
@@ -69,7 +66,6 @@ public abstract class CloudRendererMixin {
 		original.call(pass, this.corevk$pipeline == null ? pipeline : this.corevk$pipeline);
 	}
 
-	
 	@WrapOperation(method = "render",
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/systems/RenderPass;drawIndexed(IIIII)V"))

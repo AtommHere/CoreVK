@@ -37,7 +37,6 @@ public abstract class PipelineBuilderMixin {
 		return kind;
 	}
 
-	
 	@WrapOperation(method = "generateBackendCreateInfo", require = 2,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/renderpearl/backend/api/SpvModule$Reflection$Type;"
@@ -47,11 +46,9 @@ public abstract class PipelineBuilderMixin {
 		return dimensions == 0 || dimensions == 2 ? 1 : dimensions;
 	}
 
-	
 	@Unique
 	private static final ThreadLocal<Map<String, Integer>> COREVK$WRITTEN = new ThreadLocal<>();
 
-	
 	@WrapOperation(method = "generateBackendCreateInfo", require = 2,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/renderpearl/frontend/shaders/PipelineBuilder;generateSlotMap("

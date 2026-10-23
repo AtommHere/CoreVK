@@ -8,14 +8,12 @@ import org.joml.Matrix4f;
 
 public final class DrawValues {
 
-	
 	public static final Matrix4f QUAD_PROJECTION = new Matrix4f().set(
 			2.0F, 0.0F, 0.0F, 0.0F,
 			0.0F, 2.0F, 0.0F, 0.0F,
 			0.0F, 0.0F, 0.0F, 0.0F,
 			-1.0F, -1.0F, 0.0F, 1.0F);
 
-	
 	public static final Matrix4f QUAD_PROJECTION_INVERSE = new Matrix4f().set(
 			0.5F, 0.0F, 0.0F, 0.0F,
 			0.0F, 0.5F, 0.0F, 0.0F,
@@ -36,13 +34,6 @@ public final class DrawValues {
 		builder.add("of_ProjectionMatrixInverse", UniformShape.MAT4, (_, out) -> out.set(QUAD_PROJECTION_INVERSE));
 		builder.add("of_NormalMatrix", UniformShape.MAT3, (_, out) -> out.set(NORMAL_IDENTITY));
 
-		// Eight identities, and here that is the whole answer rather than a stand in: the pack reads
-		// gl_TextureMatrix[0] and expects the texture coordinates it was handed, which for a quad are
-		// already the ones it wants, and CoreVK substitutes the identity for all eight of them in a
-		// composite for the same reason (CompositeTransformer.java:43).
-		//
-		// It is the GEOMETRY table that has to answer differently, and it does: a quad carries no
-		// light map, so unit one is the identity here and the light map's matrix there.
 		builder.add("of_TextureMatrix", UniformShape.MAT4, (_, out) -> out.set(IDENTITY));
 
 		builder.add("viewWidth", UniformShape.FLOAT, (world, out) -> out.set(world.viewWidth()));
@@ -50,9 +41,6 @@ public final class DrawValues {
 		builder.add("aspectRatio", UniformShape.FLOAT,
 				(world, out) -> out.set(world.viewWidth() / Math.max(1.0F, world.viewHeight())));
 
-		// How a vertex stage moves a legacy clip position into the volume the target really uses,
-		// and how a fragment stage reads a depth back out of it. Answered whether or not the
-		// translation emits the member yet, because the answer does not depend on that.
 		builder.add("of_DepthConv", UniformShape.VEC4, (world, out) -> out.set(
 				world.depthConvention().x(), world.depthConvention().y(),
 				world.depthConvention().z(), world.depthConvention().w()));
@@ -74,40 +62,13 @@ public final class DrawValues {
 		builder.add("noiseTextureResolution", UniformShape.FLOAT,
 				(world, out) -> out.set(world.noiseTextureResolution()));
 
-		// CoreVK's own answer for a pass whose mesh has no overlay, which is what this table serves:
-		// a composite, the terrain, the sky (uniforms/CommonUniforms.java:163). Where the mesh DOES
-		// carry the overlay the name never reaches a table at all, here or there - the vertex stage
-		// fetches the texel and hands the colour on as a varying, glsl/GlslTranslator.overlayPrologue
-		// against pipeline/transform/transformer/EntityPatcher.java:39-56.
 		builder.add("entityColor", UniformShape.VEC4,
 				(_, out) -> out.set(0.0F, 0.0F, 0.0F, 0.0F));
-		// The three identifiers a pack tells one entity, block entity or held item apart by, and the
-		// numbers are CoreVK's own: it registers blockEntityId and currentRenderedItemId at -1 once
-		// and for the session (uniforms/CommonUniforms.java:164-165), and entityId comes off a field
-		// its render dispatcher sets to the entity being submitted and back to zero at the end of
-		// every submit (mixin/entity_render_context/MixinEntityRenderDispatcher.java:82 and :89), so
-		// zero is what a pass drawn between two entities reads. The -1 that field starts at
-		// (uniforms/CapturedRenderingState.java:23) is the value before the first entity of the
-		// session and is not what a pack meets.
-		//
-		// So these three are the right answer wherever CoreVK hands the uniform over, which is every
-		// pass whose mesh has no overlay: the composites, and the terrain and the sky with them.
-		// Where the mesh DOES carry them the name never reaches a table at all, here or there, the
-		// vertex stage handing each on out of a lane of the element the mesh carries,
-		// glsl/GlslTranslator.identifierPrologue against EntityPatcher.java:124-204.
-		//
-		// One case CoreVK keeps the uniform for is not about the mesh at all, and it is not live here:
-		// the lightning (uniforms/CommonUniforms.java:72-73), whose shard puts the live identifier
-		// in the field around the draw (layer/LightningRenderStateShard.java:19-21). Served, our
-		// lightning would read zero there, and what a pack loses is the branch it writes on that one
-		// identifier. No program of the pack serves the lightning here, the game drawing it and the
-		// feature layer carrying it in, so today it costs the image nothing.
+
 		builder.add("entityId", UniformShape.INT, (_, out) -> out.set(0));
 		builder.add("blockEntityId", UniformShape.INT, (_, out) -> out.set(-1));
 		builder.add("currentRenderedItemId", UniformShape.INT, (_, out) -> out.set(-1));
-		// What the pass's own program discards at, and in a pass drawn over a quad the reference
-		// held when the chain wrote its one block for the frame: ViewSource.passAlphaTest says
-		// what CoreVK hands a composite instead, and why the difference reaches no pack.
+
 		builder.add("alphaTestRef", UniformShape.FLOAT, (world, out) -> out.set(world.passAlphaTest()));
 	}
 }

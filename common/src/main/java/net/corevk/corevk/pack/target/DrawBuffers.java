@@ -8,13 +8,11 @@ import java.util.List;
 
 public final class DrawBuffers {
 
-	
 	private static final List<Integer> PAIR = List.of(0, 1);
 
 	private DrawBuffers() {
 	}
 
-	
 	public static List<Integer> parse(IncludeExpander.ExpandedUnit unit) {
 		String text = liveText(unit);
 		int drawBuffersAt = directiveStart(text, "DRAWBUFFERS");
@@ -33,8 +31,6 @@ public final class DrawBuffers {
 
 		List<Integer> slots = new ArrayList<>();
 
-		// DRAWBUFFERS runs its indices together, so it cannot name an attachment past nine.
-		// RENDERTARGETS separates them with commas and can.
 		if (runTogether) {
 			for (int i = 0; i < value.length(); i++) {
 				char digit = value.charAt(i);
@@ -53,7 +49,6 @@ public final class DrawBuffers {
 		return List.copyOf(slots);
 	}
 
-	
 	public static List<Integer> shadowColours(List<Integer> declared, int existing) {
 		if (declared.isEmpty()) {
 			return PAIR;
@@ -62,7 +57,6 @@ public final class DrawBuffers {
 		return declared.stream().anyMatch(index -> index >= existing) ? PAIR : List.copyOf(declared);
 	}
 
-	
 	private static String liveText(IncludeExpander.ExpandedUnit unit) {
 		List<String> lines = unit.lines();
 		StringBuilder text = new StringBuilder();
@@ -80,15 +74,12 @@ public final class DrawBuffers {
 		return text.toString();
 	}
 
-	
 	private static int directiveStart(String text, String name) {
 		int at = text.lastIndexOf(name + ":");
 		if (at < 0) {
 			return -1;
 		}
 
-		// The directive has to be the first thing in a block comment. A line comment does not
-		// count, and neither does a directive with prose in front of it on the same line.
 		return text.substring(0, at).stripTrailing().endsWith("/*") ? at : -1;
 	}
 

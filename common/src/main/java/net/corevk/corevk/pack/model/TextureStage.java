@@ -8,13 +8,12 @@ public enum TextureStage {
 	BEGIN,
 	SHADOWCOMP,
 	PREPARE,
-	
+
 	GBUFFERS,
 	DEFERRED,
-	
+
 	COMPOSITE;
 
-	
 	public static Optional<TextureStage> parse(String name) {
 		return switch (name) {
 			case "setup" -> Optional.of(SETUP);
@@ -28,7 +27,6 @@ public enum TextureStage {
 		};
 	}
 
-	
 	public static Optional<TextureStage> of(String program) {
 		String family = ProgramNames.familyOf(program);
 		if (ProgramNames.geometry(family)) {

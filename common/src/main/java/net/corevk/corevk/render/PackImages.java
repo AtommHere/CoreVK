@@ -32,18 +32,14 @@ import java.util.Optional;
 
 final class PackImages {
 
-	
 	private static final long LOUD_BYTES = 32L * 1024L * 1024L;
 
-	
 	private static final int MAX_RESOURCE_BYTES = 8 * 1024 * 1024;
 
-	
 	@SuppressWarnings("ArrayRecordComponent")
 	record Image(PackTexture texture, int width, int height, byte[] pixels, GpuFormat format,
 			String shape, boolean live) {
 
-		
 		Image(PackTexture texture, int width, int height, byte[] pixels, GpuFormat format,
 				String shape) {
 			this(texture, width, height, pixels, format, shape, false);
@@ -56,12 +52,10 @@ final class PackImages {
 
 	private final PackTextures declared;
 
-	
 	private final List<Image> images;
 
 	private final Map<PackTexture, Image> byTexture;
 
-	
 	private final Map<String, Image> volumes;
 
 	private final List<String> notes;
@@ -75,12 +69,10 @@ final class PackImages {
 		this.notes = List.copyOf(notes);
 	}
 
-	
 	static PackImages none() {
 		return new PackImages(PackTextures.empty(), List.of(), Map.of(), Map.of(), List.of());
 	}
 
-	
 	static PackImages read(ShaderProperties properties, Map<String, String> defines,
 			ShaderPackSource source) throws IOException {
 		PackTextures declared = PackTextures.read(properties, defines, source);
@@ -93,26 +85,14 @@ final class PackImages {
 		declared.refused().forEach(refused -> notes.add("Dropped " + refused));
 
 		for (PackTexture texture : declared.supplied()) {
-			// The layout is this declaration's own, not the name's: iterationT points colortex8 at a
-			// volume for the sampler3D and at a PNG for the sampler2D, exactly as the reference
-			// files the two apart, and handing the atlas to the PNG would spread an image over
-			// nothing and leave six programs reading a lookup table.
+
 			VolumeAtlas atlas = texture.raw().filter(VolumeAtlas::serves).isPresent()
 					? flat.get(texture.sampler())
 					: null;
 
-			// The FIRST volume under that name is the one whose layout was printed into every
-			// shader, and PackTextures keeps the first too, so a second one is handed that same
-			// atlas rather than a second copy of it. A pack writing two files for one name on two
-			// stages would otherwise have the last file spread over the first one's tiles, and what
-			// comes out of that still looks like noise; writing the SAME file twice, which is what
-			// a directive per stage makes a pack do, spread iterationT's atmosphere table twice for
-			// one lookup.
 			Image already = atlas == null ? null : volumes.get(texture.sampler());
 			if (already != null) {
-				// The extents count as much as the path: the same file declared at two sizes is one
-				// of the two layouts printed into the shaders and one blob spread over the other's
-				// tiles, which comes out looking exactly like the noise it is not.
+
 				if (!already.texture().path().equals(texture.path())
 						|| !already.texture().raw().equals(texture.raw())) {
 					notes.add(texture.path() + " is a second volume under the name "
@@ -139,7 +119,6 @@ final class PackImages {
 		return new PackImages(declared, images, byTexture, volumes, notes);
 	}
 
-	
 	private static Image decode(PackTexture texture, VolumeAtlas atlas, ShaderPackSource source,
 			List<String> notes) {
 		if (texture.gameResource()) {
@@ -148,8 +127,7 @@ final class PackImages {
 
 		Optional<Path> file = source.file(texture.path());
 		if (file.isEmpty()) {
-			// Looked for once already when the directive was read, so reaching this means the pack
-			// moved under us between the two openings.
+
 			notes.add(texture.path() + " is no longer in the pack, so " + texture.sampler()
 					+ " reads one black pixel");
 
@@ -158,9 +136,7 @@ final class PackImages {
 
 		try {
 			if (atlas != null) {
-				// Read to the length the declaration announces and no further, which is what lets a
-				// blob past the ceiling a shader source gets be read at all: iterationT's atmosphere
-				// table is four times that ceiling.
+
 				PackTexture.Raw raw = texture.raw().orElseThrow();
 
 				return new Image(texture, atlas.atlasWidth(), atlas.atlasHeight(),
@@ -169,9 +145,6 @@ final class PackImages {
 								+ atlas.atlasWidth() + "x" + atlas.atlasHeight());
 			}
 
-			// A blob that is a plain two dimensional texture goes up as it stands, its channels
-			// widened to the four the engine allocates. Read to the declared length for the reason
-			// the atlas is: the ceiling above this was written for a shader source.
 			PackTexture.Raw plain = texture.raw().filter(RawImage::serves).orElse(null);
 			if (plain != null) {
 				RawImage image = RawImage.of(plain);
@@ -181,11 +154,6 @@ final class PackImages {
 						image.width() + "x" + image.height());
 			}
 
-			// Any other blob means what its own format says it means, and nothing here turns one of
-			// those into an image: a shape that is neither a volume nor a plain texture, or either
-			// of those in a channel type or order nothing lays out. A one dimensional blob and a
-			// rectangle are read through samplers this backend does not bind; the corpus ships
-			// neither.
 			if (!texture.png()) {
 				PackTexture.Raw refused = texture.raw().orElseThrow();
 				notes.add(texture.path() + " is a raw " + refused.shape() + " of "
@@ -213,7 +181,6 @@ final class PackImages {
 		}
 	}
 
-	
 	private static Image gameResource(PackTexture texture, List<String> notes) {
 		String path = texture.path();
 		Identifier location = location(path);
@@ -252,14 +219,12 @@ final class PackImages {
 		}
 	}
 
-	
 	static Identifier location(String path) {
 		String[] parts = path.split(":", 0);
 
 		return parts.length < 2 ? null : Identifier.tryBuild(parts[0], parts[1]);
 	}
 
-	
 	private static Image missing(PackTexture texture, List<String> notes, String reason) {
 		notes.add(reason + ", so " + texture.sampler() + " reads the game's missing texture");
 
@@ -278,32 +243,25 @@ final class PackImages {
 		}
 	}
 
-	
 	List<Image> images() {
 		return this.images;
 	}
 
-	
 	Image find(TextureStage stage, String sampler) {
 		String name = SamplerPlan.behind(sampler);
 		if (!name.equals(sampler)) {
 			return this.volumes.get(name);
 		}
 
-		// No stage means a program no family claims, which is a program nothing runs. Answered
-		// rather than looked up: a stage override is written for one of the seven and there is no
-		// honest way to guess which one an eighth would have been.
 		return stage == null
 				? null
 				: this.declared.resolve(stage, name).map(this.byTexture::get).orElse(null);
 	}
 
-	
 	List<String> notes() {
 		return this.notes;
 	}
 
-	
 	static String describe(Image image) {
 		PackTexture texture = image.texture();
 		boolean flat = texture.raw()
@@ -318,7 +276,6 @@ final class PackImages {
 						: "");
 	}
 
-	
 	private static GpuFormat format(PixelType type) {
 		return switch (type) {
 			case UNSIGNED_BYTE -> GpuFormat.RGBA8_UNORM;
@@ -329,7 +286,6 @@ final class PackImages {
 		};
 	}
 
-	
 	long bytes() {
 		long total = 0L;
 		for (Image image : this.images) {
@@ -339,7 +295,6 @@ final class PackImages {
 		return total;
 	}
 
-	
 	boolean loud() {
 		return bytes() > LOUD_BYTES;
 	}

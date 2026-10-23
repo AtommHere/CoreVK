@@ -17,26 +17,20 @@ import java.util.Set;
 
 final class VolumeFlattening {
 
-	
 	private static final String VOLUME_LOOKUP = "ofTexture3D_";
 
-	
 	private static final int LOOKUP_ARGUMENTS = 2;
 
-	
 	private static final int LEVELLED_ARGUMENTS = 3;
 
 	private final TokenStream tokens;
 	private final ExpandedUnit unit;
 
-	
 	private final Map<String, VolumeAtlas> volumes;
 
-	
 	private final Set<String> packMacros;
 	private final Map<String, String> macroAliases;
 
-	
 	private final Map<String, VolumeAtlas> readVolumes = new LinkedHashMap<>();
 
 	private int volumeLookups;
@@ -51,22 +45,18 @@ final class VolumeFlattening {
 		this.macroAliases = macroAliases;
 	}
 
-	
 	Map<String, VolumeAtlas> read() {
 		return this.readVolumes;
 	}
 
-	
 	int lookups() {
 		return this.volumeLookups;
 	}
 
-	
 	int leftAlone() {
 		return this.volumesLeftAlone;
 	}
 
-	
 	void flatten() {
 		if (this.volumes.isEmpty()) {
 			return;
@@ -77,9 +67,7 @@ final class VolumeFlattening {
 	}
 
 	private void flattenOne(String name, VolumeAtlas atlas, int[] lines) {
-		// The name token of a declaration, and the pair of tokens each lookup rewrites: the callee
-		// and the argument. Held rather than found again below, so that what is rewritten is what
-		// was judged.
+
 		List<Integer> declarations = new ArrayList<>();
 		Map<Integer, Integer> lookups = new LinkedHashMap<>();
 		boolean elsewhere = this.packMacros.contains(name);
@@ -93,9 +81,7 @@ final class VolumeFlattening {
 			}
 
 			if (token.directive() != null) {
-				// The preprocessor's own lines: an alias being defined or tested is its business,
-				// and the name standing as an alias's replacement text IS the alias. The name on
-				// any other directive is a use this pass cannot follow.
+
 				if (token.text().equals(name) && !aliasBody(index)) {
 					elsewhere = true;
 				}
@@ -113,8 +99,6 @@ final class VolumeFlattening {
 			}
 		}
 
-		// A unit that reads the name without declaring it has been handed the sampler by something
-		// this pass has not seen, so there is nothing here to rename it against.
 		if (declarations.isEmpty()) {
 			return;
 		}
@@ -141,7 +125,6 @@ final class VolumeFlattening {
 		}
 	}
 
-	
 	private Set<String> spellingsOf(String name) {
 		Set<String> spellings = new HashSet<>();
 		spellings.add(name);
@@ -158,7 +141,6 @@ final class VolumeFlattening {
 		return spellings;
 	}
 
-	
 	private boolean aliasBody(int index) {
 		for (int scan = index - 1; scan >= 0; scan--) {
 			Token token = this.tokens.get(scan);
@@ -173,7 +155,6 @@ final class VolumeFlattening {
 		return false;
 	}
 
-	
 	private boolean volumeDeclaration(int index) {
 		int type = this.tokens.significantBefore(index);
 		if (type < 0 || this.tokens.get(type).kind() != Kind.IDENTIFIER
@@ -189,7 +170,6 @@ final class VolumeFlattening {
 		return cursor >= 0 && this.tokens.get(cursor).identifier("uniform");
 	}
 
-	
 	private int plainLookup(int index) {
 		int open = this.tokens.significantBefore(index);
 		if (open < 0 || !this.tokens.get(open).operator("(")) {
@@ -212,7 +192,6 @@ final class VolumeFlattening {
 		return arguments == LOOKUP_ARGUMENTS || arguments == LEVELLED_ARGUMENTS ? callee : -1;
 	}
 
-	
 	private int arguments(int open, int close) {
 		int depth = 0;
 		int count = 1;
@@ -236,7 +215,6 @@ final class VolumeFlattening {
 		return count;
 	}
 
-	
 	static List<String> helper(String name, VolumeAtlas atlas) {
 		String depth = whole(atlas.depth());
 		String last = Integer.toString(atlas.depth() - 1);
@@ -268,11 +246,6 @@ final class VolumeFlattening {
 		lines.add("\treturn mix(texture(ofMap, ofA), texture(ofMap, ofB), clamp(ofZ - ofBase, 0.0, 1.0));");
 		lines.add("}");
 
-		// The levelled form, which is what every read of iterationT's three volumes is written as.
-		// It drops the level rather than passing it on, and that is exact rather than a shortcut:
-		// the atlas is allocated with one level, so the only level any of these reads could ever
-		// have landed on is the one this reads. A bias behind texture() arrives here too, and a
-		// bias on a texture with no chain is worth exactly as much.
 		lines.add("vec4 " + VOLUME_LOOKUP + name + "(sampler2D ofMap, vec3 ofAt, float ofLevel) {");
 		lines.add("\treturn " + VOLUME_LOOKUP + name + "(ofMap, ofAt);");
 		lines.add("}");
@@ -280,7 +253,6 @@ final class VolumeFlattening {
 		return lines;
 	}
 
-	
 	private static String whole(int value) {
 		return value + ".0";
 	}

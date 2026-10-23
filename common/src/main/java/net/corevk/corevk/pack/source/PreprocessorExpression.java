@@ -8,13 +8,10 @@ import java.util.regex.Pattern;
 
 public final class PreprocessorExpression {
 
-	
 	private static final int MAX_RESOLUTION_DEPTH = 8;
 
-	
 	private static final int MAX_NESTING_DEPTH = 64;
 
-	
 	private static final Pattern BLOCK_COMMENT = Pattern.compile("/\\*.*?\\*/");
 	private static final Pattern LINE_COMMENT = Pattern.compile("//.*");
 
@@ -24,16 +21,13 @@ public final class PreprocessorExpression {
 
 	private int position;
 	private int nesting;
-	
+
 	private boolean failed;
 
-	
 	private boolean malformed;
 
-	
 	private boolean fractional;
 
-	
 	private record Scalar(double number, long whole, boolean integral) {
 
 		static Scalar of(long value) {
@@ -63,22 +57,18 @@ public final class PreprocessorExpression {
 		return decide(expression, defines).taken();
 	}
 
-	
 	public record Verdict(Optional<Boolean> taken, boolean fractional) {
 	}
 
-	
 	public static Verdict decide(String expression, Map<String, String> defines) {
 		Reading read = read(expression, defines, 0);
 
 		return new Verdict(read.value().map(Scalar::truth), read.fractional());
 	}
 
-	
 	private record Reading(Optional<Scalar> value, boolean fractional) {
 	}
 
-	
 	private static Reading read(String expression, Map<String, String> defines, int depth) {
 		if (depth > MAX_RESOLUTION_DEPTH) {
 			return new Reading(Optional.empty(), false);
@@ -125,7 +115,7 @@ public final class PreprocessorExpression {
 
 				tokens.add(text.substring(start, i));
 			} else {
-				// Two-character operators first, so that "<=" is never read as "<" then "=".
+
 				if (i + 1 < text.length() && isTwoCharacterOperator(text.substring(i, i + 2))) {
 					tokens.add(text.substring(i, i + 2));
 					i += 2;
@@ -163,7 +153,6 @@ public final class PreprocessorExpression {
 		return false;
 	}
 
-	
 	private Scalar logicalOr() {
 		Scalar left = logicalAnd();
 		while (accept("||")) {
@@ -223,7 +212,6 @@ public final class PreprocessorExpression {
 		return left;
 	}
 
-	
 	private Scalar bits(Scalar left, Scalar right, String operator) {
 		if (!left.integral() || !right.integral()) {
 			this.failed = true;
@@ -271,7 +259,6 @@ public final class PreprocessorExpression {
 		}
 	}
 
-	
 	private static int compare(Scalar left, Scalar right) {
 		return left.integral() && right.integral()
 				? Long.compare(left.whole(), right.whole())
@@ -291,7 +278,6 @@ public final class PreprocessorExpression {
 		}
 	}
 
-	
 	private Scalar shiftBy(Scalar left, Scalar places, boolean up) {
 		if (!left.integral() || !places.integral()
 				|| places.whole() < 0 || places.whole() > 63) {
@@ -340,7 +326,6 @@ public final class PreprocessorExpression {
 		}
 	}
 
-	
 	private Scalar divide(Scalar left, Scalar right, boolean remainder) {
 		if (!right.truth()) {
 			this.failed = true;
@@ -473,7 +458,6 @@ public final class PreprocessorExpression {
 		return Scalar.of(this.defines.containsKey(name));
 	}
 
-	
 	private static Reading resolve(String name, Map<String, String> defines, int depth) {
 		if (depth > MAX_RESOLUTION_DEPTH) {
 			return new Reading(Optional.of(Scalar.of(0)), false);
@@ -481,7 +465,7 @@ public final class PreprocessorExpression {
 
 		String value = defines.get(name);
 		if (value == null || value.isBlank()) {
-			// Defined but empty is the usual shape of a switch that is on.
+
 			return new Reading(Optional.of(Scalar.of(defines.containsKey(name))), false);
 		}
 
@@ -495,9 +479,6 @@ public final class PreprocessorExpression {
 			return resolve(trimmed, defines, depth + 1);
 		}
 
-		// An expression keeps its value rather than collapsing to one or zero. A pack that
-		// writes SHADOW_RES as QUALITY * 512 and then compares it against 256 is comparing
-		// sizes, and reducing that to a truth value quietly gives the wrong branch.
 		Reading read = read(trimmed, defines, depth + 1);
 
 		return new Reading(Optional.of(read.value().orElse(Scalar.of(1))), read.fractional());
@@ -514,8 +495,6 @@ public final class PreprocessorExpression {
 	private static Optional<Scalar> parseNumber(String token) {
 		boolean hexadecimal = token.length() > 2 && (token.startsWith("0x") || token.startsWith("0X"));
 
-		// The base has to be known before a suffix can be stripped: in hexadecimal, f and F are
-		// digits, and taking them for a float suffix turns 0x1F into 0x1 without a word.
 		String suffixes = hexadecimal ? "uUlL" : "uUlLfF";
 		String text = token;
 		while (!text.isEmpty() && suffixes.indexOf(text.charAt(text.length() - 1)) >= 0) {
@@ -531,11 +510,6 @@ public final class PreprocessorExpression {
 				return Optional.of(Scalar.of(Long.parseLong(text.substring(2), 16)));
 			}
 
-			// Kept as it was written and not rounded here, which is the whole of the divergence
-			// this class carries: 0.5 is a half all the way to the comparison that reads it, and
-			// the caller is told the line held one so that it can answer for a compiler that will
-			// not. An exponent makes a number fractional as surely as a point does, 1e3 being a
-			// float in every language that has both.
 			if (text.indexOf('.') >= 0 || text.indexOf('e') >= 0 || text.indexOf('E') >= 0) {
 				return Optional.of(Scalar.fraction(Double.parseDouble(text)));
 			}

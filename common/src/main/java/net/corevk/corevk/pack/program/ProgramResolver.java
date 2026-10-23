@@ -19,10 +19,9 @@ public final class ProgramResolver {
 		this.byDimension = Map.copyOf(byDimension);
 	}
 
-	
 	public static ProgramResolver resolve(ProgramSet programs, DimensionSet dimensions,
 			Set<String> switchedOff) {
-		// One index per dimension of what that dimension ships, keyed by program name.
+
 		Map<String, Map<String, String>> shipped = new LinkedHashMap<>();
 		for (ProgramSet.ProgramKey key : programs.keys()) {
 			if (key.stage() == ProgramStage.FRAGMENT && !switchedOff.contains(pathOf(key))) {
@@ -58,7 +57,6 @@ public final class ProgramResolver {
 		return new ProgramResolver(resolved);
 	}
 
-	
 	private static String pathOf(ProgramSet.ProgramKey key) {
 		String file = key.file();
 		int dot = file.lastIndexOf('.');
@@ -75,22 +73,18 @@ public final class ProgramResolver {
 				.findFirst();
 	}
 
-	
 	public int directCount(String dimension) {
 		return (int) resolutions(dimension).stream().filter(Resolution::direct).count();
 	}
 
-	
 	public int inheritedCount(String dimension) {
 		return (int) resolutions(dimension).stream().filter(resolution -> !resolution.direct()).count();
 	}
 
-	
 	public int unservedCount(String dimension) {
 		return ProgramFallbacks.names().size() - resolutions(dimension).size();
 	}
 
-	
 	public record Resolution(String requested, String servedBy, String file, int depth) {
 
 		public boolean direct() {

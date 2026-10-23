@@ -17,25 +17,21 @@ import java.util.Map;
 
 final class PackDump {
 
-	
 	private static volatile String wanted = "";
 	private static volatile Path file;
 	private static long lastNanos;
 
-	
 	private static volatile boolean said;
 
 	private PackDump() {
 	}
 
-	
 	static void configure(String program, Path into) {
 		wanted = program;
 		file = into;
 		said = false;
 	}
 
-	
 	static void take(String place, int load, List<PackPass> passes, WorldState world,
 			Collection<? extends DumpedProgram> terrain, List<? extends FamilyDraw> families) {
 		if (wanted.isEmpty() || file == null) {
@@ -52,10 +48,6 @@ final class PackDump {
 		String path = null;
 		String decoded = null;
 
-		// Named by element and not only by path: several elements of a family are usually the same
-		// file, and a line that said gbuffers_terrain twice would not say which of the two was read.
-		// The label is matched as well as the path, so dump=cutout names the pass and
-		// dump=gbuffers_terrain still names the file, taking the first pass drawn with it.
 		List<Collection<? extends DumpedProgram>> drawn = new ArrayList<>(1 + families.size());
 		drawn.add(terrain);
 		for (FamilyDraw family : families) {
@@ -81,19 +73,11 @@ final class PackDump {
 		}
 
 		if (decoded == null) {
-			// Nothing is built yet, which is the first frame or two rather than a wrong name. The
-			// line has to survive that or a dump asked for in the file would be turned off before
-			// the thing it names exists.
+
 			if (running.isEmpty() || said) {
 				return;
 			}
 
-			// Said once and the line left armed, rather than turning the dump off outright: that
-			// would be right only while everything a place draws with is read on its first frame.
-			// Three families are read at the moment the world first draws one, so naming a piece of
-			// the sky or an entity would be refused before the thing existed and stay refused for
-			// the rest of the session. What is listed is therefore what has been read SO
-			// FAR and the line says as much, since another family reading later still answers.
 			said = true;
 			CoreVK.logger().warn("{}={} names nothing read so far, so nothing is dumped yet. Read so "
 					+ "far: {}", EngineOptions.DUMP_KEY, wanted, running);
@@ -108,7 +92,6 @@ final class PackDump {
 		return path.toLowerCase(Locale.ROOT).endsWith(wanted);
 	}
 
-	
 	private static void write(String text) {
 		try {
 			Files.createDirectories(file.getParent());
@@ -119,13 +102,9 @@ final class PackDump {
 		}
 	}
 
-	
 	private static String situation(WorldState world) {
 		int id = world.biomeId();
-		// Backwards, on purpose. Asking the define table which name carries the number the uniform
-		// just reported is the whole check: the two are built from one walk of the registry and are
-		// meant to agree, and a number no define carries is that promise broken, said out loud here
-		// rather than found later as a pack lighting the wrong biome.
+
 		String name = EngineDefines.machine().biomes().entrySet().stream()
 				.filter(entry -> entry.getValue() == id)
 				.map(Map.Entry::getKey)

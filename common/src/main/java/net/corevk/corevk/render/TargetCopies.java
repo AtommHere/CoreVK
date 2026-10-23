@@ -18,45 +18,35 @@ import java.util.function.BiFunction;
 
 final class TargetCopies {
 
-	
 	static final int FIRST_SAMPLED = 4;
 
 	private record Key(int target, TargetSchedule.Side side) {
 	}
 
-	
 	private final Set<Key> asked = new LinkedHashSet<>();
 
-	
 	private final Set<String> said = new HashSet<>();
 
-	
 	private final Map<Key, TargetSurface> copies = new LinkedHashMap<>();
 
-	
 	private final Map<Key, TargetSurface> sources = new LinkedHashMap<>();
 
-	
 	private final Set<Key> refused = new LinkedHashSet<>();
 
-	
 	private boolean written;
 
-	
 	void ask(int target, TargetSchedule.Side side) {
 		synchronized (this) {
 			this.asked.add(new Key(target, side));
 		}
 	}
 
-	
 	boolean firstMention(String path, int target, TargetSchedule.Side side) {
 		synchronized (this) {
 			return this.said.add(path + "|" + target + "|" + side);
 		}
 	}
 
-	
 	void ensure(BiFunction<Integer, TargetSchedule.Side, TargetSurface> source) {
 		List<Key> keys;
 		synchronized (this) {
@@ -83,8 +73,7 @@ final class TargetCopies {
 					? " alt" : "");
 			try {
 				if (copy == null) {
-					// Named before it is allocated, like the target it copies, so that the last line
-					// written names what was asked for when the allocation is what fails.
+
 					CoreVK.logger().info("Allocating a copy of {} as {} at {}x{}, read by a "
 							+ "translucent geometry program on the half it writes", name,
 							target.texture().getFormat(), target.width(), target.height());
@@ -109,18 +98,15 @@ final class TargetCopies {
 				continue;
 			}
 
-			// A new image, or an image of another size: nothing has filled it yet.
 			this.written = false;
 			this.sources.put(key, target);
 		}
 	}
 
-	
 	boolean any() {
 		return !this.copies.isEmpty();
 	}
 
-	
 	void take(CommandEncoder encoder) {
 		for (Map.Entry<Key, TargetSurface> entry : this.copies.entrySet()) {
 			TargetSurface source = this.sources.get(entry.getKey());
@@ -136,12 +122,10 @@ final class TargetCopies {
 		this.written = true;
 	}
 
-	
 	void forget() {
 		this.written = false;
 	}
 
-	
 	GpuTextureView view(int target, TargetSchedule.Side side) {
 		if (!this.written) {
 			return null;
@@ -152,7 +136,6 @@ final class TargetCopies {
 		return copy == null ? null : copy.view();
 	}
 
-	
 	void release() {
 		this.copies.values().forEach(TargetSurface::close);
 		this.copies.clear();

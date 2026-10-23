@@ -6,11 +6,11 @@ public record PackOption(String name, Kind kind, String defaultText, List<String
 		boolean defaultOff, String constType, String declaredIn, int line) {
 
 	public enum Kind {
-		
+
 		TOGGLE,
-		
+
 		VALUE,
-		
+
 		CONST
 	}
 
@@ -18,7 +18,6 @@ public record PackOption(String name, Kind kind, String defaultText, List<String
 		values = List.copyOf(values);
 	}
 
-	
 	public boolean hasValueList() {
 		return !this.values.isEmpty();
 	}

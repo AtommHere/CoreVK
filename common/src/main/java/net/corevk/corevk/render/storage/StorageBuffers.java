@@ -38,7 +38,6 @@ public final class StorageBuffers implements AutoCloseable {
 	private final BufferObject.Reading declared;
 	private final List<Allocated> allocated = new ArrayList<>();
 
-	
 	private Map<Integer, Bound> bindings = Map.of();
 	private GpuBuffer dummy;
 	private int lastWidth;
@@ -52,12 +51,10 @@ public final class StorageBuffers implements AutoCloseable {
 		return new StorageBuffers(BufferObject.Reading.empty());
 	}
 
-	
 	public static boolean named(String name) {
 		return CustomStorage.named(name);
 	}
 
-	
 	public static Bound bound(String name) {
 		return current.lookup(name);
 	}
@@ -80,7 +77,6 @@ public final class StorageBuffers implements AutoCloseable {
 		this.bindings = Map.copyOf(bound);
 	}
 
-	
 	public record Bound(long buffer, long range) {
 	}
 
@@ -88,7 +84,6 @@ public final class StorageBuffers implements AutoCloseable {
 		current = this;
 	}
 
-	
 	public void ensure(int screenWidth, int screenHeight) {
 		install();
 		if (this.declared.buffers().isEmpty()) {
@@ -108,9 +103,7 @@ public final class StorageBuffers implements AutoCloseable {
 		}
 
 		ensurePlaceholder(device);
-		// The map follows the list whatever happens below: an allocation that throws halfway
-		// through a resize has already destroyed the relative buffers and dropped them from the
-		// list, and a map left standing would hand a destroyed handle to the next descriptor push.
+
 		try {
 			allocate(vulkan, first, resized, screenWidth, screenHeight);
 		} finally {
@@ -168,7 +161,6 @@ public final class StorageBuffers implements AutoCloseable {
 		}
 	}
 
-	
 	public static void bind(RenderPass pass, List<String> names) {
 		if (names.isEmpty()) {
 			return;
@@ -188,7 +180,6 @@ public final class StorageBuffers implements AutoCloseable {
 		return this.dummy == null ? null : this.dummy.slice(0, 16);
 	}
 
-	
 	private void zero(GpuDevice device) {
 		CommandEncoder encoder = device.createCommandEncoder();
 		GpuRecording.endPass(encoder);
@@ -297,7 +288,6 @@ public final class StorageBuffers implements AutoCloseable {
 			}
 		}
 
-		
 		private void destroy(VulkanDevice vulkan) {
 			long buffer = this.buffer;
 			long allocation = this.allocation;

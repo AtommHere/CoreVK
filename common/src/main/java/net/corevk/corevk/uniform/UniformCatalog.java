@@ -34,7 +34,6 @@ public final class UniformCatalog {
 	private record Entry(UniformShape natural, UniformSource source) {
 	}
 
-	
 	public static UniformCatalog engine() {
 		UniformCatalog built = engine;
 		if (built != null) {
@@ -62,7 +61,6 @@ public final class UniformCatalog {
 		}
 	}
 
-	
 	public static UniformCatalog geometry() {
 		UniformCatalog built = geometry;
 		if (built != null) {
@@ -81,7 +79,6 @@ public final class UniformCatalog {
 		}
 	}
 
-	
 	public static UniformCatalog shadowGeometry() {
 		UniformCatalog built = shadowGeometry;
 		if (built != null) {
@@ -100,7 +97,6 @@ public final class UniformCatalog {
 		}
 	}
 
-	
 	private static void coreMatrices(Builder builder) {
 		builder.alias("modelViewMatrix", "of_ModelViewMatrix");
 		builder.alias("projectionMatrix", "of_ProjectionMatrix");
@@ -111,12 +107,10 @@ public final class UniformCatalog {
 		return new Builder(Map.of());
 	}
 
-	
 	public static Builder builder(UniformCatalog base) {
 		return new Builder(base.entries);
 	}
 
-	
 	public UniformSource source(String name) {
 		Entry entry = this.entries.get(name);
 
@@ -137,14 +131,12 @@ public final class UniformCatalog {
 
 		private final Map<String, Entry> entries;
 
-		
 		private final Set<String> added = new HashSet<>();
 
 		private Builder(Map<String, Entry> base) {
 			this.entries = new LinkedHashMap<>(base);
 		}
 
-		
 		public Builder add(String name, UniformShape natural, UniformSource source) {
 			if (!this.added.add(name)) {
 				throw new IllegalStateException(name + " is registered twice in the same catalogue");
@@ -155,7 +147,6 @@ public final class UniformCatalog {
 			return this;
 		}
 
-		
 		public Builder alias(String name, String existing) {
 			Entry entry = this.entries.get(existing);
 			if (entry == null) {

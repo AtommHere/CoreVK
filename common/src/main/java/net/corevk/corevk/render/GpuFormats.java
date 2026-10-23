@@ -16,8 +16,7 @@ import org.lwjgl.vulkan.VkFormatProperties;
 final class GpuFormats {
 
 	static {
-		// The two enumerations are compiled separately, so a format added on the pack side after
-		// this class was built would otherwise surface as a failed draw rather than as a hole.
+
 		for (TargetFormat format : TargetFormat.values()) {
 			try {
 				of(format);
@@ -74,28 +73,23 @@ final class GpuFormats {
 		};
 	}
 
-	
 	static FilterMode filterFor(TargetFormat format) {
 		return format.integer() ? FilterMode.NEAREST : FilterMode.LINEAR;
 	}
 
-	
 	static boolean storageCapable(GpuFormat format) {
 		return feature(format, VK10.VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, false);
 	}
 
-	
 	static boolean filtersLinearly(GpuFormat format) {
 		return feature(format, VK10.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT, true);
 	}
 
-	
 	static boolean blitsBothWays(GpuFormat format) {
 		return feature(format, VK10.VK_FORMAT_FEATURE_BLIT_SRC_BIT, false)
 				&& feature(format, VK10.VK_FORMAT_FEATURE_BLIT_DST_BIT, false);
 	}
 
-	
 	private static boolean feature(GpuFormat format, int bit, boolean absent) {
 		GpuDevice device = RenderSystem.tryGetDevice();
 		if (device == null

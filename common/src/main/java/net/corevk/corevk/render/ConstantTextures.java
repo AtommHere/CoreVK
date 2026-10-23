@@ -15,7 +15,6 @@ import java.util.Map;
 
 final class ConstantTextures {
 
-	
 	private static final GpuFormat FORMAT = GpuFormat.RGBA8_UNORM;
 
 	private static final Vector4f OPAQUE_BLACK = new Vector4f(0.0F, 0.0F, 0.0F, 1.0F);
@@ -28,7 +27,6 @@ final class ConstantTextures {
 	private final TextureTarget farPlane;
 	private final Map<PbrMap, TextureTarget> flatMaps = new EnumMap<>(PbrMap.class);
 
-	
 	private ConstantTextures(GpuDevice device) {
 		this.black = GraphicsApi.textureTarget("CoreVK terrain black", 1, 1, false, FORMAT);
 		this.white = GraphicsApi.textureTarget("CoreVK terrain white", 1, 1, false, FORMAT);
@@ -46,7 +44,6 @@ final class ConstantTextures {
 				encoder.clearColorTexture(target.getColorTexture(), map.missing()));
 	}
 
-	
 	static ConstantTextures of(GpuDevice device) {
 		if (instance == null) {
 			instance = new ConstantTextures(device);
@@ -55,12 +52,10 @@ final class ConstantTextures {
 		return instance;
 	}
 
-	
 	static boolean ready() {
 		return instance != null;
 	}
 
-	
 	static void close() {
 		if (instance == null) {
 			return;
@@ -81,17 +76,14 @@ final class ConstantTextures {
 		return this.white.getColorTextureView();
 	}
 
-	
 	GpuTextureView farPlane() {
 		return this.farPlane.getDepthTextureView();
 	}
 
-	
 	static GpuTextureView farPlaneIfReady() {
 		return instance == null ? null : instance.farPlane();
 	}
 
-	
 	GpuTextureView flat(PbrMap map) {
 		return this.flatMaps.get(map).getColorTextureView();
 	}

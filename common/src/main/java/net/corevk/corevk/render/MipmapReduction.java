@@ -11,7 +11,6 @@ final class MipmapReduction {
 	private MipmapReduction() {
 	}
 
-	
 	static boolean generate(CommandEncoder encoder, TargetSurface surface) {
 		if (surface == null || surface.levels() <= 1) {
 			return false;
@@ -26,7 +25,6 @@ final class MipmapReduction {
 		return true;
 	}
 
-	
 	static boolean generate(CommandEncoder encoder, GpuTexture texture) {
 		if (texture == null || texture.getMipLevels() <= 1) {
 			return false;

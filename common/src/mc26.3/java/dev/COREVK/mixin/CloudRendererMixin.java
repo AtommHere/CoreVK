@@ -26,15 +26,12 @@ import org.jspecify.annotations.Nullable;
 @Mixin(CloudRenderer.class)
 public abstract class CloudRendererMixin {
 
-	
 	@Unique
 	private @Nullable RenderPipeline corevk$pipeline;
 
-	
 	@Unique
 	private @Nullable RenderPass corevk$opened;
 
-	
 	@ModifyVariable(method = "render(Lnet/minecraft/client/CloudStatus;"
 			+ "Lcom/mojang/renderpearl/api/commands/RenderPass;)V",
 			require = 1, argsOnly = true, at = @At(value = "LOAD", ordinal = 0))
@@ -59,7 +56,6 @@ public abstract class CloudRendererMixin {
 		return this.corevk$opened;
 	}
 
-	
 	@Inject(method = "render(Lnet/minecraft/client/CloudStatus;"
 			+ "Lcom/mojang/renderpearl/api/commands/RenderPass;)V",
 			require = 1, at = @At("RETURN"))
@@ -84,7 +80,6 @@ public abstract class CloudRendererMixin {
 		original.call(pass, chosen == null ? compiled : chosen);
 	}
 
-	
 	@WrapOperation(method = "render(Lcom/mojang/renderpearl/api/commands/RenderPass;"
 			+ "Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)V",
 			require = 1, at = @At(value = "INVOKE",

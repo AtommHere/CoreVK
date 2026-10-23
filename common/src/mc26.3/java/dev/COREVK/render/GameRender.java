@@ -37,33 +37,27 @@ import java.util.function.Supplier;
 
 public final class GameRender {
 
-	
 	private static @Nullable GpuTextureView featuresColour;
 
-	
 	private static @Nullable GpuTextureView featuresDepth;
 
 	private GameRender() {
 	}
 
-	
 	public static boolean redirectsFeatures() {
 		return true;
 	}
 
-	
 	public static void redirectFeatures(GpuTextureView colour, GpuTextureView depth) {
 		featuresColour = colour;
 		featuresDepth = depth;
 	}
 
-	
 	public static void endFeatureRedirect() {
 		featuresColour = null;
 		featuresDepth = null;
 	}
 
-	
 	public static @Nullable RenderPass featuresPass() {
 		GpuTextureView colour = featuresColour;
 		GpuTextureView depth = featuresDepth;
@@ -82,7 +76,6 @@ public final class GameRender {
 		return pass;
 	}
 
-	
 	public static boolean drawsOnMainTarget(PreparedRenderType prepared) {
 		Minecraft minecraft = Minecraft.getInstance();
 
@@ -90,12 +83,10 @@ public final class GameRender {
 				|| prepared.oitPipelineSet() == null);
 	}
 
-	
 	public static String drawTargetName(PreparedRenderType prepared) {
 		return "the order independent transparency targets";
 	}
 
-	
 	public static GpuTextureView drawColour(PreparedRenderType prepared) {
 		GpuTextureView redirected = featuresColour;
 
@@ -103,7 +94,6 @@ public final class GameRender {
 				: Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView();
 	}
 
-	
 	public static @Nullable GpuTextureView drawDepth(PreparedRenderType prepared) {
 		GpuTextureView redirected = featuresDepth;
 		if (redirected != null) {
@@ -115,7 +105,6 @@ public final class GameRender {
 		return GraphicsApi.hasDepth(main) ? main.getDepthTextureView() : null;
 	}
 
-	
 	public static void renderAllFeatures(FeatureRenderDispatcher dispatcher,
 			SubmitNodeStorage submits, Supplier<String> label) {
 		RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
@@ -133,7 +122,6 @@ public final class GameRender {
 		}
 	}
 
-	
 	public static void submitHands(GameRenderer gameRenderer, float partialTicks, PoseStack pose,
 			SubmitNodeCollector into, LocalPlayer player, int light) {
 		PlayerRenderState state = gameRenderer.gameRenderState().levelRenderState.playerRenderState;
@@ -143,25 +131,21 @@ public final class GameRender {
 		}
 	}
 
-	
 	public static void extractCamera(Camera camera, CameraRenderState into, DeltaTracker delta) {
 		camera.extractRenderState(into, delta);
 	}
 
-	
 	public static boolean shouldRender(EntityRenderDispatcher entities, Entity entity,
 			Frustum frustum, Vec3 at, float partialTicks) {
 		return entities.shouldRender(entity, frustum, at.x, at.y, at.z, partialTicks);
 	}
 
-	
 	public static boolean sectionShown(LevelRenderer level, BlockPos block) {
 		long fade = Util.toMillis(Minecraft.getInstance().options.chunkSectionFadeInTime().get());
 
 		return level.isSectionCompiledAndVisible(block, fade);
 	}
 
-	
 	public static int skyColor(Camera camera, float partialTick) {
 		Vector3fc colour = camera.attributeProbe().getValue(EnvironmentAttributes.SKY_COLOR,
 				partialTick);
@@ -169,17 +153,14 @@ public final class GameRender {
 		return ARGB.color(255, channel(colour.x()), channel(colour.y()), channel(colour.z()));
 	}
 
-	
 	private static int channel(float value) {
 		return Mth.clamp(Math.round(value * 255.0F), 0, 255);
 	}
 
-	
 	public static boolean particlesApart() {
 		return Minecraft.getInstance().gameRenderer.useImprovedTransparency();
 	}
 
-	
 	public static boolean weatherApart() {
 		return Minecraft.getInstance().gameRenderer.useImprovedTransparency();
 	}

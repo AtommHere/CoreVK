@@ -16,10 +16,8 @@ import java.util.function.Supplier;
 
 public final class GeometryHold {
 
-	
 	private static final int JOINS = -1;
 
-	
 	private static final int NO_HOLD = -2;
 
 	private static final int COUNT_DIFFERS = -3;
@@ -35,21 +33,17 @@ public final class GeometryHold {
 	private static int areaH;
 	private static boolean opening;
 
-	
 	private static boolean drawing;
 
-	
 	private static Supplier<String> ended;
 
 	private GeometryHold() {
 	}
 
-	
 	public static boolean opening() {
 		return opening;
 	}
 
-	
 	public static RenderPass open(CommandEncoder encoder, RenderPassDescriptor descriptor) {
 		int fit = fit(descriptor);
 		if (fit == JOINS) {
@@ -59,15 +53,10 @@ public final class GeometryHold {
 			return current;
 		}
 
-		// Named here and nowhere else: this is the one point that still knows both what is recording
-		// and what is asking, and a count of passes without their causes is what a family's number
-		// gets read into rather than read from. Only while a census is armed, the naming being the
-		// only part of any of this that builds a string.
 		if (PassTimings.censusArmed()) {
 			PassTimings.censusReopen(descriptor.label(), name(fit));
 		}
 
-		// Null, the cause having just been reported: the next open owes its own.
 		flush(null);
 		opening = true;
 		try {
@@ -81,7 +70,6 @@ public final class GeometryHold {
 		}
 	}
 
-	
 	public static boolean keep(RenderPass pass) {
 		boolean held = pass == current;
 		if (held) {
@@ -91,14 +79,8 @@ public final class GeometryHold {
 		return held;
 	}
 
-	
 	public static RenderPass leftover(RenderPassDescriptor descriptor) {
-		// The NAME is asked last, and that order is what keeps this on the path every pass of the
-		// frame takes: the encoder sends every createRenderPass through here, and reading a
-		// descriptor's name means running the supplier that builds it, which for the game's own
-		// immediate draws concatenates the pipeline it is drawing with into a string that is thrown
-		// away one comparison later. Everything ahead of it compares pointers and numbers, so the
-		// string is now only built for a pass that already writes the held images at the held area.
+
 		if (opening || current == null || clears(descriptor) || fit(descriptor) != JOINS
 				|| !leftoverLabel(descriptor)) {
 			return null;
@@ -110,11 +92,9 @@ public final class GeometryHold {
 		return current;
 	}
 
-	
 	public static void flush(Supplier<String> cause) {
 		RenderPass pass = current;
-		// Only when something really was recording. A clear with no hold standing ends nothing, and
-		// blaming it for the reopening that comes later would name a bystander.
+
 		if (pass != null) {
 			ended = cause;
 		}
@@ -128,14 +108,12 @@ public final class GeometryHold {
 		}
 	}
 
-	
 	public static void flushIdle(Supplier<String> cause) {
 		if (!drawing) {
 			flush(cause);
 		}
 	}
 
-	
 	private static int fit(RenderPassDescriptor descriptor) {
 		if (current == null || colours == null) {
 			return NO_HOLD;
@@ -169,7 +147,6 @@ public final class GeometryHold {
 		return sameArea ? JOINS : AREA_DIFFERS;
 	}
 
-	
 	private static String name(int fit) {
 		if (fit >= 0) {
 			return "its colour image " + fit + " is not the one held";
@@ -220,7 +197,6 @@ public final class GeometryHold {
 		return view == null ? null : view.texture();
 	}
 
-	
 	private static void resetArea(RenderPass pass) {
 		pass.disableScissor();
 	}

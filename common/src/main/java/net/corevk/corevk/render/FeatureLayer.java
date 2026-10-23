@@ -42,7 +42,6 @@ final class FeatureLayer {
 
 	private static final Vector4fc TRANSPARENT = new Vector4f(0.0F, 0.0F, 0.0F, 0.0F);
 
-	
 	private static final GpuFormat FORMAT = GpuFormat.RGBA8_UNORM;
 
 	private static final int VERTICES = 6;
@@ -75,7 +74,6 @@ final class FeatureLayer {
 			}
 			""";
 
-	
 	private final ChainPlan.Attachment into;
 
 	private final RenderPipeline pipeline;
@@ -85,11 +83,9 @@ final class FeatureLayer {
 	private boolean broken;
 	private boolean reported;
 
-	
 	private int brokenWidth;
 	private int brokenHeight;
 
-	
 	FeatureLayer(ChainPlan.Attachment into, GpuFormat destination) {
 		this.into = into;
 		this.source = GraphicsApi.source((id, type) -> {
@@ -116,14 +112,10 @@ final class FeatureLayer {
 				.build();
 	}
 
-	
 	GpuTextureView open(GpuDevice device, int width, int height) {
-		// Texture allocation records its layout transition immediately. The event can arrive
-		// with the previous physical render pass still pending on the Vulkan encoder.
+
 		GeometryHold.flush(() -> "CoreVK feature layer allocation");
-		// Before the latch and not after, the same order ColorTargets.ensure keeps and for the
-		// reason written there: a minimised window is another size, and lifting a refusal on a size
-		// nothing is ever allocated at only makes the real size pay the failure twice.
+
 		if (width <= 0 || height <= 0) {
 			return null;
 		}
@@ -144,8 +136,7 @@ final class FeatureLayer {
 
 		if (this.layer == null) {
 			try {
-				// No depth of its own: the redirected draws test against the game's depth, which
-				// the override for depth keeps pointing at, so entities still hide behind walls.
+
 				this.layer = GraphicsApi.textureTarget("CoreVK features", width, height, false, FORMAT);
 			} catch (GpuDeviceLossException e) {
 				throw e;
@@ -166,7 +157,6 @@ final class FeatureLayer {
 		return this.layer.getColorTextureView();
 	}
 
-	
 	boolean prepare(GpuDevice device) {
 		if (GraphicsApi.valid(GraphicsApi.compile(device, this.pipeline, this.source))) {
 			return true;
@@ -181,12 +171,10 @@ final class FeatureLayer {
 		return false;
 	}
 
-	
 	ChainPlan.Attachment into() {
 		return this.into;
 	}
 
-	
 	void compose(CommandEncoder encoder, GpuBuffer quad, GpuTextureView into,
 			Optional<Vector4fc> clear) {
 		if (this.layer == null || quad == null || into == null) {

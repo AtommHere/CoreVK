@@ -27,39 +27,29 @@ import java.util.stream.Stream;
 
 public final class ShaderPackSource implements AutoCloseable {
 
-	
 	private static final Set<String> SOURCE_EXTENSIONS =
 			Set.of("glsl", "fsh", "vsh", "gsh", "csh", "tcs", "tes", "inc", "settings");
 
 	private static final String SHADERS_DIRECTORY = "shaders";
 
-	
 	private static final int SHADERS_SEARCH_DEPTH = 3;
 
-	
 	private static final long MAX_FILE_BYTES = 8L * 1024 * 1024;
 
-	
 	private static final int BINARY_PROBE = 4096;
 
-	
 	private static final AtomicInteger OPENINGS = new AtomicInteger();
 
 	private final String packName;
 	private final Path shadersRoot;
 	private final FileSystem ownedFileSystem;
 
-	// Directory listings, lower-cased, kept for the case-insensitive fallback below. Built on
-	// demand because most packs never need it.
 	private final Map<String, Map<String, Path>> listingsByDirectory = new HashMap<>();
 
-	
 	private final Map<String, List<String>> linesByFile = new HashMap<>();
 
-	
 	private final Map<Expansion, IncludeExpander.ExpandedUnit> expandedUnits = new HashMap<>();
 
-	
 	private final Map<Object, Object> derived = new HashMap<>();
 
 	private int caseInsensitiveHits;
@@ -70,7 +60,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		this.ownedFileSystem = ownedFileSystem;
 	}
 
-	
 	public static String nameOf(Path packPath) {
 		Path name = packPath.getFileName();
 		if (name == null) {
@@ -85,17 +74,14 @@ public final class ShaderPackSource implements AutoCloseable {
 		return text.substring(0, text.length() - 4);
 	}
 
-	
 	public static int openings() {
 		return OPENINGS.get();
 	}
 
-	
 	public interface Derivation<T> {
 		T read() throws IOException;
 	}
 
-	
 	@SuppressWarnings("unchecked")
 	public <T> T derived(Object key, Derivation<T> compute) throws IOException {
 		Object known = this.derived.get(key);
@@ -107,7 +93,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		return (T) known;
 	}
 
-	
 	public OptionIndex options() throws IOException {
 		return derived(OptionIndex.class, () -> {
 			OptionIndex.Reader reader = new OptionIndex.Reader();
@@ -139,7 +124,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		}
 	}
 
-	
 	private static Path findShadersRoot(Path root) throws IOException {
 		Path direct = root.resolve(SHADERS_DIRECTORY);
 		if (Files.isDirectory(direct)) {
@@ -163,17 +147,14 @@ public final class ShaderPackSource implements AutoCloseable {
 		return this.ownedFileSystem != null;
 	}
 
-	
 	public int caseInsensitiveHits() {
 		return this.caseInsensitiveHits;
 	}
 
-	
 	public String rel(Path file) {
 		return this.shadersRoot.relativize(file).toString().replace('\\', '/');
 	}
 
-	
 	public List<Path> sourceFiles() throws IOException {
 		try (Stream<Path> tree = Files.walk(this.shadersRoot)) {
 			List<Path> files = new ArrayList<>(tree.filter(Files::isRegularFile)
@@ -185,7 +166,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		}
 	}
 
-	
 	public List<Path> otherFiles() throws IOException {
 		Set<Path> sources = Set.copyOf(sourceFiles());
 
@@ -200,7 +180,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		}
 	}
 
-	
 	public String searchableText(Path file) throws IOException {
 		try (InputStream in = Files.newInputStream(file)) {
 			byte[] head = in.readNBytes(BINARY_PROBE);
@@ -223,7 +202,7 @@ public final class ShaderPackSource implements AutoCloseable {
 		try {
 			return Files.size(file) <= MAX_FILE_BYTES;
 		} catch (IOException e) {
-			// A file whose size cannot even be read is one nothing will read either.
+
 			return false;
 		}
 	}
@@ -240,7 +219,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		return dot < 0 ? "" : text.substring(dot + 1).toLowerCase(Locale.ROOT);
 	}
 
-	
 	public List<String> readLines(Path file) throws IOException {
 		String relative = rel(file);
 		List<String> known = this.linesByFile.get(relative);
@@ -248,9 +226,6 @@ public final class ShaderPackSource implements AutoCloseable {
 			return known;
 		}
 
-		// The largest source file in the corpus is a hundred and sixty kilobytes. Reading without
-		// a ceiling means a zip that unpacks to half a gigabyte is read whole into memory before
-		// anything downstream gets the chance to refuse it.
 		long size = Files.size(file);
 		if (size > MAX_FILE_BYTES) {
 			throw new IOException(relative + " is " + size + " bytes, past the " + MAX_FILE_BYTES
@@ -267,20 +242,16 @@ public final class ShaderPackSource implements AutoCloseable {
 			text = text.substring(1);
 		}
 
-		// Splitting on a lone carriage return as well: some pack files still carry classic Mac
-		// line endings, and treating such a file as one long line loses every directive in it.
 		List<String> lines = List.of(text.split("\r\n|\n|\r", -1));
 		this.linesByFile.put(relative, lines);
 
 		return lines;
 	}
 
-	
 	Optional<IncludeExpander.ExpandedUnit> expandedUnit(SettingSet settings, String entry) {
 		return Optional.ofNullable(this.expandedUnits.get(new Expansion(settings, entry)));
 	}
 
-	
 	void rememberUnit(SettingSet settings, String entry, IncludeExpander.ExpandedUnit unit) {
 		this.expandedUnits.put(new Expansion(settings, entry), unit);
 	}
@@ -288,7 +259,6 @@ public final class ShaderPackSource implements AutoCloseable {
 	private record Expansion(SettingSet settings, String entry) {
 	}
 
-	
 	public Optional<Path> resolveInsideShaders(String spec) {
 		return resolveAgainst(this.shadersRoot, withoutLeadingSlash(spec));
 	}
@@ -297,7 +267,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		return spec.replaceAll("^/+", "");
 	}
 
-	
 	public Optional<Path> resolveRelativeTo(Path fromFile, String spec) {
 		Path parent = fromFile.getParent();
 
@@ -317,7 +286,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		return resolveIgnoringCase(target.get());
 	}
 
-	
 	private Optional<Path> confine(Path base, String spec) {
 		Path target;
 		try {
@@ -329,12 +297,10 @@ public final class ShaderPackSource implements AutoCloseable {
 		return target.startsWith(this.shadersRoot) ? Optional.of(target) : Optional.empty();
 	}
 
-	
 	public boolean insidePack(String relative) {
 		return confine(this.shadersRoot, withoutLeadingSlash(relative)).isPresent();
 	}
 
-	
 	private Optional<Path> resolveIgnoringCase(Path target) {
 		Path parent = target.getParent();
 		Path name = target.getFileName();
@@ -369,7 +335,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		return byLowerName;
 	}
 
-	
 	public List<String> topLevelDirectories() throws IOException {
 		try (Stream<Path> entries = Files.list(this.shadersRoot)) {
 			return entries.filter(Files::isDirectory)
@@ -379,17 +344,14 @@ public final class ShaderPackSource implements AutoCloseable {
 		}
 	}
 
-	
 	public Optional<Path> file(String relative) {
 		return resolveInsideShaders(relative);
 	}
 
-	
 	public long size(Path file) throws IOException {
 		return Files.size(file);
 	}
 
-	
 	public byte[] head(Path file, long wanted) throws IOException {
 		if (wanted < 0 || wanted > Integer.MAX_VALUE) {
 			throw new IOException(rel(file) + " is asked for " + wanted
@@ -407,7 +369,6 @@ public final class ShaderPackSource implements AutoCloseable {
 		}
 	}
 
-	
 	public byte[] bytes(Path file) throws IOException {
 		long size = Files.size(file);
 		if (size > MAX_FILE_BYTES) {
@@ -418,22 +379,18 @@ public final class ShaderPackSource implements AutoCloseable {
 		return Files.readAllBytes(file);
 	}
 
-	
 	void forgetDerived() {
 		this.derived.clear();
 	}
 
-	
 	int filesRead() {
 		return this.linesByFile.size();
 	}
 
-	
 	int unitsFlattened() {
 		return this.expandedUnits.size();
 	}
 
-	
 	@Override
 	public void close() throws IOException {
 		this.linesByFile.clear();

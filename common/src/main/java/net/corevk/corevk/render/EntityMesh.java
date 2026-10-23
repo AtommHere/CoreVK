@@ -21,43 +21,33 @@ import org.jspecify.annotations.Nullable;
 
 public final class EntityMesh {
 
-	
 	private static final VertexFormat FORMAT = extend();
 
-	
 	private static final VertexFormat MOVING_BLOCK_FORMAT = extendMovingBlock();
 
-	
 	private static boolean carrying;
 
-	
 	private static boolean said;
 
-	
 	private static boolean widerRefused;
 
-	
 	private static boolean rebuildAsked;
 
 	private EntityMesh() {
 	}
 
-	
 	public static VertexFormat format() {
 		return FORMAT;
 	}
 
-	
 	public static VertexFormat movingBlockFormat() {
 		return MOVING_BLOCK_FORMAT;
 	}
 
-	
 	public static boolean carrying() {
 		return carrying;
 	}
 
-	
 	public static @Nullable VertexFormat binding(RenderPipeline pipeline,
 			@Nullable VertexFormat declared) {
 		if (!carrying) {
@@ -76,25 +66,20 @@ public final class EntityMesh {
 		return block && movingBlock(pipeline) ? MOVING_BLOCK_FORMAT : declared;
 	}
 
-	
 	@SuppressWarnings("ReferenceEquality")
 	public static boolean movingBlock(RenderPipeline pipeline) {
 		return pipeline == RenderPipelines.SOLID_BLOCK || pipeline == RenderPipelines.CUTOUT_BLOCK
 				|| pipeline == RenderPipelines.TRANSLUCENT_BLOCK;
 	}
 
-	
 	private static boolean asked() {
 		return !widerRefused && (EntityDraw.wanted() || HandDraw.wanted());
 	}
 
-	
 	static void ask() {
 		boolean asked = asked();
 		if (asked == carrying) {
-			// Back in agreement, so whatever was asked for is owed no longer and the next real
-			// disagreement gets its own line. This is the road a load takes when it turns one switch
-			// off and the other leaves the answer where it was.
+
 			rebuildAsked = false;
 
 			return;
@@ -112,12 +97,10 @@ public final class EntityMesh {
 		rebuildAsked = true;
 	}
 
-	
 	public static void settle() {
 		boolean asked = asked();
 		boolean moved = asked != carrying;
-		// Before the way out and not after it: this runs whether or not the answer moved, and a settle
-		// that found nothing to do is exactly the one that would leave the flag standing.
+
 		rebuildAsked = false;
 		if (said && !moved) {
 			return;
@@ -126,45 +109,6 @@ public final class EntityMesh {
 		said = true;
 		carrying = asked;
 
-		// ONLY where the answer really moved, and the two conditions are not one. The first settle of
-		// a session has never said anything and must print, but a session nobody picked a pack in
-		// settles false onto false and has nothing to drop: dropping anyway is a full recompile of
-		// every static pipeline at the first world join, for a stride that did not change.
-		//
-		// Where it did move, a drop is owed: the game precompiles every static pipeline at every
-		// resource load and caches it by identity (ShaderManager.apply, VulkanDevice.pipelineCache),
-		// this backend bakes the stride in at compile, so the entity ones standing here carry the
-		// other answer's stride. Left standing they read the mesh at the wrong offsets from now on,
-		// which on screen is the hand and every fallback entity as triangles stretched across the
-		// picture, and it does not heal: the cache is only emptied at a resource reload, so the
-		// defect holds for the rest of the session. Measured before it was believed: hand=off on a
-		// stock bench, one world join, and the artefacts stood until a pack toggle forced the
-		// reload.
-		//
-		// AND NOTHING IS DESTROYED HERE ALL THE SAME, which was this engine's half of issue 111.
-		// Destruction waits the device idle, and there is no instant of a running session where
-		// that is safe: this backend records continuously, so at any positional hook something
-		// already recorded still names what a purge frees. Freed here, on a pack load in a running
-		// world, the device was lost seconds later with nothing in the log; moved to the head of
-		// the frame, it took the boot's world join down instead. So the two halves of eviction are
-		// split along what each one can bear. Leaving the map is map work, safe anywhere, and
-		// enough on its own: what no lookup can answer with, no NEW draw binds. The compiled
-		// pipelines wait in the mixin for clearPipelineCache, the game's one safe road, which
-		// quiesces first and now frees them with the rest. And the recompile happens at once
-		// rather than lazily at the next bind. The null asks the backend's default source, and it
-		// is never read: a source is only consulted on a miss of the device's shader module cache
-		// (VulkanDevice.getOrCompileShader, keyed by id, type and defines), the drop leaves that
-		// cache standing, and the moved answer changes none of the three keys. The recompile
-		// therefore reuses the very modules the last resource load compiled, core shaders a
-		// resource pack replaced included, and only the pipeline around them takes the new stride.
-		//
-		// The GL backend is left exactly as it stood, debt included, and the old line still says
-		// the answer moved there. Whether GL owes the same eviction is UNPROVEN in both
-		// directions: its encoder rebuilds the vertex array from the live getter at every draw
-		// (GlCommandEncoder), which reads as immune, but GlProgram.link binds attribute locations
-		// once from the format it is handed, which reads as the same bake by another name. Nobody
-		// has drawn the artefact there, and an eviction shipped unmeasured would be this fix's own
-		// plausible-and-wrong.
 		if (moved) {
 			GpuDevice device = RenderSystem.getDevice();
 			List<RenderPipeline> dropped = GraphicsApi.dropEntityPipelines(device);
@@ -176,21 +120,11 @@ public final class EntityMesh {
 				} catch (GpuDeviceLossException e) {
 					throw e;
 				} catch (RuntimeException e) {
-					// A pipeline the driver refuses throws out of precompilePipeline rather than coming
-					// back invalid, and this runs inside Sodium's renderer setup, outside every catch
-					// of the frame. Going back to the game's own format is the game's own compile, and
-					// a refusal there is not this engine's to answer.
+
 					if (!asked) {
 						throw e;
 					}
 
-					// Going to the wider format, what was refused is the format, so the mesh stops
-					// carrying it. Whatever this loop already compiled at the wider format leaves the
-					// map again, so every entity pipeline of the game compiles at its own format at its
-					// next bind, and the pack's entities and hand stand down for the session, their
-					// programs reading a mesh that no longer carries. The order is what
-					// asks for no rebuild: the answer goes back first and the hand is taken down without
-					// asking, so the entity switch is the one question left and it finds agreement.
 					widerRefused = true;
 					carrying = false;
 					GraphicsApi.dropEntityPipelines(device);
@@ -233,7 +167,6 @@ public final class EntityMesh {
 				MovingBlockVertex.APPENDED);
 	}
 
-	
 	private static VertexFormat extend() {
 		VertexFormat.Builder builder = VertexFormat.builder(DefaultVertexFormat.ENTITY.getStepRate());
 		for (VertexFormatElement element : DefaultVertexFormat.ENTITY.getElements()) {
@@ -246,7 +179,6 @@ public final class EntityMesh {
 				.build();
 	}
 
-	
 	private static VertexFormat extendMovingBlock() {
 		VertexFormat.Builder builder = VertexFormat.builder(DefaultVertexFormat.BLOCK.getStepRate());
 		for (VertexFormatElement element : DefaultVertexFormat.BLOCK.getElements()) {

@@ -41,43 +41,33 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 			.translatable(ScreenText.PACK_DROP)
 			.withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 
-	
 	private static final Identifier IN_WORLD_BACKGROUND =
 			Identifier.withDefaultNamespace("textures/gui/inworld_menu_background.png");
 
-	
 	private static final float INVISIBLE = 0.02F;
 
-	
 	private static final float FAINTEST = 0.01F;
 
-	
 	private static final URI CURSEFORGE_PACKS =
 			URI.create("https://www.curseforge.com/minecraft/search?class=shaders");
 	private static final URI MODRINTH_PACKS = URI.create("https://modrinth.com/shaders");
 
 	private static final int ROW_HEIGHT = 20;
 
-	
 	private static final int SCROLLBAR_INSET = 6;
 
-	
 	private static final int ROW_WIDTH = 308;
 	private static final int ROW_MARGIN = 50;
 
-	
 	private static final int ROW_NUDGE = 2;
 
-	
 	private static final int TEXT_HEIGHT = 11;
 
 	private static final int WHITE = 0xFFFFFFFF;
 	private static final int LABEL_GREY = 0xFFC2C2C2;
 
-	
 	private static final int APPLIED_YELLOW = 0xFFFFF263;
 
-	
 	private static final int DISABLED_GREY = 0xFFA2A2A2;
 
 	private final PackHost host;
@@ -106,8 +96,7 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 					StandardWatchEventKinds.ENTRY_DELETE);
 			this.watching = true;
 		} catch (IOException | RuntimeException e) {
-			// A folder that cannot be watched is not a broken screen: the list is built once either
-			// way, and what is lost is a pack dropped in while it is open appearing on its own.
+
 			CoreVK.logger().warn("CoreVK could not watch {} for new packs",
 					PackLoader.directory(gameDirectory), e);
 			this.watching = false;
@@ -124,7 +113,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		return this.width - SCROLLBAR_INSET;
 	}
 
-	
 	@Override
 	protected void updateWidgetNarration(NarrationElementOutput output) {
 	}
@@ -139,7 +127,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		return super.getRowTop(row) + ROW_NUDGE;
 	}
 
-	
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.isUp() && getFocused() == children().getFirst()) {
@@ -149,7 +136,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		return super.keyPressed(event);
 	}
 
-	
 	@Override
 	public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
 			float a) {
@@ -163,14 +149,12 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 				break;
 			}
 
-			// A key that cannot be reset is a folder that went away, and nothing is watched after that.
 			this.watching = this.key.reset();
 		}
 
 		super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
 	}
 
-	
 	public void close() throws IOException {
 		if (this.key != null) {
 			this.key.cancel();
@@ -202,8 +186,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 			return;
 		}
 
-		// The fade reaches the blit's own colour, which is the one place on this screen where it is
-		// honoured at all: everything else CoreVK hands it to is a widget alpha nothing reads.
 		int tint = ARGB.colorFromFloat(Math.max(alpha, FAINTEST), 1.0F, 1.0F, 1.0F);
 		boolean inWorld = this.minecraft.level != null;
 		Identifier header = inWorld ? Screen.INWORLD_HEADER_SEPARATOR : Screen.HEADER_SEPARATOR;
@@ -215,7 +197,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 				getWidth(), 2, 32, 2, tint);
 	}
 
-	
 	public void refresh(String chosen) {
 		clearEntries();
 
@@ -227,9 +208,7 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 					PackLoader.directory(this.gameDirectory), e);
 			addEntry(this.toggleRow);
 			this.toggleRow.packsPresent = false;
-			// Not translated, and CoreVK gives the reason for leaving its own untranslated: this is seen
-			// very rarely, and what it is really for is getting the reader to the log, where the cause
-			// is. Usually a folder this game cannot read.
+
 			addEntry(new LabelEntry(Component
 					.literal("Your shader pack folder could not be read. See the log.")
 					.withStyle(ChatFormatting.RED)));
@@ -238,11 +217,10 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		}
 
 		addEntry(this.toggleRow);
-		// CoreVK offers somewhere to get a pack when there is none, and the toggle is dead for the same
-		// reason: switching shaders on with an empty folder would do nothing and say nothing.
+
 		this.toggleRow.packsPresent = !packs.isEmpty();
 		if (packs.isEmpty()) {
-			// Untranslated, as CoreVK leaves its own: the address it opens is in English either way.
+
 			addEntry(new PinnedEntry(Component.literal("Download Shaders from CurseForge"),
 					() -> openPackSite(CURSEFORGE_PACKS)));
 			addEntry(new PinnedEntry(Component.literal("Download Shaders from Modrinth"),
@@ -270,27 +248,22 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		addEntry(new LabelEntry(DROP_LABEL));
 	}
 
-	
 	public String chosenName() {
 		return getSelected() instanceof PackEntry entry ? entry.packName : "";
 	}
 
-	
 	public boolean shadersEnabled() {
 		return this.toggleRow.shadersEnabled;
 	}
 
-	
 	public boolean packsPresent() {
 		return this.toggleRow.packsPresent;
 	}
 
-	
 	public void markSelectedApplied() {
 		this.applied = getSelected() instanceof PackEntry entry ? entry : null;
 	}
 
-	
 	public void select(String name) {
 		for (BaseEntry entry : children()) {
 			if (entry instanceof PackEntry pack && pack.packName.equals(name)) {
@@ -301,19 +274,16 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		}
 	}
 
-	
 	private void openPackSite(URI address) {
 		ConfirmLinkScreen.confirmLinkNow(this.minecraft.gui.screen(), address, true);
 	}
 
-	
 	public abstract static class BaseEntry extends AbstractSelectionList.Entry<BaseEntry> {
 
 		protected BaseEntry() {
 		}
 	}
 
-	
 	public static final class LabelEntry extends BaseEntry {
 
 		private final Component label;
@@ -331,7 +301,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		}
 	}
 
-	
 	public static final class ToggleEntry extends BaseEntry {
 
 		private final PackList list;
@@ -405,7 +374,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		}
 	}
 
-	
 	public static final class PinnedEntry extends BaseEntry {
 
 		private final Component label;
@@ -447,7 +415,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 		}
 	}
 
-	
 	public static final class PackEntry extends BaseEntry {
 
 		private final PackList list;
@@ -494,9 +461,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 			boolean enabled = this.list.toggleRow.shadersEnabled;
 			boolean under = isMouseOver(mouseX, mouseY);
 
-			// Measured against the bold form so that a name does not grow past the row the moment the
-			// mouse is over it, and cut with the ellipsis written out rather than through the shared
-			// helper, which is what CoreVK does here.
 			String name = this.packName;
 			if (font.width(Component.literal(name).withStyle(ChatFormatting.BOLD))
 					> this.list.getRowWidth() - 3) {
@@ -521,7 +485,6 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 					y + (height - TEXT_HEIGHT) / 2, color);
 		}
 
-		
 		private boolean press() {
 			boolean did = false;
 			if (!this.list.toggleRow.shadersEnabled) {
@@ -530,10 +493,7 @@ public final class PackList extends AbstractSelectionList<PackList.BaseEntry> {
 			}
 
 			if (!isSelected()) {
-				// Itself, where CoreVK looks its own row up by an index it was built with,
-				// ShaderPackSelectionList.java:524. The index is the position among the list's rows
-				// rather than among the packs, so it counts the toggle above them, and it would count
-				// wrong the day another row joins it. The row is already the answer.
+
 				this.list.setSelected(this);
 				did = true;
 			}

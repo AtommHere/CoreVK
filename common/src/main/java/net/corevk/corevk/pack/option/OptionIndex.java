@@ -18,16 +18,10 @@ public final class OptionIndex {
 			Pattern.compile("^\\s*(//\\s*)?#\\s*define\\s+([A-Za-z_]\\w*)\\s*(.*)$");
 	private static final Pattern CONSTANT =
 			Pattern.compile("^\\s*const\\s+(int|float|bool|uint)\\s+([A-Za-z_]\\w*)\\s*=\\s*([^;]+);(.*)$");
-	// The list is the first bracket anywhere in the trailing comment, not one that has to
-	// follow the slashes. Packs routinely describe the setting before offering its values,
-	// as in "// render resolution multiplier [0.10 0.25]", and requiring the bracket first
-	// silently leaves those options with nothing to cycle through.
+
 	private static final Pattern VALUE_LIST = Pattern.compile("//[^\\[]*\\[(.*?)]");
 	private static final Pattern TRAILING_COMMENT = Pattern.compile("//.*");
-	// The reference's own strictness, detail for detail: no space between # and the keyword,
-	// the name alone, and nothing after it, so a trailing comment on the #ifdef line keeps it
-	// from counting as a reference there too. The name class is the one this index can hold;
-	// the reference would also take a name opening on a digit, which no declaration here can.
+
 	private static final Pattern CONDITIONAL =
 			Pattern.compile("^\\s*#(?:ifdef|ifndef)\\s+([A-Za-z_]\\w*)\\s*$");
 
@@ -39,13 +33,11 @@ public final class OptionIndex {
 		this.conditionalReferences = Set.copyOf(conditionalReferences);
 	}
 
-	
 	public static final class Reader {
 
 		private final Map<String, PackOption> found = new LinkedHashMap<>();
 		private final Set<String> referenced = new HashSet<>();
 
-		
 		public void read(String where, List<String> lines) {
 			for (int i = 0; i < lines.size(); i++) {
 				PackOption option = parse(lines.get(i), where, i + 1);
@@ -71,8 +63,6 @@ public final class OptionIndex {
 			String rest = define.group(3);
 			String defaultText = TRAILING_COMMENT.matcher(rest).replaceAll("").trim();
 
-			// Empty means a bare switch. Anything else is a value, even without a list of
-			// allowed ones next to it, and even when it is a macro's parameter list.
 			return new PackOption(define.group(2),
 					defaultText.isEmpty() ? PackOption.Kind.TOGGLE : PackOption.Kind.VALUE,
 					defaultText, valueList(rest), define.group(1) != null, null, where, lineNumber);
@@ -87,7 +77,6 @@ public final class OptionIndex {
 		return null;
 	}
 
-	
 	private static List<String> valueList(String text) {
 		Matcher list = VALUE_LIST.matcher(text);
 		if (!list.find()) {
@@ -101,12 +90,10 @@ public final class OptionIndex {
 		return Optional.ofNullable(this.byName.get(name));
 	}
 
-	
 	public boolean referenced(String name) {
 		return this.conditionalReferences.contains(name);
 	}
 
-	
 	public boolean offers(PackOption option) {
 		return switch (option.kind()) {
 			case TOGGLE -> referenced(option.name());
@@ -122,7 +109,6 @@ public final class OptionIndex {
 		return this.byName.values();
 	}
 
-	
 	public Set<String> names() {
 		return this.byName.keySet();
 	}
@@ -135,7 +121,6 @@ public final class OptionIndex {
 		return (int) this.byName.values().stream().filter(option -> option.kind() == kind).count();
 	}
 
-	
 	public int disabledCount() {
 		return (int) this.byName.values().stream().filter(PackOption::defaultOff).count();
 	}
@@ -144,7 +129,6 @@ public final class OptionIndex {
 		return (int) this.byName.values().stream().filter(PackOption::hasValueList).count();
 	}
 
-	
 	public Collection<String> caseCollisions() {
 		Map<String, String> seen = new LinkedHashMap<>();
 		Collection<String> collisions = new TreeSet<>();

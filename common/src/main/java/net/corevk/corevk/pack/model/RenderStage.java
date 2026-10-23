@@ -2,7 +2,6 @@ package net.corevk.corevk.pack.model;
 
 public enum RenderStage {
 
-	
 	NONE,
 	SKY,
 	SUNSET,
@@ -11,7 +10,6 @@ public enum RenderStage {
 	MOON,
 	STARS,
 
-	
 	VOID,
 	TERRAIN_SOLID,
 	TERRAIN_CUTOUT_MIPPED,
@@ -30,7 +28,6 @@ public enum RenderStage {
 	WORLD_BORDER,
 	HAND_TRANSLUCENT;
 
-	
 	public String symbol() {
 		return "MC_RENDER_STAGE_" + name();
 	}

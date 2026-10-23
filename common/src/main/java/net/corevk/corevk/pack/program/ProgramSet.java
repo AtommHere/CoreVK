@@ -17,7 +17,6 @@ import java.util.function.ToIntFunction;
 
 public final class ProgramSet {
 
-	
 	public static final String ROOT = "";
 
 	private final List<ProgramKey> keys;
@@ -44,7 +43,7 @@ public final class ProgramSet {
 
 			ProgramStage stage = ProgramStage.ofFile(fileName).orElse(null);
 			if (stage == null) {
-				// A shared body, not an entry point. Every .glsl lands here.
+
 				continue;
 			}
 
@@ -75,7 +74,6 @@ public final class ProgramSet {
 		return this.keys.size();
 	}
 
-	
 	public Map<String, Integer> countByDimension() {
 		Map<String, Integer> counts = new TreeMap<>();
 		for (ProgramKey key : this.keys) {
@@ -98,17 +96,14 @@ public final class ProgramSet {
 		return (int) this.keys.stream().map(key -> key.name().baseName()).distinct().count();
 	}
 
-	
 	public Map<String, Integer> skippedNames() {
 		return new TreeMap<>(this.skippedNames);
 	}
 
-	
 	public Map<String, Integer> skippedDirectories() {
 		return new TreeMap<>(this.skippedDirectories);
 	}
 
-	
 	public List<ProgramKey> fragmentsOf(String place) {
 		return this.keys.stream()
 				.filter(key -> key.stage() == ProgramStage.FRAGMENT)
@@ -116,7 +111,6 @@ public final class ProgramSet {
 				.toList();
 	}
 
-	
 	public List<ProgramKey> computesOf(String place) {
 		return this.keys.stream()
 				.filter(key -> key.stage() == ProgramStage.COMPUTE)
@@ -124,7 +118,6 @@ public final class ProgramSet {
 				.toList();
 	}
 
-	
 	public static List<ProgramKey> sorted(List<ProgramKey> entries, ToIntFunction<String> rank) {
 		return entries.stream()
 				.sorted(Comparator
@@ -134,7 +127,6 @@ public final class ProgramSet {
 				.toList();
 	}
 
-	
 	public record ProgramKey(String dimension, ProgramNames.ProgramName name, ProgramStage stage, String file) {
 	}
 }

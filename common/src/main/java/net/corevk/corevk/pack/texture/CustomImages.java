@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 public final class CustomImages {
 
-	
 	private static final Set<String> LAYOUT_FORMATS = Arrays.stream(TargetFormat.values())
 			.map(CustomImages::glslLayout)
 			.collect(Collectors.toUnmodifiableSet());
@@ -25,12 +24,10 @@ public final class CustomImages {
 	private CustomImages() {
 	}
 
-	
 	public static boolean isLayoutFormat(String word) {
 		return LAYOUT_FORMATS.contains(word);
 	}
 
-	
 	public static void install(ImageInformation.Reading reading) {
 		Map<String, ImageInformation> images = new LinkedHashMap<>();
 		for (ImageInformation image : reading.images()) {
@@ -51,12 +48,10 @@ public final class CustomImages {
 		key = "";
 	}
 
-	
 	public static String key() {
 		return key;
 	}
 
-	
 	public static Set<String> namesOf(ImageInformation.Reading reading) {
 		Set<String> named = new LinkedHashSet<>();
 		for (ImageInformation image : reading.images()) {
@@ -67,7 +62,6 @@ public final class CustomImages {
 		return Set.copyOf(named);
 	}
 
-	
 	public static boolean named(String name) {
 		return names.contains(originalName(name));
 	}
@@ -76,19 +70,16 @@ public final class CustomImages {
 		return CustomImageView.parse(name).map(CustomImageView::original).orElse(name);
 	}
 
-	
 	public static Set<String> names() {
 		return names;
 	}
 
-	
 	public static boolean storage(String name) {
 		String original = originalName(name);
 		ImageInformation image = byName.get(original);
 		return image != null && image.name().equals(original);
 	}
 
-	
 	public static Optional<String> layoutFormat(String name) {
 		if (!storage(name)) {
 			return Optional.empty();

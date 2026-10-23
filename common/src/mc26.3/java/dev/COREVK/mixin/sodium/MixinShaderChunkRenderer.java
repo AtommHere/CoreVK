@@ -32,7 +32,6 @@ public abstract class MixinShaderChunkRenderer {
 	@Shadow
 	protected VertexFormat vertexFormat;
 
-	
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void corevk$sampler(TerrainRenderPass pass, FogParameters parameters,
 			GpuSampler terrainSampler, @Nullable OitStage stage, CallbackInfo callback) {
@@ -42,9 +41,7 @@ public abstract class MixinShaderChunkRenderer {
 	@Inject(method = "compileProgram", at = @At("HEAD"), cancellable = true)
 	private void corevk$terrain(TerrainRenderPass pass, @Nullable OitStage stage,
 			CallbackInfoReturnable<RenderPipeline> callback) {
-		// The region offset arrives through push constants, which only the Vulkan backend pushes at
-		// all: under OpenGL Sodium sets it as an ordinary uniform and our shader would read nothing.
-		// An order independent stage asks for one of Sodium's own sets, which no pack answers for.
+
 		if (DrawBackend.BACKEND == DrawBackend.OPENGL || stage != null) {
 			return;
 		}
@@ -60,15 +57,13 @@ public abstract class MixinShaderChunkRenderer {
 		}
 	}
 
-	
 	@Redirect(method = "compileProgram",
 			at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;",
 					ordinal = 0),
 			require = 1)
 	private Object corevk$ofThisFormat(Map<?, ?> memo, Object pass) {
 		Object found = memo.get(pass);
-		// A pipeline binding nothing at nought is no more usable than one binding another format, and
-		// the renderer builds none: every road into this map goes through its own vertex binding.
+
 		if (found instanceof RenderPipeline pipeline
 				&& !this.vertexFormat.equals(pipeline.getVertexFormatBinding(0))) {
 			return null;

@@ -18,13 +18,11 @@ import net.minecraft.world.phys.Vec3;
 
 public final class SodiumApi {
 
-	
 	private static boolean refusalSaid;
 
 	private SodiumApi() {
 	}
 
-	
 	public static void drawShadowLayer(SodiumWorldRenderer renderer, ChunkSectionLayerGroup group,
 			ChunkRenderMatrices matrices, Vec3 camera, GpuSampler sampler) {
 		RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();

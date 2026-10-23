@@ -24,10 +24,8 @@ import java.util.function.Function;
 
 public final class ComputeShader {
 
-	
 	private static final int STORAGE_IMAGE = Spvc.SPVC_RESOURCE_TYPE_STORAGE_IMAGE;
 
-	
 	private static final int STORAGE_BUFFER = Spvc.SPVC_RESOURCE_TYPE_STORAGE_BUFFER;
 
 	private static final Constructor<?> SAMPLER;
@@ -55,20 +53,17 @@ public final class ComputeShader {
 	private ComputeShader() {
 	}
 
-	
 	public record Binding(boolean buffer, String name) {
 	}
 
-	
 	public record Compiled(long module, List<Binding> entries) {
 	}
 
-	
 	public static @Nullable Compiled build(VulkanDevice vulkan, String label, String source,
 			String stage, Function<String, @Nullable ByteBuffer> compile) throws Exception {
 		long began = System.nanoTime();
 		IntermediaryShaderModule module = null;
-		// One state for the key and the patch, as the game's compiler road takes it.
+
 		RawLocals.begin();
 		try {
 			String key = ModuleCache.keyOf(source, stage);
@@ -80,11 +75,6 @@ public final class ComputeShader {
 					return null;
 				}
 
-				// The same zeroes the game's compiler road gets in GlslCompilerMixin: this road
-				// has its own shaderc call, so it has to ask for them itself, and before the
-				// reflection and the store, so a served blob carries them too. Compiled at the
-				// performance level, this module has mostly values where that road has variables,
-				// and its undefined reads are what the pass turns into zeroes here.
 				module = IntermediaryShaderModule.createFromSpirv(label,
 						RawLocals.patch(label, spirv));
 				ModuleCache.store(key, module);
@@ -101,7 +91,6 @@ public final class ComputeShader {
 		}
 	}
 
-	
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static void appendStorageImages(IntermediaryShaderModule module) {
 		if (module == null || module.spirv() == null) {
@@ -115,7 +104,6 @@ public final class ComputeShader {
 		}
 	}
 
-	
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static void appendStorageBuffers(IntermediaryShaderModule module) {
 		if (module == null || module.spirv() == null) {
@@ -130,7 +118,6 @@ public final class ComputeShader {
 		}
 	}
 
-	
 	private static Compiled compile(VulkanDevice vulkan, IntermediaryShaderModule module) {
 		try {
 			IntermediaryShaderModuleAccessor access =
@@ -285,7 +272,6 @@ public final class ComputeShader {
 		return found;
 	}
 
-	
 	private static String resourceName(long compiler, SpvcReflectedResource resource) {
 		String name = resource.nameString();
 		if (name != null && !name.isEmpty()) {
@@ -317,7 +303,6 @@ public final class ComputeShader {
 		}
 	}
 
-	
 	static String samplerName(Object sampler) {
 		return nameOf(sampler, SAMPLER_NAME);
 	}

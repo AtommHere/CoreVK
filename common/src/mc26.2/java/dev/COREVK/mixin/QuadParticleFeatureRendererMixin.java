@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 @Mixin(QuadParticleFeatureRenderer.class)
 public abstract class QuadParticleFeatureRendererMixin {
 
-	
 	@WrapOperation(method = "executeGroup", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/systems/CommandEncoder;createRenderPass("
@@ -52,7 +51,6 @@ public abstract class QuadParticleFeatureRendererMixin {
 		return pass;
 	}
 
-	
 	@WrapMethod(method = "executeGroup", require = 1)
 	private void corevk$group(FeatureFrameContext context, int groupIndex,
 			List<QuadParticleFeatureRenderer.Submit> submits, boolean strictlyOrdered,

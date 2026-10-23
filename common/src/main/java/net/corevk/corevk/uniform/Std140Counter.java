@@ -36,7 +36,6 @@ public final class Std140Counter implements UniformSink {
 		return advance(8, 8);
 	}
 
-	
 	@Override
 	public UniformSink putVec3(float x, float y, float z) {
 		return advance(16, 12);
@@ -52,7 +51,6 @@ public final class Std140Counter implements UniformSink {
 		return advance(8, 8);
 	}
 
-	
 	@Override
 	public UniformSink putIVec3(int x, int y, int z) {
 		return advance(16, 12);

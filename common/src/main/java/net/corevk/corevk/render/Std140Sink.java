@@ -42,7 +42,6 @@ final class Std140Sink implements UniformSink {
 		return this;
 	}
 
-	
 	@Override
 	public UniformSink putVec3(float x, float y, float z) {
 		this.builder.align(16);
@@ -65,7 +64,6 @@ final class Std140Sink implements UniformSink {
 		return this;
 	}
 
-	
 	@Override
 	public UniformSink putIVec3(int x, int y, int z) {
 		this.builder.align(16);
@@ -81,7 +79,6 @@ final class Std140Sink implements UniformSink {
 		return this;
 	}
 
-	
 	@Override
 	public UniformSink putMat3(Matrix3fc m) {
 		this.builder.putVec4(m.m00(), m.m01(), m.m02(), 0.0F)

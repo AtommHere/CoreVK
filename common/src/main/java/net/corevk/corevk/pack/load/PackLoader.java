@@ -24,14 +24,12 @@ public final class PackLoader {
 
 	public static final String DIRECTORY_NAME = "shaderpacks";
 
-	
 	private static final Comparator<String> BY_NAME =
 			String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder());
 
 	private PackLoader() {
 	}
 
-	
 	public static ShaderProperties properties(Path packPath) throws IOException {
 		try (ShaderPackSource source = ShaderPackSource.open(packPath)) {
 			return ShaderProperties.parse(source);
@@ -48,29 +46,12 @@ public final class PackLoader {
 			ProgramSet programs = ProgramSet.enumerate(source, dimensions);
 			PackStats stats = PackStats.measure(source, options);
 
-			// Every entry point is flattened, and the text is then thrown away. This stage is
-			// judged on whether the graph resolves, not on what comes out of it, and holding
-			// two hundred flattened units would cost a lot of memory to prove nothing.
 			SettingSet settings = SettingSet.defaults();
 
-			// The file has conditionals of its own, and they read the settings, so the toggles
-			// can only be known once the settings are.
 			Set<String> disabled = properties.switchedOff(settings.globalDefines(options), options);
 
-			// Resolved as the pack SHIPS, with no toggle applied, and the empty set says so rather
-			// than standing for one nobody worked out. This report runs before the machine's own
-			// symbols are installed and against the pack's defaults rather than the player's
-			// settings, so the answer it would give to a toggle is not the answer the chain gets:
-			// a pack branching a program on DISTANT_HORIZONS reads it off here and on there. The
-			// count above carries the same reserve and carried it before this line existed.
 			ProgramResolver resolved = ProgramResolver.resolve(programs, dimensions, Set.of());
 
-			// This walk is a diagnosis of a pack and not a step of a load: it is made the first
-			// time a pack is read and never again for the same one, so what it costs is left out
-			// of the load's clock rather than doubling a figure the log invites the two to be
-			// compared on. It leaves nothing in the opening's memo either, which is what keeps
-			// the note above true: a key here is a file of the pack and each of them comes up
-			// once, so there would be nothing to find there and every unit to hold.
 			IncludeExpander expander = IncludeExpander.forTheReport(source, settings);
 			ExpansionStats expansion = ExpansionStats.NONE;
 			int expanded = 0;
@@ -89,12 +70,10 @@ public final class PackLoader {
 		}
 	}
 
-	
 	public static Path directory(Path gameDirectory) {
 		return gameDirectory.resolve(DIRECTORY_NAME);
 	}
 
-	
 	public static List<Path> candidates(Path gameDirectory) throws IOException {
 		Path directory = directory(gameDirectory);
 		if (!Files.isDirectory(directory)) {
@@ -110,7 +89,6 @@ public final class PackLoader {
 		}
 	}
 
-	
 	private static String withoutFormatting(String name) {
 		StringBuilder kept = new StringBuilder(name.length());
 		for (int i = 0; i < name.length(); i++) {
@@ -124,7 +102,6 @@ public final class PackLoader {
 		return kept.toString();
 	}
 
-	
 	public static boolean looksLikeAPack(Path entry) {
 		if (Files.isDirectory(entry)) {
 			return true;

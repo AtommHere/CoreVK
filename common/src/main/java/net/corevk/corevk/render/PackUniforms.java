@@ -18,7 +18,6 @@ final class PackUniforms {
 		this(members, UniformCatalog.engine());
 	}
 
-	
 	PackUniforms(List<TranslatedUnit.Uniform> members, UniformCatalog catalog) {
 		this.block = new UniformBlock(members, catalog);
 	}
@@ -27,7 +26,6 @@ final class PackUniforms {
 		return this.block.size();
 	}
 
-	
 	List<String> unsupplied() {
 		return this.block.unanswered();
 	}
@@ -36,7 +34,6 @@ final class PackUniforms {
 		this.block.write(new Std140Sink(into), world);
 	}
 
-	
 	void write(UniformSink into, WorldState world) {
 		this.block.write(into, world);
 	}

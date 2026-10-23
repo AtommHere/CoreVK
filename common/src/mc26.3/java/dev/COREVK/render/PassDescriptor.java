@@ -18,48 +18,40 @@ public final class PassDescriptor {
 		this.builder = RenderPassDescriptor.builder(label);
 	}
 
-	
 	public static PassDescriptor create(Supplier<String> label) {
 		return new PassDescriptor(label);
 	}
 
-	
 	public PassDescriptor withColorAttachment(GpuTextureView view) {
 		this.builder.withColorAttachment(view);
 		return this;
 	}
 
-	
 	public PassDescriptor withColorAttachment(GpuTextureView view, Optional<Vector4fc> clear) {
 		this.builder.withColorAttachment(view, clear);
 		return this;
 	}
 
-	
 	public PassDescriptor withUnusedColorAttachment() {
 		this.builder.withUnusedColorAttachment();
 		return this;
 	}
 
-	
 	public PassDescriptor withDepthAttachment(GpuTextureView view) {
 		this.builder.withDepthAttachment(view);
 		return this;
 	}
 
-	
 	public PassDescriptor withDepthAttachment(GpuTextureView view, OptionalDouble clear) {
 		this.builder.withDepthAttachment(view, clear);
 		return this;
 	}
 
-	
 	public PassDescriptor withRenderArea(RenderPass.RenderArea area) {
 		this.builder.withRenderArea(area);
 		return this;
 	}
 
-	
 	public RenderPassDescriptor build() {
 		return this.builder.build();
 	}

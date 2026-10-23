@@ -11,9 +11,6 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererBlurMixin {
 
-	// require = 1 because the failure is otherwise invisible: an argument nobody modifies is an
-	// argument the game passes through, so a signature that moves would give back exactly the late
-	// switch this exists to remove, with nothing said anywhere.
 	@ModifyArg(method = "render",
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/GlobalSettingsUniform;"

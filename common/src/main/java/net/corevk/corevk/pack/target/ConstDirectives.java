@@ -8,17 +8,14 @@ import java.util.Optional;
 
 public final class ConstDirectives {
 
-	
 	private static final String[] TYPES = { "int", "float", "vec2", "ivec3", "vec4", "bool" };
 
 	private ConstDirectives() {
 	}
 
-	
 	public record Directive(String type, String name, String value, int line) {
 	}
 
-	
 	public static List<Directive> read(IncludeExpander.ExpandedUnit unit) {
 		List<Directive> found = new ArrayList<>();
 		List<String> lines = unit.lines();
@@ -32,15 +29,12 @@ public final class ConstDirectives {
 		return List.copyOf(found);
 	}
 
-	
 	public static Optional<Directive> readLine(String line) {
 		return parse(line, -1);
 	}
 
 	private static Optional<Directive> parse(String line, int number) {
-		// Three substring searches before anything else. The corpus expands to millions of lines
-		// and almost none of them are declarations, so the cheap refusal is what makes the whole
-		// plan affordable.
+
 		if (!line.contains("const") || !line.contains("=") || !line.contains(";")) {
 			return Optional.empty();
 		}
@@ -65,8 +59,6 @@ public final class ConstDirectives {
 			}
 		}
 
-		// The space is what tells a type from the start of a longer name, so a declaration of
-		// something called intensity is not read as an int.
 		if (type == null || !startsWithSpace(rest)) {
 			return Optional.empty();
 		}

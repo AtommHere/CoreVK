@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Minecraft.class)
 public abstract class ClientLifecycleMixin {
 
-	
 	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V",
 			at = @At("HEAD"), require = 1)
 	private void corevk$leaveWorld(Screen screen, boolean keepResourcePacks, boolean stopSound,

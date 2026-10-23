@@ -43,12 +43,10 @@ import java.util.stream.IntStream;
 
 public final class PackValues {
 
-	
 	private static final int CHUNK_BLOCKS = 16;
 
 	private final FrameState state = new FrameState();
 
-	
 	private final Set<String> declared = new LinkedHashSet<>();
 
 	private final List<String> problems = new ArrayList<>();
@@ -59,16 +57,12 @@ public final class PackValues {
 	private ShaderProperties.Weather weather = new ShaderProperties.Weather(true, true);
 	private boolean rainDepth;
 
-	
 	private ShadowCasters shadowCasters = ShadowCasters.DEFAULT;
 
-	
 	private boolean dhShadow = true;
 
-	
 	private boolean avoidsDhClouds;
 
-	
 	private ShadowCullState shadowCull = ShadowCullState.DEFAULT;
 
 	private boolean separateAo;
@@ -85,7 +79,6 @@ public final class PackValues {
 	private PackValues() {
 	}
 
-	
 	public static PackValues read(OpenedPack pack, String dimension) throws IOException {
 		PackValues values = new PackValues();
 
@@ -95,10 +88,7 @@ public final class PackValues {
 		SettingSet settings = pack.settings();
 
 		values.state.directives(PackDirectives.read(source, settings, dimension));
-		// Here because it is the first moment the answer exists and the last one before a unit is
-		// translated: the map's chain is a directive of the PACK, folded over every fragment stage
-		// of the dimension, and what it decides in the translation is whether a shadowtex lookup
-		// keeps the level of detail the pack wrote or is pinned to the base with the rest.
+
 		GlslTranslator.askShadowChains(values.state.directives().shadowDepthMipmap(0),
 				values.state.directives().shadowDepthMipmap(1));
 		values.state.endFlashShadows(properties.endFlashShadows(settings.globalDefines(options)));
@@ -124,9 +114,6 @@ public final class PackValues {
 		values.bufferObjects = properties.bufferObjects(settings.globalDefines(options));
 		CustomStorage.install(values.bufferObjects);
 
-		// Read against the same settings as everything above, which is not a formality: BSL wraps
-		// all its declarations in one conditional and keeps a fifth of them under the #else, so a
-		// reading with an empty table measures a different pack.
 		FaceShading.install(properties.oldLighting(settings.globalDefines(options)));
 		BlockStateIds.install(BlockIds.read(source, settings.globalDefines(options)));
 		PackNameIds.install(
@@ -136,74 +123,60 @@ public final class PackValues {
 		return values;
 	}
 
-	
 	public NoiseTexture.Image noiseImage() {
 		return this.noiseImage;
 	}
 
-	
 	PackImages packImages() {
 		return this.packImages;
 	}
 
-	
 	ImageInformation.Reading storageImages() {
 		return this.storageImages;
 	}
 
-	
 	public UniformCatalog catalog() {
 		return this.catalog;
 	}
 
-	
 	public UniformCatalog geometryCatalog() {
 		return this.geometry;
 	}
 
-	
 	public UniformCatalog shadowGeometryCatalog() {
 		return this.shadowGeometry;
 	}
 
-	
 	public void convention(Vector4fc convention) {
 		this.state.convention(convention);
 	}
 
-	
 	public void modelView(Matrix4fc matrix, Matrix4fc bob) {
 		this.state.passModelView(matrix, bob);
 	}
 
-	
 	public void projection(Matrix4fc matrix) {
 		this.state.passProjection(matrix);
 	}
 
-	
 	public void passColour(Vector4fc colour) {
 		this.state.passColour(colour);
 	}
 
-	
 	public void passAlphaTest(float reference) {
 		this.state.passAlphaTest(reference);
 	}
 
-	
 	public void renderStage(RenderStage stage) {
 		this.state.renderStage(stage);
 	}
 
-	
 	public Matrix4f shadowFrustum(Matrix4f dest) {
 		ViewMatrices view = this.state.view();
 
 		return dest.set(view.drawnShadowProjection()).mul(view.drawnShadowModelView());
 	}
 
-	
 	public ShadowCullPlan shadowCullPlan(int userChunks, int renderDistanceChunks, Vector3f light,
 			Matrix4f camera, boolean voxelised) {
 		ViewMatrices view = this.state.view();
@@ -232,30 +205,25 @@ public final class PackValues {
 				CelestialValues.shadowLightVector(this.state, light), camera, bound, safeZone);
 	}
 
-	
 	public void drawnShadowPair(Matrix4f modelView, Matrix4f projection) {
 		ViewMatrices view = this.state.view();
 		modelView.set(view.drawnShadowModelView());
 		projection.set(view.drawnShadowProjection());
 	}
 
-	
 	public int noiseResolution() {
 		return Math.round(this.state.noiseTextureResolution());
 	}
 
-	
 	public int shadowResolution() {
 		return this.state.directives().shadowMapResolution();
 	}
 
-	
 	public float shadowRenderDistance(int userChunks, int renderDistanceChunks) {
 		return distanceFor(this.state.directives().shadowDistanceRenderMul(), userChunks,
 				renderDistanceChunks);
 	}
 
-	
 	private float distanceFor(float multiplier, int userChunks, int renderDistanceChunks) {
 		float blocks = multiplier < 0.0F
 				? userChunks * (float) CHUNK_BLOCKS
@@ -264,7 +232,6 @@ public final class PackValues {
 		return blocks >= renderDistanceChunks * (float) CHUNK_BLOCKS ? -1.0F : blocks;
 	}
 
-	
 	public OptionalInt forcedShadowRenderDistanceChunks() {
 		PackDirectives directives = this.state.directives();
 		if (!directives.forcesShadowRenderDistance()) {
@@ -276,7 +243,6 @@ public final class PackValues {
 		return OptionalInt.of((blocks + CHUNK_BLOCKS - 1) / CHUNK_BLOCKS);
 	}
 
-	
 	public float entityShadowDistance(int userChunks, int renderDistanceChunks) {
 		float multiplier = this.state.directives().entityShadowDistanceMul();
 		if (multiplier == 1.0F || multiplier < 0.0F) {
@@ -287,96 +253,77 @@ public final class PackValues {
 				userChunks, renderDistanceChunks);
 	}
 
-	
 	public List<PackDirectives.ShadowColour> shadowColours() {
 		return IntStream.range(0, ShadowTargets.MAX_COLOURS)
 				.mapToObj(index -> this.state.directives().shadowColour(index))
 				.toList();
 	}
 
-	
 	public List<PackDirectives.ShadowDepth> shadowDepths() {
 		return List.of(this.state.directives().shadowDepth(0),
 				this.state.directives().shadowDepth(1));
 	}
 
-	
 	public float sunPathRotation() {
 		return this.state.directives().sunPathRotation();
 	}
 
-	
 	public ShaderProperties.SkyElements skyElements() {
 		return this.skyElements;
 	}
 
-	
 	public ShaderProperties.Weather weather() {
 		return this.weather;
 	}
 
-	
 	public boolean rainDepth() {
 		return this.rainDepth;
 	}
 
-	
 	public ShadowCasters shadowCasters() {
 		return this.shadowCasters;
 	}
 
-	
 	public boolean dhShadow() {
 		return this.dhShadow;
 	}
 
-	
 	public boolean avoidsDhClouds() {
 		return this.avoidsDhClouds;
 	}
 
-	
 	public boolean separateAo() {
 		return this.separateAo;
 	}
 
-	
 	public boolean breaksAnisotropy() {
 		return this.breaksAnisotropy;
 	}
 
-	
 	public Optional<String> particleOrdering() {
 		return this.particleOrdering;
 	}
 
-	
 	public WorldState world() {
 		return this.state;
 	}
 
-	
 	ViewMatrices view() {
 		return this.state.view();
 	}
 
-	
 	public void advance() {
 		this.state.advance();
 		this.customs.update(this.state, this.state.frameTime());
 
-		// Normally empty, and this is the only place able to say anything: an expression that
-		// throws is dropped where it is evaluated, and that side of the line has no logger.
 		this.customs.drainProblems().forEach(problem ->
 				CoreVK.logger().warn("The pack's own {}", problem));
 	}
 
-	
 	public void leaveWorld() {
 		this.state.leaveWorld();
 	}
 
-	
 	public List<String> notes() {
 		List<String> notes = new ArrayList<>();
 		if (!this.declared.isEmpty()) {
@@ -394,7 +341,6 @@ public final class PackValues {
 		return notes;
 	}
 
-	
 	public Gaps classify(List<String> unanswered) {
 		List<String> engine = new ArrayList<>();
 		List<String> pack = new ArrayList<>();
@@ -413,7 +359,6 @@ public final class PackValues {
 		return new Gaps(List.copyOf(engine), List.copyOf(pack), List.copyOf(nobody));
 	}
 
-	
 	public static Map<String, List<String>> standIns(List<String> members) {
 		Map<String, List<String>> named = new LinkedHashMap<>();
 		for (String member : members) {
@@ -423,15 +368,11 @@ public final class PackValues {
 			}
 		}
 
-		// Not Map.copyOf, which shuffles its iteration order differently on every run: the groups
-		// are printed, and two launches of the same jar must print them in the members' order both
-		// times or the journals stop comparing.
 		named.replaceAll((_, names) -> List.copyOf(names));
 
 		return Collections.unmodifiableMap(named);
 	}
 
-	
 	private void readNoise(ShaderProperties properties, ShaderPackSource source,
 			Map<String, String> defines) {
 		String path = properties.noiseTexturePath(defines).orElse(null);
@@ -467,7 +408,6 @@ public final class PackValues {
 		this.shadowGeometry = this.customs.layerOn(UniformCatalog.shadowGeometry());
 	}
 
-	
 	public record Gaps(List<String> engine, List<String> pack, List<String> nobody) {
 	}
 }

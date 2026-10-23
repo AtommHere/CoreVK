@@ -9,7 +9,6 @@ import net.minecraft.util.Mth;
 
 final class TargetSurface implements AutoCloseable {
 
-	
 	private static final int USAGE = GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC
 			| GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT;
 
@@ -17,27 +16,22 @@ final class TargetSurface implements AutoCloseable {
 	private final GpuFormat format;
 	private final boolean mipped;
 
-	
 	private final boolean storage;
 
 	private GpuTexture texture;
 	private GpuTextureView view;
 
-	
 	private GpuTextureView baseView;
 
 	private int width;
 	private int height;
 
-	
 	private boolean chainWritten;
 
-	
 	TargetSurface(String label, GpuFormat format, boolean mipped, int width, int height) {
 		this(label, format, mipped, false, width, height);
 	}
 
-	
 	TargetSurface(String label, GpuFormat format, boolean mipped, boolean storage, int width,
 			int height) {
 		this.label = label;
@@ -47,7 +41,6 @@ final class TargetSurface implements AutoCloseable {
 		allocate(width, height);
 	}
 
-	
 	static int levelsFor(boolean mipped, int width, int height) {
 		return mipped ? Mth.log2(Math.max(width, height)) + 1 : 1;
 	}
@@ -68,22 +61,18 @@ final class TargetSurface implements AutoCloseable {
 		return this.texture;
 	}
 
-	
 	boolean chainWritten() {
 		return this.chainWritten;
 	}
 
-	
 	void chainWritten(boolean written) {
 		this.chainWritten = written;
 	}
 
-	
 	long baseBytes() {
 		return (long) this.width * this.height * this.format.blockSize();
 	}
 
-	
 	long bytes() {
 		long texels = 0L;
 		for (int level = 0; level < levels(); level++) {
@@ -93,22 +82,18 @@ final class TargetSurface implements AutoCloseable {
 		return texels * this.format.blockSize();
 	}
 
-	
 	GpuTextureView view() {
 		return this.view;
 	}
 
-	
 	GpuTextureView storageView() {
 		return this.baseView == null ? this.view : this.baseView;
 	}
 
-	
 	boolean storage() {
 		return this.storage;
 	}
 
-	
 	boolean resize(int width, int height) {
 		if (this.texture != null && this.width == width && this.height == height) {
 			return false;
@@ -126,20 +111,11 @@ final class TargetSurface implements AutoCloseable {
 
 		this.width = width;
 		this.height = height;
-		// A new image, so its levels are whatever the driver left there until the reduction says
-		// otherwise. Set before anything can read it rather than after, because a resize is exactly
-		// the moment a chain silently stops being true.
+
 		this.chainWritten = false;
 
-		// Everything or nothing. A view that throws after the texture was made would leave that
-		// texture with no owner: the caller only learns of a surface once the constructor returns,
-		// so a half built one is never put in a map, never closed, and not even a resource reload
-		// gets it back. The chain makes this real rather than theoretical, since one surface now
-		// creates up to a dozen views instead of one.
 		try {
-			// The flag is read by the mixin on the game's usage conversion, inside this one call,
-			// and lowered whatever the call did: a throw that left it up would mark the next
-			// texture anybody creates.
+
 			TextureUsage.requestStorage(this.storage);
 			try {
 				this.texture = device.createTexture(this.label, USAGE, this.format, width, height, 1,
@@ -159,7 +135,6 @@ final class TargetSurface implements AutoCloseable {
 		}
 	}
 
-	
 	@Override
 	public void close() {
 		if (this.baseView != null) {

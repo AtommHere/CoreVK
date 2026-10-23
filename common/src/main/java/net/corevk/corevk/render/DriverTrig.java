@@ -17,14 +17,12 @@ public final class DriverTrig {
 	private DriverTrig() {
 	}
 
-	
 	public static void read(Path gameDirectory) {
 		armed = PROPERTY
 				|| Files.isRegularFile(gameDirectory.resolve(CoreVK.MOD_ID).resolve(ARM_FILE));
 		GlslTranslator.reduceTrig(!armed);
 	}
 
-	
 	public static void announce() {
 		int sites = GlslTranslator.trigSites();
 		if (armed) {

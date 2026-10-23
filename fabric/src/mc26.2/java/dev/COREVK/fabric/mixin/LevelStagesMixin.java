@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(LevelRenderer.class)
 public abstract class LevelStagesMixin {
 
-	
 	@WrapOperation(method = "lambda$addMainPass$0",
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;"

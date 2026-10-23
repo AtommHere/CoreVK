@@ -2,19 +2,15 @@ package net.corevk.corevk.render;
 
 public final class EntityFrame {
 
-	
 	public static final int FLAT = pack(1.0F, 0.0F, 0.0F, 1.0F);
 
-	
 	private static final float RANGE = 127.0F;
 
-	
 	private static final float TINY = 1.0E-12F;
 
 	private EntityFrame() {
 	}
 
-	
 	public static boolean faceNormal(float[] into, float x0, float y0, float z0, float x1, float y1,
 			float z1, float x2, float y2, float z2, float x3, float y3, float z3) {
 		float ax = x2 - x0;
@@ -40,7 +36,6 @@ public final class EntityFrame {
 		return true;
 	}
 
-	
 	public static int tangent(float normalX, float normalY, float normalZ, boolean flatten,
 			float x0, float y0, float z0, float u0, float v0,
 			float x1, float y1, float z1, float u1, float v1,
@@ -81,9 +76,6 @@ public final class EntityFrame {
 		float du2 = u2 - u0;
 		float dv2 = v2 - v0;
 
-		// Three corners sharing a texture coordinate leave no gradient to invert. CoreVK carries the
-		// same guard and the same value for it, and what comes out of it is an edge rather than
-		// anything meaningful: the point is to keep the branch out of the division.
 		float span = du1 * dv2 - du2 * dv1;
 		float scale = span == 0.0F ? 1.0F : 1.0F / span;
 
@@ -100,10 +92,6 @@ public final class EntityFrame {
 		ty *= unit;
 		tz *= unit;
 
-		// The bitangent the texture really runs along, against the one this frame would predict from
-		// the tangent and the normal. Where the two point apart the third axis turns the other way,
-		// and that is the whole of what the fourth component says: a mirrored piece of a skin lights
-		// its bumps as dents without it.
 		float bx = scale * (-du2 * edge1x + du1 * edge2x);
 		float by = scale * (-du2 * edge1y + du1 * edge2y);
 		float bz = scale * (-du2 * edge1z + du1 * edge2z);
@@ -113,18 +101,15 @@ public final class EntityFrame {
 		return pack(tx, ty, tz, side < 0.0F ? -1.0F : 1.0F);
 	}
 
-	
 	public static int pack(float x, float y, float z, float w) {
 		return (snorm(x) & 0xFF) | ((snorm(y) & 0xFF) << 8) | ((snorm(z) & 0xFF) << 16)
 				| ((snorm(w) & 0xFF) << 24);
 	}
 
-	
 	public static float unpack(int word, int component) {
 		return (byte) (word >> (component * 8)) * (1.0F / RANGE);
 	}
 
-	
 	private static int snorm(float value) {
 		return (int) (Math.clamp(value, -1.0F, 1.0F) * RANGE);
 	}

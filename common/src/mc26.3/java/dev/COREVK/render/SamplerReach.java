@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class SamplerReach {
 
-	
 	private static final int SAMPLED_IMAGE = Spvc.SPVC_RESOURCE_TYPE_SAMPLED_IMAGE;
 
 	private static final boolean DECLARED = Boolean.getBoolean("corevk.declaredSamplers");
@@ -29,19 +28,15 @@ public final class SamplerReach {
 	private SamplerReach() {
 	}
 
-	
 	public interface Narrowable {
 
-		
 		void corevk$unreached(Set<String> unreached);
 	}
 
-	
 	public static String cacheWord() {
 		return DECLARED ? "declared-samplers" : "reached-samplers";
 	}
 
-	
 	public static void narrow(String filename, ByteBuffer spirv, Object module) {
 		if (DECLARED || !(module instanceof Narrowable narrowable) || !RawLocals.ours(filename)) {
 			return;
@@ -54,7 +49,6 @@ public final class SamplerReach {
 		}
 	}
 
-	
 	public static List<SpvModule.Reflection.Descriptor> keep(
 			List<SpvModule.Reflection.Descriptor> reflected, int type, Set<String> unreached) {
 		if (type != SAMPLED_IMAGE || unreached.isEmpty()) {
@@ -77,7 +71,6 @@ public final class SamplerReach {
 		return kept;
 	}
 
-	
 	public static void say(long compiled) {
 		long walked = WALKED.getAndSet(0L);
 		long narrowed = NARROWED.getAndSet(0L);
@@ -98,7 +91,6 @@ public final class SamplerReach {
 						+ "game's and Sodium's among them)", dropped, narrowed, walked, compiled);
 	}
 
-	
 	private static Set<String> unreached(ByteBuffer spirv) {
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			PointerBuffer pointer = stack.callocPointer(1);
@@ -164,8 +156,7 @@ public final class SamplerReach {
 		List<String> names = new ArrayList<>(found);
 		SpvcReflectedResource.Buffer reflected = SpvcReflectedResource.create(list.get(0), found);
 		for (int index = 0; index < found; index++) {
-			// The same string the game's own reflection puts on the record, taken from the same
-			// call, so the two spellings of one resource cannot differ.
+
 			names.add(reflected.get(index).nameString());
 		}
 

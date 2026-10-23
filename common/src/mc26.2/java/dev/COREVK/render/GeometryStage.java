@@ -29,10 +29,8 @@ import java.util.WeakHashMap;
 
 public final class GeometryStage {
 
-	
 	public static final int STAGE_BIT = VK12.VK_SHADER_STAGE_GEOMETRY_BIT;
 
-	
 	private static final Method VARIABLE_NAME;
 
 	static {
@@ -45,11 +43,9 @@ public final class GeometryStage {
 		}
 	}
 
-	
 	private static final Map<RenderPipeline, String> SHIPPED =
 			Collections.synchronizedMap(new WeakHashMap<>());
 
-	
 	private static volatile boolean noted;
 
 	private static volatile boolean served;
@@ -61,14 +57,12 @@ public final class GeometryStage {
 	private GeometryStage() {
 	}
 
-	
 	private static final class InFlight {
 
 		private final RenderPipeline pipeline;
 
 		private IntermediaryShaderModule module;
 
-		
 		private VulkanDevice device;
 
 		private long handle;
@@ -79,12 +73,10 @@ public final class GeometryStage {
 		}
 	}
 
-	
 	public static void serve(boolean answer) {
 		served = answer;
 	}
 
-	
 	public static boolean note(RenderPipeline pipeline, String path, PackProgram.Loaded loaded) {
 		TranslatedUnit unit = loaded.program().stages().get(ProgramStage.GEOMETRY);
 		if (unit == null) {
@@ -104,7 +96,6 @@ public final class GeometryStage {
 		return true;
 	}
 
-	
 	public static String fragment(RenderPipeline pipeline, String path, PackProgram.Loaded loaded) {
 		String fragment = loaded.program().stages().get(ProgramStage.FRAGMENT).text();
 		TranslatedUnit unit = loaded.program().stages().get(ProgramStage.GEOMETRY);
@@ -139,7 +130,6 @@ public final class GeometryStage {
 		noted = true;
 	}
 
-	
 	private static GeometryFold.Result fold(RenderPipeline pipeline, String path, String geometry,
 			String fragment) {
 		long compiler = Shaderc.shaderc_compiler_initialize();
@@ -147,9 +137,6 @@ public final class GeometryStage {
 			return GeometryFold.Result.refused("could not be read, shaderc giving no compiler");
 		}
 
-		// On the heap rather than through the overloads taking text, which encode on the thread's
-		// memory stack: a translated stage carries the pack's whole settings header and runs to tens
-		// of kilobytes, against a stack of sixty-four.
 		ByteBuffer source = MemoryUtil.memUTF8(
 				GlslPreprocessor.injectDefines(geometry, pipeline.getShaderDefines()), false);
 		ByteBuffer name = MemoryUtil.memUTF8(path);
@@ -181,7 +168,6 @@ public final class GeometryStage {
 		}
 	}
 
-	
 	public static void noteBeside(RenderPipeline variant, RenderPipeline base) {
 		String text = SHIPPED.get(base);
 		if (text != null) {
@@ -189,12 +175,10 @@ public final class GeometryStage {
 		}
 	}
 
-	
 	public static boolean noted() {
 		return noted;
 	}
 
-	
 	public static IntermediaryShaderModule begin(GlslCompiler compiler, RenderPipeline pipeline)
 			throws ShaderCompileException {
 		abandon();
@@ -222,24 +206,20 @@ public final class GeometryStage {
 		return module;
 	}
 
-	
 	public static boolean compiling() {
 		return Boolean.TRUE.equals(COMPILING.get());
 	}
 
-	
 	public static IntermediaryShaderModule building() {
 		InFlight flight = BUILDING.get();
 
 		return flight == null ? null : flight.module;
 	}
 
-	
 	public static boolean buildingHere() {
 		return BUILDING.get() != null;
 	}
 
-	
 	public static List<String> outputs(IntermediaryShaderModule module) {
 		List<String> names = new ArrayList<>();
 		for (Object output : ((IntermediaryShaderModuleAccessor) (Object) module).corevk$outputs()) {
@@ -253,7 +233,6 @@ public final class GeometryStage {
 		return names;
 	}
 
-	
 	public static void built(VulkanDevice device) {
 		InFlight flight = BUILDING.get();
 		if (flight == null || flight.module == null) {
@@ -266,14 +245,12 @@ public final class GeometryStage {
 		flight.module = null;
 	}
 
-	
 	public static long pending(RenderPipeline pipeline) {
 		InFlight flight = BUILDING.get();
 
 		return flight != null && flight.pipeline == pipeline ? flight.handle : 0L;
 	}
 
-	
 	public static void taken(RenderPipeline pipeline) {
 		InFlight flight = BUILDING.get();
 		if (flight == null || flight.pipeline != pipeline) {
@@ -284,7 +261,6 @@ public final class GeometryStage {
 		free(flight);
 	}
 
-	
 	private static void abandon() {
 		InFlight flight = BUILDING.get();
 		if (flight == null) {
@@ -305,7 +281,6 @@ public final class GeometryStage {
 		}
 	}
 
-	
 	public static void close() {
 		SHIPPED.clear();
 		noted = false;

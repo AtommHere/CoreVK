@@ -10,12 +10,10 @@ import java.util.TreeSet;
 
 public final class VertexPrologue {
 
-	
 	public static final Set<String> SYNTHESIZED = Collections.unmodifiableSet(new TreeSet<>(
 			List.of("mc_Entity", "mc_midTexCoord", "mc_chunkFade", "at_tangent", "at_midBlock",
 					"vaPosition", "vaNormal", "vaColor", "vaUV0", "vaUV1", "vaUV2", "dhMaterialId")));
 
-	
 	private static final Map<String, String> BETTER_DEFAULTS = Map.of(
 			"at_tangent", "vec4(1.0, 0.0, 0.0, 1.0)",
 			"of_Normal", "vec3(0.0, 1.0, 0.0)");
@@ -23,12 +21,10 @@ public final class VertexPrologue {
 	private VertexPrologue() {
 	}
 
-	
 	private static Map<String, String> globals(Set<String> used, Map<String, String> synthesized) {
 		return globals(used, synthesized, Map.of());
 	}
 
-	
 	public static Map<String, String> globals(Set<String> used, Map<String, String> synthesized,
 			Map<String, String> ahead) {
 		Map<String, String> globals = new LinkedHashMap<>(synthesized);
@@ -48,12 +44,10 @@ public final class VertexPrologue {
 		return globals;
 	}
 
-	
 	public static String declaration(String name, String type) {
 		return type + " " + name + " = " + value(name, type) + ";";
 	}
 
-	
 	public static List<String> tail(Set<String> used, Map<String, String> synthesized) {
 		List<String> lines = new ArrayList<>();
 		globals(used, synthesized).forEach((name, type) -> lines.add(declaration(name, type)));
@@ -61,7 +55,6 @@ public final class VertexPrologue {
 		return lines;
 	}
 
-	
 	public static List<String> blankTexCoords() {
 		List<String> lines = new ArrayList<>();
 		for (int unit = 3; unit <= 7; unit++) {
@@ -71,7 +64,6 @@ public final class VertexPrologue {
 		return lines;
 	}
 
-	
 	public static String elementType(String element) {
 		return switch (element) {
 			case "Position" -> "vec3";
@@ -83,14 +75,12 @@ public final class VertexPrologue {
 		};
 	}
 
-	
 	public static String value(String name, String type) {
 		String better = BETTER_DEFAULTS.get(name);
 
 		return better != null && better.startsWith(type + "(") ? better : zero(type);
 	}
 
-	
 	public static String zero(String type) {
 		return switch (type) {
 			case "float" -> "0.0";
@@ -101,14 +91,11 @@ public final class VertexPrologue {
 			case "ivec2", "ivec3", "ivec4" -> type + "(0)";
 			case "uvec2", "uvec3", "uvec4" -> type + "(0u)";
 			case "bvec2", "bvec3", "bvec4" -> type + "(false)";
-			// A matrix attribute is not something the corpus has, and a constructor from one scalar
-			// is the identity rather than a zero. Left as the language's own default so that a pack
-			// which somehow declares one still compiles.
+
 			default -> type + "(0.0)";
 		};
 	}
 
-	
 	private static String defaultType(String name) {
 		return switch (name) {
 			case "dhMaterialId" -> "int";

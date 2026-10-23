@@ -22,7 +22,6 @@ public final class LinkWidget extends PageWidget {
 
 	private static final int WHITE = 0xFFFFFFFF;
 
-	
 	private static final int TEXT_INSET = 7;
 	private static final int ARROW_INSET = 9;
 
@@ -34,7 +33,6 @@ public final class LinkWidget extends PageWidget {
 	private @Nullable Component trimmedLabel;
 	private boolean labelTrimmed;
 
-	
 	public LinkWidget(String page, boolean resolved) {
 		this.page = page;
 		this.resolved = resolved;
@@ -71,8 +69,6 @@ public final class LinkWidget extends PageWidget {
 			this.trimmedLabel = ScreenDraw.shorten(font, this.label.copy(), room);
 		}
 
-		// Centred, then nudged left by half of however much it still overruns the room the arrow
-		// leaves, which is CoreVK's arithmetic and what keeps a long name off the arrow.
 		int width = font.width(this.trimmedLabel);
 		int overrun = Math.max(width - (at.width() - 18), 0);
 		graphics.text(font, this.trimmedLabel,
@@ -81,7 +77,7 @@ public final class LinkWidget extends PageWidget {
 		graphics.text(font, ARROW, at.right() - ARROW_INSET, at.position().y() + TEXT_INSET, WHITE);
 
 		if (hovered && this.labelTrimmed) {
-			// Drawn after every row, so that the row below cannot be drawn over it.
+
 			host().onTop(() -> ScreenDraw.textPanel(font, graphics, this.label, mouseX + 2,
 					mouseY - 16));
 		}

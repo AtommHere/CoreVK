@@ -10,13 +10,11 @@ import org.jspecify.annotations.Nullable;
 @Mixin(RenderSystem.class)
 public interface RenderSystemAccessor {
 
-	
 	@Accessor("currentPipelineCache")
 	static @Nullable PipelineCache corevk$current() {
 		throw new AssertionError();
 	}
 
-	
 	@Accessor("fallbackPipelineCache")
 	static @Nullable PipelineCache corevk$fallback() {
 		throw new AssertionError();

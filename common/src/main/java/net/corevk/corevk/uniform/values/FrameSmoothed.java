@@ -11,10 +11,8 @@ import java.util.WeakHashMap;
 
 public final class FrameSmoothed {
 
-	
 	private static final List<FrameSmoothed> ALL = new ArrayList<>();
 
-	
 	private static final Set<Smoothed> TRACKED =
 			Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
 
@@ -27,7 +25,6 @@ public final class FrameSmoothed {
 		ALL.add(this);
 	}
 
-	
 	public static Smoothed tracked() {
 		Smoothed smoothed = new Smoothed();
 		TRACKED.add(smoothed);
@@ -35,7 +32,6 @@ public final class FrameSmoothed {
 		return smoothed;
 	}
 
-	
 	public static void forgetAll() {
 		for (FrameSmoothed smoothed : ALL) {
 			smoothed.smoothed.reset();

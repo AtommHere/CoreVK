@@ -24,8 +24,7 @@ public abstract class CommandEncoderMixin {
 			require = 1)
 	private void corevk$flushHold(RenderPassDescriptor descriptor,
 			CallbackInfoReturnable<RenderPass> cir) {
-		// The level's pass first: whatever is opened now, the pass the game drew the level into so
-		// far has to end before it, and the level's next draw opens it again.
+
 		LevelPass.suspendCurrent();
 		RenderPass leftover = GeometryHold.leftover(descriptor);
 		if (leftover != null) {
@@ -35,8 +34,7 @@ public abstract class CommandEncoderMixin {
 		}
 
 		if (!GeometryHold.opening()) {
-			// The pass's own label is the cause, and it is already a supplier: naming it costs
-			// nothing until a census asks, which is why the prefix is added there and not here.
+
 			GeometryHold.flush(descriptor.label());
 		}
 	}
@@ -91,7 +89,6 @@ public abstract class CommandEncoderMixin {
 		PassTimings.censusClear();
 	}
 
-	
 	@Inject(method = "createFence", at = @At("HEAD"), require = 1)
 	private void corevk$fence(CallbackInfoReturnable<?> cir) {
 		LevelPass.suspendCurrent();
@@ -105,7 +102,6 @@ public abstract class CommandEncoderMixin {
 		PassTimings.censusCopy();
 	}
 
-	
 	@Inject(method = {
 			"writeToBuffer(Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Ljava/nio/ByteBuffer;)V",
 			"copyToBuffer(Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;)V",

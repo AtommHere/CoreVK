@@ -16,87 +16,65 @@ public final class LegacyGlsl {
 	private LegacyGlsl() {
 	}
 
-	
 	public static final Map<String, String> FIXED_FUNCTION_MEMBERS = fixedFunctionMembers();
 
-	
 	public static final Map<String, String> FIXED_ATTRIBUTES = fixedAttributes();
 
-	
 	public static final Map<String, String> FIXED_FUNCTION = fixedFunction();
 
-	
 	public static final Map<String, String> DEPRECATED_FUNCTIONS = deprecatedFunctions();
 
-	
 	public static final Map<String, String> SHADOW_FUNCTIONS = Map.of(
 			"shadow2D", "texture",
 			"shadow2DLod", "textureLod",
 			"shadow2DProj", "textureProj");
 
-	
 	public static final Set<String> DEPTH_LOOKUPS = Set.of(
 			"texture", "textureLod", "texelFetch", "textureOffset", "textureLodOffset",
 			"textureGrad", "textureProj", "textureProjLod",
 			"textureGather", "textureGatherOffset", "textureGatherOffsets");
 
-	
 	public static final Set<String> LEVELLED_LOOKUPS = Set.of(
 			"texture", "textureLod", "textureOffset", "textureLodOffset", "textureGrad",
 			"textureGradOffset");
 
-	
 	public static final Map<String, String> RESERVED_NAMES = Map.of(
 			"texture", "ofTexture",
 			"sampler", "ofSampler",
 			"image", "ofImage");
 
-	
 	public static final Map<String, String> ENGINE_ATTRIBUTES = engineAttributes();
 
-	
 	public static final Map<String, String> ENTITY_UNIFORMS = entityUniforms();
 
-	
 	public static final Map<String, String> CORE_MATRICES = coreMatrices();
 
-	
 	public static final String GAME_TRANSFORMS = "DynamicTransforms";
 
-	
 	public static final String GAME_TEXTURE_MATRIX = "of_GameTextureMatrix";
 
-	
 	public static final String GLINT_ALPHA = "of_GlintAlpha";
 
-	
 	public static final String OVERLAY_SAMPLER = "ofOverlay";
 
-	
 	public static final String GAME_MODEL_VIEW = "of_GameModelView";
 
-	
 	public static final String CAMERA_BOB = "of_CameraBob";
 
-	
 	private static final Set<String> ENTITY_ROOTS = Set.of(
 			"gbuffers_entities", "gbuffers_block", "gbuffers_hand",
 			"shadow_entities", "shadow_block");
 
-	
 	private static final Set<String> GAME_DRAW_ROOTS =
 			Stream.concat(ENTITY_ROOTS.stream(), Stream.of("gbuffers_armor_glint"))
 					.collect(Collectors.toUnmodifiableSet());
 
-	
 	private static final Set<String> LIGHT_DRAW_ROOTS = Set.of("shadow_entities", "shadow_block");
 
-	
 	private static final Set<String> CAMERA_DRAW_ROOTS = GAME_DRAW_ROOTS.stream()
 			.filter(root -> !LIGHT_DRAW_ROOTS.contains(root))
 			.collect(Collectors.toUnmodifiableSet());
 
-	
 	public static final List<String> FULLSCREEN_ATTRIBUTES = List.of(
 			"in vec3 Position;",
 			"in vec2 UV0;",
@@ -112,15 +90,12 @@ public final class LegacyGlsl {
 			"#define of_Color vec4(1.0)",
 			"#define of_Normal vec3(0.0, 0.0, 1.0)");
 
-	
 	public static final List<String> FULLSCREEN_ELEMENTS = List.of("Position", "UV0");
 
-	
 	private static final Map<String, String> FULLSCREEN_ANSWERED = Map.of(
 			"vaPosition", "Position",
 			"vaUV0", "UV0");
 
-	
 	public static String fullscreenElement(String name, String type) {
 		String element = FULLSCREEN_ANSWERED.get(name);
 		int wanted = switch (type) {
@@ -151,7 +126,6 @@ public final class LegacyGlsl {
 		return widened.append(')').toString();
 	}
 
-	
 	public static final Set<String> POST_120_BUILTINS = Set.of(
 			"sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
 			"fma", "frexp", "ldexp", "round", "roundEven", "trunc", "modf", "isnan", "isinf",
@@ -161,54 +135,41 @@ public final class LegacyGlsl {
 			"packHalf2x16", "unpackHalf2x16",
 			"bitfieldExtract", "bitfieldInsert", "bitfieldReverse", "bitCount", "findLSB", "findMSB");
 
-	
 	private static final Map<String, String> NARROW_TYPES = narrowTypes();
 
-	
 	public static final Set<String> TYPE_NAMES = typeNames();
 
-	
 	public static final Set<String> PRECISION_QUALIFIERS = Set.of("lowp", "mediump", "highp");
 
-	
 	public static final Set<String> INTERPOLATION_QUALIFIERS =
 			Set.of("flat", "smooth", "noperspective", "centroid", "sample", "invariant", "precise");
 
-	
 	public static final Set<String> MEMORY_QUALIFIERS =
 			Set.of("restrict", "coherent", "readonly", "writeonly", "volatile");
 
-	
 	public static final Set<String> OPAQUE_DIRECTIVES =
 			Set.of("include", "version", "extension", "line", "pragma", "error");
 
-	
 	public static final Set<String> NAMING_DIRECTIVES = Set.of("define", "undef", "ifdef", "ifndef");
 
-	
 	private static final Set<String> OPAQUE_PREFIXES =
 			Set.of("sampler", "isampler", "usampler", "image", "iimage", "uimage",
 					"texture", "itexture", "utexture", "subpassInput", "atomic_uint");
 
-	
 	private static final Set<String> IMAGE_PREFIXES = Set.of("image", "iimage", "uimage");
 
-	
 	public static boolean drawsEntities(String program) {
 		return ProgramFallbacks.chain(program).stream().anyMatch(ENTITY_ROOTS::contains);
 	}
 
-	
 	public static boolean bindsGameTransforms(String program) {
 		return ProgramFallbacks.chain(program).stream().anyMatch(GAME_DRAW_ROOTS::contains);
 	}
 
-	
 	public static boolean readsDrawModelView(String program) {
 		return ProgramFallbacks.chain(program).stream().anyMatch(CAMERA_DRAW_ROOTS::contains);
 	}
 
-	
 	public static boolean isOpaqueType(String type) {
 		for (String prefix : OPAQUE_PREFIXES) {
 			if (type.startsWith(prefix)) {
@@ -219,7 +180,6 @@ public final class LegacyGlsl {
 		return false;
 	}
 
-	
 	static boolean isImageType(String type) {
 		for (String prefix : IMAGE_PREFIXES) {
 			if (type.startsWith(prefix)) {
@@ -248,11 +208,6 @@ public final class LegacyGlsl {
 			}
 		}
 
-		// The explicitly sized types of GL_EXT_shader_explicit_arithmetic_types, which a pack
-		// written for a recent card declares its outputs and varyings under. Left out, a
-		// declaration under one of them read as a use, so the declaration was neither lifted nor
-		// counted, and RenderPearl's f16vec4 output stayed in the body under an ofFragData0 laid on
-		// the same location.
 		names.addAll(NARROW_TYPES.keySet());
 		names.addAll(List.of("float32_t", "float64_t", "int32_t", "int64_t", "uint32_t", "uint64_t"));
 		for (String prefix : List.of("f32", "f64", "i32", "i64", "u32", "u64")) {
@@ -273,7 +228,6 @@ public final class LegacyGlsl {
 		return Set.copyOf(names);
 	}
 
-	
 	private static Map<String, String> narrowTypes() {
 		Map<String, String> widened = new LinkedHashMap<>();
 		widened.put("float16_t", "float");
@@ -300,7 +254,6 @@ public final class LegacyGlsl {
 		return Collections.unmodifiableMap(widened);
 	}
 
-	
 	static String widened(String type) {
 		return NARROW_TYPES.getOrDefault(type, type);
 	}
@@ -371,8 +324,6 @@ public final class LegacyGlsl {
 			renames.put("gl_" + name.substring(3), name);
 		}
 
-		// Not part of the uniform block: it is a varying, and which direction it runs depends on
-		// the stage, so the translator declares it rather than this table.
 		renames.put("gl_FogFragCoord", "of_FogFragCoord");
 
 		return Collections.unmodifiableMap(renames);

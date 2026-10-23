@@ -28,11 +28,9 @@ import java.util.function.Supplier;
 @Mixin(WeatherEffectRenderer.class)
 public abstract class WeatherEffectRendererMixin {
 
-	
 	@Unique
 	private RenderPipeline corevk$pipeline;
 
-	
 	@Inject(method = { PatchedMethods.WEATHER_RENDER, PatchedMethods.WEATHER_RENDER_WIDENED },
 			require = 1, at = @At("HEAD"), cancellable = true)
 	private void corevk$refuse(CallbackInfo callback) {
@@ -41,7 +39,6 @@ public abstract class WeatherEffectRendererMixin {
 		}
 	}
 
-	
 	@WrapOperation(method = { PatchedMethods.WEATHER_RENDER, PatchedMethods.WEATHER_RENDER_WIDENED },
 			require = 1,
 			at = @At(value = "INVOKE",
@@ -51,7 +48,6 @@ public abstract class WeatherEffectRendererMixin {
 		return original.call(state) || WeatherDraw.depth();
 	}
 
-	
 	@WrapOperation(method = { PatchedMethods.WEATHER_RENDER, PatchedMethods.WEATHER_RENDER_WIDENED },
 			require = 1,
 			at = @At(value = "INVOKE",
@@ -84,7 +80,6 @@ public abstract class WeatherEffectRendererMixin {
 		original.call(pass, this.corevk$pipeline == null ? pipeline : this.corevk$pipeline);
 	}
 
-	
 	@WrapOperation(method = "renderWeather", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/systems/RenderPass;bindTexture("

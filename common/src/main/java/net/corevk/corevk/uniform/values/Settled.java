@@ -11,10 +11,8 @@ final class Settled {
 	private float a;
 	private float b;
 
-	
 	private boolean valid;
 
-	
 	boolean holds(Matrix4fc matrix) {
 		if (this.valid && same(this.first, matrix)) {
 			return true;
@@ -26,7 +24,6 @@ final class Settled {
 		return false;
 	}
 
-	
 	boolean holds(Matrix4fc matrix, float a, float b) {
 		if (this.valid && this.a == a && this.b == b && same(this.first, matrix)) {
 			return true;
@@ -40,7 +37,6 @@ final class Settled {
 		return false;
 	}
 
-	
 	boolean holds(Matrix4fc first, Matrix4fc second) {
 		if (this.valid && same(this.first, first) && same(this.second, second)) {
 			return true;
@@ -53,7 +49,6 @@ final class Settled {
 		return false;
 	}
 
-	
 	private static boolean same(Matrix4f held, Matrix4fc matrix) {
 		return held.equals(matrix, 0.0F);
 	}

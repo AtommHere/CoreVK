@@ -7,10 +7,8 @@ import java.util.regex.Pattern;
 
 public record ChainFilter(List<String> only, List<String> without, int limit) {
 
-	
 	public static final ChainFilter ALL = new ChainFilter(List.of(), -1);
 
-	
 	private static final Pattern NAME = Pattern.compile("[A-Za-z_]\\w*");
 
 	public ChainFilter {
@@ -22,7 +20,6 @@ public record ChainFilter(List<String> only, List<String> without, int limit) {
 		this(only, List.of(), limit);
 	}
 
-	
 	public static ChainFilter parse(String text) {
 		if (text == null) {
 			return ALL;
@@ -42,10 +39,7 @@ public record ChainFilter(List<String> only, List<String> without, int limit) {
 		}
 
 		List<String> names = new ArrayList<>();
-		// Limit 0, the one-argument reading: a trailing empty field goes and a leading one stays,
-		// so "composite4," filters and ",composite4" falls back to the whole chain. Lopsided, and
-		// kept lopsided on purpose - the two answers are a filter and no filter, and moving a
-		// debugging knob's fallback is not something a build gate should be allowed to decide.
+
 		for (String token : trimmed.split(",", 0)) {
 			String name = token.trim();
 			if (!NAME.matcher(name).matches()) {
@@ -58,7 +52,6 @@ public record ChainFilter(List<String> only, List<String> without, int limit) {
 		return names.isEmpty() ? ALL : new ChainFilter(names, -1);
 	}
 
-	
 	public ChainFilter without(Collection<String> programs) {
 		if (programs.isEmpty()) {
 			return this;
@@ -70,12 +63,10 @@ public record ChainFilter(List<String> only, List<String> without, int limit) {
 		return new ChainFilter(this.only, refused, this.limit);
 	}
 
-	
 	public boolean refuses(String bareName) {
 		return this.without.contains(bareName);
 	}
 
-	
 	public boolean accepts(String bareName, int rank) {
 		if (refuses(bareName)) {
 			return false;

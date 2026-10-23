@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemStackRenderState.class)
 public abstract class ItemStackRenderStateMixin implements DisplayedItem {
 
-	
 	@Unique
 	private static final int BLOCK_ITEM = 1;
 
@@ -33,7 +32,6 @@ public abstract class ItemStackRenderStateMixin implements DisplayedItem {
 	@Unique
 	private @Nullable Identifier corevk$model;
 
-	
 	@Unique
 	private int corevk$heldBlockEntity;
 
@@ -69,22 +67,15 @@ public abstract class ItemStackRenderStateMixin implements DisplayedItem {
 			return;
 		}
 
-		// A bucket of powder snow is a block item and is not drawn as one, which is the one exception
-		// CoreVK carries and it carries it by class.
 		if (item instanceof BlockItem block && !(item instanceof SolidBucketItem)) {
 			EntityIdentifiers.blockEntity(BLOCK_ITEM);
-			// Nought and not the minus one the table answers everywhere else, which is CoreVK's own
-			// number here and the only place it departs from its own default: it asks for this one
-			// value with getOrDefault(state, 0) (ItemStackStateLayerMixin.java:57) where every other
-			// read of the same table takes the map's -1.
+
 			EntityIdentifiers.item(
 					Math.max(BlockStateIds.id(block.getBlock().defaultBlockState()), 0));
 
 			return;
 		}
 
-		// The model the item names comes first and its registry key second, so that a resource pack
-		// which points two items at one model has the pack answer once for both.
 		Identifier name = this.corevk$model != null
 				? this.corevk$model
 				: BuiltInRegistries.ITEM.getKey(item);

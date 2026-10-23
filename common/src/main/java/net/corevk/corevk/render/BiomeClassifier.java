@@ -22,14 +22,12 @@ public final class BiomeClassifier {
 	private BiomeClassifier() {
 	}
 
-	
 	public static void record(ResourceKey<Biome> key) {
 		Identifier identifier = key.identifier();
 		IDS.put(identifier, NAMES.size());
 		NAMES.add(identifier.getPath().toUpperCase(Locale.ROOT));
 	}
 
-	
 	public static int identify(Holder<Biome> biome) {
 		Identifier key = biome.unwrapKey().map(k -> k.identifier()).orElse(null);
 		Integer id = key == null ? null : IDS.get(key);
@@ -37,12 +35,10 @@ public final class BiomeClassifier {
 		return id == null ? 0 : id;
 	}
 
-	
 	public static List<String> names() {
 		return List.copyOf(NAMES);
 	}
 
-	
 	@SuppressWarnings("EnumOrdinal")
 	public static int categoryOf(Holder<Biome> holder) {
 		return category(holder).ordinal();
@@ -50,7 +46,7 @@ public final class BiomeClassifier {
 
 	private static BiomeCategory category(Holder<Biome> holder) {
 		if (holder.is(BiomeTags.WITHOUT_WANDERING_TRADER_SPAWNS)) {
-			// Literally only the void carries this one.
+
 			return BiomeCategory.NONE;
 		} else if (holder.is(BiomeTags.HAS_VILLAGE_SNOWY)) {
 			return BiomeCategory.ICY;

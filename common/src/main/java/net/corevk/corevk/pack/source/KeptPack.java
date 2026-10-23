@@ -22,20 +22,16 @@ import java.util.stream.Stream;
 
 final class KeptPack {
 
-	
 	private static final boolean ENABLED = Boolean.parseBoolean(
 			System.getProperty("corevk.keepPackOpen", "true"));
 
-	
 	private static final int MOST_ENTRIES = 20_000;
 
-	
 	private static volatile Held held;
 
 	private KeptPack() {
 	}
 
-	
 	static OpenedPack open(Path packPath, Map<String, OptionValue> chosen, String profile)
 			throws IOException {
 		if (!ENABLED) {
@@ -58,8 +54,6 @@ final class KeptPack {
 			return standing.pack();
 		}
 
-		// Opened before the one held is let go, so that a pack that cannot be read leaves the
-		// session with the opening it had rather than with none.
 		OpenedPack opened = OpenedPack.open(packPath, chosen, profile);
 		CoreVK.logger().info("Pack opened afresh: {}, property=corevk.keepPackOpen",
 				why(standing, print, wanted));
@@ -69,14 +63,12 @@ final class KeptPack {
 		return opened;
 	}
 
-	
 	static void forget() {
 		Held standing = held;
 		held = null;
 		drop(standing);
 	}
 
-	
 	static boolean holds(OpenedPack pack) {
 		Held standing = held;
 		if (standing == null) {
@@ -89,12 +81,10 @@ final class KeptPack {
 		return same;
 	}
 
-	
 	private static boolean atTheAskedScale(Held standing) {
 		return standing.pack().settings().scale() == SettingSet.askedShadowMapScale();
 	}
 
-	
 	private static String why(Held standing, String print, Key wanted) {
 		if (standing == null) {
 			return "none was held";
@@ -123,18 +113,14 @@ final class KeptPack {
 		try {
 			standing.pack().source().close();
 		} catch (IOException | RuntimeException e) {
-			// Said rather than thrown: the load that provoked this has a fresh opening in hand and
-			// nothing about it is wrong, and a mounted archive that would not close is a handle
-			// held until the game is closed rather than a reason to refuse a pack.
+
 			CoreVK.logger().warn("CoreVK could not close the pack opening it was holding", e);
 		}
 	}
 
-	
 	private record Held(OpenedPack pack, Key key, String print) {
 	}
 
-	
 	private static String fingerprint(Path packPath) {
 		List<String> entries = new ArrayList<>();
 		try (Stream<Path> walk = Files.walk(packPath)) {
@@ -143,15 +129,6 @@ final class KeptPack {
 					return null;
 				}
 
-				// What the READER will read, which for a symlink is the target and not the link:
-				// the reading side goes through Files.readAllBytes, which follows, so a print taken
-				// off the link would stand still while the file the pack is built from moved.
-				//
-				// One entry that cannot be stat'd, a broken link among them, is written down as
-				// exactly that rather than abandoning the whole print: a single dangling link in a
-				// pack folder would otherwise make that pack unfingerprintable, and with it never
-				// kept again for the rest of the session, in silence. A target that appears later
-				// makes the read succeed, which moves the entry, which moves the print.
 				BasicFileAttributes attributes;
 				try {
 					attributes = Files.readAttributes(path, BasicFileAttributes.class);
@@ -174,8 +151,6 @@ final class KeptPack {
 			return null;
 		}
 
-		// Sorted rather than taken in the walk's own order, which is the filesystem's business and
-		// not a property of the pack.
 		Collections.sort(entries);
 		MessageDigest digest = sha256();
 		for (String entry : entries) {
@@ -194,7 +169,6 @@ final class KeptPack {
 		}
 	}
 
-	
 	private record Key(Path packPath, String settings, String profile, Map<String, String> defines) {
 
 		static Key of(Path packPath, Map<String, OptionValue> chosen, String profile) {

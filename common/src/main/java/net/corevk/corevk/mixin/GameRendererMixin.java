@@ -22,7 +22,6 @@ public abstract class GameRendererMixin {
 		return original.call(projection, bob);
 	}
 
-	
 	@WrapOperation(method = "renderLevel", require = 2,
 			at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;rotate(FLorg/joml/Vector3fc;)Lorg/joml/Matrix4f;"))
 	private Matrix4f corevk$spin(Matrix4f projection, float angle, Vector3fc axis,

@@ -42,22 +42,18 @@ public final class PropertiesFile {
 		return !this.lines.isEmpty();
 	}
 
-	
 	public void walk(Map<String, String> defines, Consumer<String> line) {
 		walk(this.lines, defines, line);
 	}
 
-	
 	public void walkDefining(Map<String, String> defines, BiConsumer<String, Map<String, String>> line) {
 		walkDefining(this.lines, defines, line);
 	}
 
-	
 	static void walk(List<String> lines, Map<String, String> defines, Consumer<String> line) {
 		walkDefining(lines, defines, (text, _) -> line.accept(text));
 	}
 
-	
 	static void walkDefining(List<String> lines, Map<String, String> defines,
 			BiConsumer<String, Map<String, String>> line) {
 		Map<String, String> live = new LinkedHashMap<>(defines);
@@ -101,23 +97,18 @@ public final class PropertiesFile {
 			}
 		}
 
-		// A file whose last line asks to be continued. The pack is wrong and the value is still
-		// worth handing over, since everything before the backslash is a complete declaration.
 		if (joined != null) {
 			line.accept(joined.toString(), live);
 		}
 	}
 
-	
 	private static void apply(String keyword, String line, ConditionStack conditions,
 			Map<String, String> defines) {
 		switch (keyword) {
 			case "ifdef", "ifndef" -> {
 				Matcher name = IncludeExpander.DEFINED_NAME
 						.matcher(line.replaceFirst("^\\s*#\\s*\\w+", ""));
-				// Nothing that can name a setting after the keyword leaves the group taken, and
-				// anything written after the name is dropped. These files carry the conditionals
-				// a pack's shaders carry, so they get the same reading: one stack, one decision.
+
 				conditions.ifDirective(!name.matches()
 						|| keyword.equals("ifdef") == defines.containsKey(name.group(1)));
 			}
@@ -128,7 +119,6 @@ public final class PropertiesFile {
 		}
 	}
 
-	
 	private static boolean decide(String expression, Map<String, String> defines) {
 		return !expression.isBlank()
 				&& PreprocessorExpression.evaluate(expression, defines).orElse(true);

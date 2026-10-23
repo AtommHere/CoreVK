@@ -5,7 +5,6 @@ import java.util.Map;
 
 public final class SettingSet {
 
-	
 	private static volatile int shadowMapScale = 100;
 
 	private final Map<String, OptionValue> chosen;
@@ -25,7 +24,6 @@ public final class SettingSet {
 		shadowMapScale = percent;
 	}
 
-	
 	public static int askedShadowMapScale() {
 		return shadowMapScale;
 	}
@@ -35,13 +33,10 @@ public final class SettingSet {
 		Map<String, OptionValue> chosen = new LinkedHashMap<>(profile);
 		chosen.putAll(user);
 
-		// Taken once here rather than read where it is used, so that every unit of one reading
-		// is expanded at the same size even if the player moves the slider while a pack loads.
 		return new SettingSet(chosen, EngineDefines.table(EngineDefines.machine()), variantName,
 			shadowMapScale);
 	}
 
-	
 	public int scale() {
 		return this.scale;
 	}
@@ -58,7 +53,6 @@ public final class SettingSet {
 		return this.variantName;
 	}
 
-	
 	public Map<String, String> globalDefines(OptionIndex index) {
 		Map<String, String> defines = new LinkedHashMap<>(this.engine);
 
@@ -82,7 +76,7 @@ public final class SettingSet {
 
 			OptionValue value = this.chosen.get(option.name());
 			if (value == null) {
-				// Left as the pack ships it. A setting commented out is simply not defined.
+
 				if (!option.defaultOff()) {
 					defines.put(option.name(), option.defaultText());
 				}
@@ -100,7 +94,6 @@ public final class SettingSet {
 		return defines;
 	}
 
-	
 	public Map<String, String> unitDefines() {
 		return this.engine;
 	}

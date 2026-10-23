@@ -6,22 +6,18 @@ import java.util.OptionalInt;
 
 public final class TargetName {
 
-	
 	public static final int MAX_TARGETS = 32;
 
 	private static final String PREFIX = "colortex";
 
-	
 	private static final String IMAGE_PREFIX = "colorimg";
 
-	
 	private static final List<String> LEGACY = List.of(
 			"gcolor", "gdepth", "gnormal", "composite", "gaux1", "gaux2", "gaux3", "gaux4");
 
 	private TargetName() {
 	}
 
-	
 	public static OptionalInt index(String name) {
 		int legacy = LEGACY.indexOf(name);
 		if (legacy >= 0) {
@@ -42,7 +38,6 @@ public final class TargetName {
 		return index < MAX_TARGETS ? OptionalInt.of(index) : OptionalInt.empty();
 	}
 
-	
 	public static OptionalInt imageIndex(String name) {
 		if (!name.startsWith(IMAGE_PREFIX)) {
 			return OptionalInt.empty();
@@ -58,17 +53,14 @@ public final class TargetName {
 		return index < MAX_TARGETS ? OptionalInt.of(index) : OptionalInt.empty();
 	}
 
-	
 	public static String canonical(int index) {
 		return PREFIX + index;
 	}
 
-	
 	public static Optional<String> legacyAlias(int index) {
 		return index >= 0 && index < LEGACY.size() ? Optional.of(LEGACY.get(index)) : Optional.empty();
 	}
 
-	
 	public static Optional<Suffixed> split(String directiveName) {
 		if (directiveName.startsWith(PREFIX)) {
 			int cursor = PREFIX.length();
@@ -97,7 +89,6 @@ public final class TargetName {
 	public record Suffixed(int index, String suffix) {
 	}
 
-	
 	public static String bareName(String program) {
 		int slash = program.lastIndexOf('/');
 

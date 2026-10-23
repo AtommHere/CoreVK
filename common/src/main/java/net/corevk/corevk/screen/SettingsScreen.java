@@ -47,36 +47,28 @@ import java.util.stream.Stream;
 
 public final class SettingsScreen extends Screen implements PackHost, ScreenHost {
 
-	
 	private static final int LIST_TOP = 32;
 	private static final int FOOTER_ROOM = 94;
 
-	
 	private static final int BUTTON_WIDTH = 100;
 	private static final int BUTTON_HEIGHT = 20;
 	private static final int BUTTON_PITCH = 104;
 
-	
 	private static final int WIDE_BUTTON_WIDTH = 152;
 	private static final int WIDE_BUTTON_PITCH = 78;
 
-	
 	private static final int EYE_SIZE = 20;
 	private static final int EYE_V = 146;
 
 	private static final int COMMENT_PANEL_WIDTH = 314;
 
-	
 	private static final int NOTIFICATION_TICKS = 100;
 
-	
 	private static final int COMMENT_DELAY = 10;
 
-	
 	private static final float BLUR_HALF_LIFE = 2.0F;
 	private static final float LIST_HALF_LIFE = 1.0F;
 
-	
 	private static final float OPTIONS_BLUR = 0.1F;
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -91,13 +83,10 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 
 	private final @Nullable Screen parent;
 
-	
 	private final Component nameLine;
 
-	
 	private final Deque<String> history = new ArrayDeque<>();
 
-	
 	private final List<Runnable> topLayer = new ArrayList<>();
 
 	private final Smoothed blurFade = new Smoothed();
@@ -121,17 +110,14 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 	private List<FormattedCharSequence> commentBody = List.of();
 	private int commentTicks;
 
-	
 	private String page = "";
 
 	private boolean optionsOpen;
 
-	
 	private boolean previewing;
 	private boolean guiHidden;
 	private boolean dropChanges;
 
-	
 	private boolean started;
 
 	private float blurAlpha;
@@ -144,8 +130,7 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		this.nameLine = Component.literal(CoreVK.MOD_NAME + " " + CoreVK.platform().modVersion())
 				.withStyle(ChatFormatting.GRAY);
 		adopt(PackChoice.session().orElse(null));
-		// Whatever the file says when there is no pack: the other view would be an empty page, and the
-		// list is where one is picked.
+
 		this.optionsOpen = !PackChoice.opensOnPacks() && this.session != null;
 	}
 
@@ -156,8 +141,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		int listTop = LIST_TOP + 4;
 		int listHeight = Math.max(0, this.height - FOOTER_ROOM - listTop);
 
-		// Rebuilt rather than resized, which is what CoreVK does, with the pack the list had kept
-		// selected carried across: a resize that lost it would drop a pack chosen and not yet applied.
 		String chosen = this.packList == null
 				? PackChoice.askedFor().name()
 				: this.packList.chosenName();
@@ -165,7 +148,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 				? PackChoice.askedFor().enabled()
 				: this.packList.shadersEnabled();
 
-		// Let go of the old folder watcher first. CoreVK does not, and leaks a watch key per resize.
 		closePackList();
 		this.packList = new PackList(this, this.minecraft, gameDirectory(), chosen, enabled,
 				this.width, listHeight, LIST_TOP);
@@ -202,9 +184,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 					BUTTON_HEIGHT, Component.empty(), this::switchView));
 			refreshViewSwitch();
 
-			// In a world only, exactly like the eye it mirrors. Out of one no pack is drawing, so a
-			// reading changes no image; it still rebuilds this screen from what it read, so what is
-			// left out there is the loop this button exists for and not the whole of its effect.
 			if (this.minecraft.level != null) {
 				addRenderableWidget(reload());
 			}
@@ -216,13 +195,10 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 			this.eyeButton = null;
 		}
 
-		// Never let a comment panel outlive the page it belonged to, which is CoreVK's own fix for a
-		// panel that stayed up after the screen had moved on.
 		this.hoveredCell = null;
 		this.commentTicks = 0;
 	}
 
-	
 	private Button reload() {
 		return PanelButton.icon(besideRows(true), this.height - 39, EYE_SIZE, ScreenDraw.Icon.REFRESH,
 				Component.translatable(ScreenText.RELOAD), () -> {
@@ -231,7 +207,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 				});
 	}
 
-	
 	private int besideRows(boolean onTheLeft) {
 		float edge = this.width / 2.0F + (onTheLeft ? -154.0F : 154.0F);
 		float free = onTheLeft ? edge : this.width - edge;
@@ -247,7 +222,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		return (int) (onTheLeft ? free / 2.0F : edge + free / 2.0F) - EYE_SIZE / 2;
 	}
 
-	
 	private Button eye() {
 		int x = besideRows(false);
 
@@ -257,8 +231,7 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 				this.guiHidden ? EYE_SIZE : 0, EYE_V, EYE_SIZE, ScreenDraw.WIDGETS, label,
 				this::toggleHidden);
 		button.setTooltip(Tooltip.create(label));
-		// Ten seconds, which is CoreVK's: the tooltip would otherwise cover the world this button exists
-		// to uncover.
+
 		button.setTooltipDelay(Duration.ofSeconds(10));
 
 		return button;
@@ -272,7 +245,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		}
 	}
 
-	
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
 		syncWithLoadedPack();
@@ -291,15 +263,12 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 			drawComment(graphics);
 		}
 
-		// After every list entry, and before the lines at the bottom left, which nothing may cover.
 		for (Runnable draw : this.topLayer) {
 			draw.run();
 		}
 
 		this.topLayer.clear();
 
-		// CoreVK's arrangement, ShaderPackScreen.java:218-226: the name and version on the bottom line,
-		// pushed up one by whatever has to be said under them.
 		Component note = engineNote();
 		if (note.getString().isEmpty()) {
 			graphics.text(this.font, this.nameLine, 2, this.height - 10, WHITE);
@@ -329,7 +298,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		this.listAlpha = this.listFade.updateAndGet(list, LIST_HALF_LIFE, LIST_HALF_LIFE, dt);
 	}
 
-	
 	private Component subtitle() {
 		Component said = this.notification;
 		if (said != null && this.notificationTicks > 0) {
@@ -339,7 +307,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		return this.optionsOpen ? CONFIGURE_TITLE : SELECT_TITLE;
 	}
 
-	
 	private Component engineNote() {
 		String failed = this.error == null ? PackChoice.lastError().orElse(null) : this.error;
 		if (failed != null) {
@@ -399,7 +366,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		}
 	}
 
-	
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.isEscape()) {
@@ -424,18 +390,12 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		} else if (event.isCycleFocus()) {
 			PackList list = this.packList;
 			if (!this.optionsOpen && list != null) {
-				// CoreVK presses the focused row before switching, so that Tab from the list opens the
-				// settings of the pack the keyboard is on rather than of the pack that was applied.
-				// Return is named through the game's own table rather than by number, since the game
-				// asks whether a key confirms against that same table, and the number is a GLFW key
-				// under 26.2 and an SDL scancode under 26.3. F1 below is named the same way for the
-				// same reason.
+
 				list.keyPressed(new KeyEvent(InputConstants.KEY_RETURN, 0, 0));
 			}
 
 			switchView();
-			// Cleared after the rebuild put it back, so that the Tab falling through below walks the
-			// new view from its start rather than from whatever the rebuild happened to focus.
+
 			setFocused(null);
 		} else if (event.key() == InputConstants.KEY_F1 && this.minecraft.level != null) {
 			toggleHidden();
@@ -443,7 +403,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 			return true;
 		}
 
-		// Nothing else reaches a screen that is not being drawn.
 		return this.guiHidden || super.keyPressed(event);
 	}
 
@@ -452,7 +411,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		rebuildWidgets();
 	}
 
-	
 	private void switchView() {
 		this.optionsOpen = !this.optionsOpen;
 		if (this.optionsOpen) {
@@ -462,7 +420,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		rebuildWidgets();
 	}
 
-	
 	private void previewChosen() {
 		PackList list = this.packList;
 		if (list == null) {
@@ -501,7 +458,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		}
 	}
 
-	
 	private void giveUp(@Nullable PackSession loaded) {
 		this.optionsOpen = false;
 		this.previewing = false;
@@ -516,15 +472,7 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 
 		button.setMessage(Component
 				.translatable(this.optionsOpen ? ScreenText.PACKS : ScreenText.TITLE));
-		// Live for the pack the LIST has selected, and not for the pack that happens to be loaded.
-		// Asking the loaded one was a circle: the first pack anybody ever picks has never been read,
-		// so nothing said it had settings, so the button that would have read it stayed dead, and
-		// the only way out was to load the pack at its own default profile first, which is exactly
-		// what reading without loading exists to avoid.
-		//
-		// A pack this screen has already read answers for itself, and a pack it has not is taken to
-		// have settings until the reading says otherwise. Being wrong that way costs one click and
-		// one sentence; being wrong the other way is the circle above.
+
 		PackList list = this.packList;
 		PackSession shown = this.session;
 		String chosen = list == null ? "" : list.chosenName();
@@ -533,18 +481,14 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		boolean anythingToConfigure = (list == null || list.shadersEnabled())
 				&& (unread || laysSomethingOut);
 		button.active = this.optionsOpen || anythingToConfigure;
-		// Dead only where this screen KNOWS there is nothing, and it says which nothing on hover: a
-		// folder with no pack in it, a pack turned off on purpose, a name the folder has not got, and
-		// a pack that was read and lays nothing out are four different answers.
+
 		button.setTooltip(button.active ? null : Tooltip.create(nothingToConfigure()));
 	}
 
-	
 	private Component nothingToConfigure() {
 		PackList list = this.packList;
 		if (list != null && !list.shadersEnabled()) {
-			// The toggle's own words, which is what makes the connection obvious: the sentence on
-			// the dead button is the one written on the row right above it.
+
 			return Component.translatable(ScreenText.SHADERS_DISABLED);
 		}
 
@@ -556,7 +500,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		return noPackReason();
 	}
 
-	
 	private static Component noPackReason() {
 		if (PackChoice.packMissing()) {
 			return Component.translatable(ScreenText.PACK_MISSING, PackChoice.askedFor().name());
@@ -571,7 +514,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		return this.listAlpha;
 	}
 
-	
 	public int blurRadius() {
 		return (int) this.blurAlpha;
 	}
@@ -584,10 +526,7 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 	@Override
 	public void packChosen() {
 		setFocused(this.folderButton);
-		// A preview is of one pack, and the selection has left it: what was set on it would be
-		// written into that pack's file by an Apply aimed at another, and the bottom line and its
-		// forced count would go on describing a pack that is neither drawing nor chosen. Dropped
-		// here, at the click, rather than repaired on the way back to the options view.
+
 		PackList list = this.packList;
 		PackSession shown = this.session;
 		if (this.previewing && list != null && shown != null
@@ -595,15 +534,12 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 			giveUp(PackChoice.session().orElse(null));
 		}
 
-		// The switch is live for what the list has selected, so it has to hear that the selection
-		// moved. Nothing else rebuilds this screen when a row is clicked, and without this the very
-		// first pack picked on a fresh install left the button dead until something else did.
 		refreshViewSwitch();
 	}
 
 	@Override
 	public MenuValues values() {
-		// Only ever reached from a cell, and a cell only exists when a pack was read.
+
 		return Objects.requireNonNull(this.values, "no pack is loaded");
 	}
 
@@ -647,7 +583,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 				&& !this.commentBody.isEmpty();
 	}
 
-	
 	@Override
 	public void hovered(PageWidget widget, boolean hovered) {
 		if (hovered && widget != this.hoveredCell) {
@@ -663,7 +598,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		}
 	}
 
-	
 	private List<FormattedCharSequence> wrapComment(Component comment) {
 		String text = comment.getString();
 		if (text.endsWith(".")) {
@@ -698,7 +632,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 				: loaded.settingsFile();
 	}
 
-	
 	@Override
 	public void resetSettings() {
 		PackSession loaded = this.session;
@@ -719,7 +652,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 						loaded.settingsFile().getFileName().toString())));
 	}
 
-	
 	private void emptySettings() {
 		PackSession loaded = this.session;
 		if (loaded == null) {
@@ -774,7 +706,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		refresh();
 	}
 
-	
 	@Override
 	public void onFilesDrop(List<Path> files) {
 		if (this.optionsOpen) {
@@ -837,12 +768,9 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 			String name = name(packs.getFirst());
 			announce(Component.translatable(ScreenText.ADDED_PACK, name)
 					.withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW));
-			// Selected straight away: somebody who has just dragged a pack in wants to use it.
+
 			list.select(name);
-			// And the switch is told, because it is live for what the list has selected and this is
-			// the one road to a selection that does not go through a row being pressed. Without it
-			// a dropped pack sits selected under a dead button until something unrelated rebuilds
-			// the screen.
+
 			refreshViewSwitch();
 
 			return;
@@ -852,7 +780,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 				.withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW));
 	}
 
-	
 	private static void copyInto(Path directory, Path pack) throws IOException {
 		Files.createDirectories(directory);
 		Path target = directory.resolve(name(pack));
@@ -885,7 +812,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		return name == null ? path.toString() : name.toString();
 	}
 
-	
 	private void applyChanges() {
 		PackList list = this.packList;
 		if (list == null) {
@@ -897,13 +823,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		boolean enabled = list.shadersEnabled();
 		boolean samePack = chosen.equals(asked.name());
 
-		// A pack being swapped drops what was clicked on the one before it: a value set on one pack has
-		// no meaning in the next one's file, and CoreVK clears its own queue for the same reason.
-		//
-		// Unless what is on screen IS the pack being swapped to, which is the whole point of reading
-		// a pack without loading it: the values were set on it, they belong in its file, and throwing
-		// them away here would give back exactly the behaviour this replaced. The low profile someone
-		// just picked has to survive the switch, or they pay the high one anyway.
 		boolean settingsAreForTheChosenPack = samePack || this.previewing;
 		if (!settingsAreForTheChosenPack) {
 			MenuValues current = this.values;
@@ -925,7 +844,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		refreshViewSwitch();
 	}
 
-	
 	private boolean writePendingSettings() {
 		PackSession loaded = this.session;
 		MenuValues current = this.values;
@@ -942,15 +860,13 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		} catch (IOException | RuntimeException e) {
 			this.error = String.valueOf(e.getMessage());
 			CoreVK.logger().error("CoreVK could not write {}", loaded.settingsFile(), e);
-			// The screen stays open and the bottom line carries the message: what was pending is still
-			// pending, so nothing has been lost.
+
 			return false;
 		}
 
 		return true;
 	}
 
-	
 	private boolean writePackFile(String chosen, boolean enabled) {
 		Path file = PackChoice.packFile(gameDirectory());
 		try {
@@ -966,7 +882,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		return true;
 	}
 
-	
 	private void reloadPack() {
 		PackChoice.reload(gameDirectory());
 	}
@@ -976,7 +891,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		onClose();
 	}
 
-	
 	@Override
 	public void onClose() {
 		if (this.dropChanges) {
@@ -1007,26 +921,18 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		this.packList = null;
 	}
 
-	
 	private void openFolder() {
 		Path directory = PackLoader.directory(gameDirectory());
 		try {
 			Files.createDirectories(directory);
 		} catch (IOException e) {
-			// Opened anyway: a folder that cannot be created is one the platform will report on better
-			// than this line could.
+
 			CoreVK.logger().warn("CoreVK could not create {}", directory, e);
 		}
 
 		Desktop.openPath(directory);
 	}
 
-	
-	// By identity, and here that is the opposite answer to the one EngineOptions gives on its own
-	// record, on purpose. The question is whether the render layer has handed over a new reading, not
-	// whether the reading says the same thing: a reload of an unchanged pack builds a session equal to
-	// the held one, and by value this method would then return early and leave the screen on the menu
-	// it read before.
 	@SuppressWarnings("ReferenceEquality")
 	private void syncWithLoadedPack() {
 		PackSession loaded = PackChoice.session().orElse(null);
@@ -1035,10 +941,6 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 			return;
 		}
 
-		// A pack being looked at is not the loaded one BY CONSTRUCTION, so this would swap it away on
-		// the very next frame and put the drawing pack's settings back under the player's hands. The
-		// look ends when the loaded pack becomes the one on screen, which is Apply having gone
-		// through, and that is the case the name check below lets past.
 		if (this.previewing && (loaded == null || held == null
 				|| !loaded.packFileName().equals(held.packFileName()))) {
 			return;
@@ -1049,9 +951,7 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		if (loaded != null && held != null && current != null
 				&& loaded.packFileName().equals(held.packFileName())) {
 			this.session = loaded;
-			// On the menu that was just read and not on the one held, since the same file name is not
-			// the same pack: a directory pack is edited in place, and a zip is replaced under its own
-			// name often enough.
+
 			this.values = current.reread(loaded.menu(), loaded.saved().values(), loaded.forcedText());
 			dropMissingPage();
 		} else {
@@ -1061,14 +961,12 @@ public final class SettingsScreen extends Screen implements PackHost, ScreenHost
 		rebuildWidgets();
 	}
 
-	
 	private void adopt(@Nullable PackSession loaded) {
 		this.session = loaded;
 		this.values = loaded == null
 				? null
 				: MenuValues.of(loaded.menu(), loaded.saved().values(), loaded.forcedText());
-		// Out to the list when there is no pack left to configure, which is the view a pack is picked
-		// from: turning every pack off otherwise leaves an empty page under a row of buttons.
+
 		if (loaded == null) {
 			this.optionsOpen = false;
 		}

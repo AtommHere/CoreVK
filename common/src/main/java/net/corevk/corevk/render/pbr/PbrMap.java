@@ -9,13 +9,10 @@ import java.util.function.IntUnaryOperator;
 
 public enum PbrMap {
 
-	
 	NORMALS("normals", "_n", ARGB.color(0xFF, 0x7F, 0x7F, 0xFF)),
 
-	
 	SPECULAR("specular", "_s", ARGB.color(0, 0, 0, 0));
 
-	
 	private static final IntUnaryOperator METAL = value -> value < 230 ? 0 : value - 229;
 	private static final IntUnaryOperator POROSITY = value -> value < 65 ? 0 : 1;
 	private static final IntUnaryOperator EMISSION = value -> value < 255 ? 0 : 1;
@@ -30,12 +27,10 @@ public enum PbrMap {
 		this.missing = missing;
 	}
 
-	
 	public String sampler() {
 		return this.sampler;
 	}
 
-	
 	public static PbrMap named(String sampler) {
 		for (PbrMap map : values()) {
 			if (map.sampler.equals(sampler)) {
@@ -46,23 +41,19 @@ public enum PbrMap {
 		return null;
 	}
 
-	
 	String suffix() {
 		return this.suffix;
 	}
 
-	
 	public Vector4fc missing() {
 		return new Vector4f(ARGB.red(this.missing) / 255.0F, ARGB.green(this.missing) / 255.0F,
 				ARGB.blue(this.missing) / 255.0F, ARGB.alpha(this.missing) / 255.0F);
 	}
 
-	
 	public boolean interpolates(boolean labPbr) {
 		return this != SPECULAR || !labPbr;
 	}
 
-	
 	int blend(int first, int second, int third, int fourth, boolean labPbr) {
 		if (this == SPECULAR && labPbr) {
 			return ARGB.color(
@@ -86,7 +77,6 @@ public enum PbrMap {
 		return (first + second + third + fourth) / 4;
 	}
 
-	
 	private static int byClass(IntUnaryOperator classOf, int first, int second, int third,
 			int fourth) {
 		int[] values = {first, second, third, fourth};

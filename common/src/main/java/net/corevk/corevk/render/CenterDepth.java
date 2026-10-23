@@ -33,24 +33,18 @@ final class CenterDepth {
 	private static final Identifier FRAGMENT_ID =
 			Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, "pack/center_depth_fragment");
 
-	
 	private static final String SCENE = "InSampler";
 
-	
 	private static final String BEFORE = "PrevSampler";
 
 	private static final String UNIFORM_BLOCK = "OfCenterDepth";
 
-	
 	private static final int BLOCK_BYTES = 16;
 
-	
 	private static final int VERTICES = 6;
 
-	
 	private static final GpuFormat FORMAT = GpuFormat.R32_FLOAT;
 
-	
 	private static final int SURFACES = 2;
 
 	private static final String LABEL = "CoreVK centre depth";
@@ -69,7 +63,6 @@ final class CenterDepth {
 			}
 			""";
 
-	
 	private static final String FRAGMENT = """
 			#version 460 core
 
@@ -106,24 +99,19 @@ final class CenterDepth {
 
 	private RenderPipeline pipeline;
 
-	
 	private boolean refused;
 
 	private TargetSurface[] texels;
 	private MappableRingBuffer factor;
 
-	
 	private int current;
 
-	
 	private boolean primed;
 
-	
 	GpuTextureView view() {
 		return this.primed ? this.texels[this.current].view() : null;
 	}
 
-	
 	void sample(CommandEncoder encoder, GpuDevice device, GpuBuffer quad, GpuTextureView opaque,
 			float halfLife, float seconds) {
 		if (quad == null || opaque == null || !ensure()) {
@@ -138,23 +126,18 @@ final class CenterDepth {
 		int into = 1 - this.current;
 		float blend = blend(halfLife, seconds);
 
-		// Written through the game's own builder rather than into the buffer by hand, which is what
-		// every other block of this engine does: one float is a layout too, and the two would drift.
 		this.factor.rotate();
 		try (GpuBufferSlice.MappedView view = this.factor.currentBuffer().map(false, true)) {
 			Std140Builder.intoBuffer(view.data()).putFloat(blend);
 		}
 
-		// Loaded rather than cleared: the draw covers the one texel, so a clear would be one more
-		// write of the same texel.
 		try (RenderPass pass = encoder.createRenderPass(() -> LABEL, this.texels[into].view(),
 				Optional.empty())) {
 			GraphicsApi.setPipeline(pass, compiled);
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setUniform(UNIFORM_BLOCK, this.factor.currentBuffer());
 			pass.setVertexBuffer(0, quad.slice());
-			// NEAREST on both, as CoreVK binds both: one is read at its own centre and the other is one
-			// texel wide, so there is nothing for a filter to average either way.
+
 			GraphicsApi.bindTexture(pass, SCENE, opaque,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 			GraphicsApi.bindTexture(pass, BEFORE, this.texels[this.current].view(),
@@ -166,7 +149,6 @@ final class CenterDepth {
 		this.primed = true;
 	}
 
-	
 	private float blend(float halfLife, float seconds) {
 		if (!this.primed) {
 			return 1.0F;
@@ -175,7 +157,6 @@ final class CenterDepth {
 		return seconds > 0.0F ? Smoothed.blend(halfLife, seconds) : 0.0F;
 	}
 
-	
 	void release() {
 		if (this.texels != null) {
 			for (TargetSurface texel : this.texels) {
@@ -196,7 +177,6 @@ final class CenterDepth {
 		this.primed = false;
 	}
 
-	
 	private boolean ensure() {
 		if (this.refused) {
 			return false;
@@ -207,15 +187,12 @@ final class CenterDepth {
 		}
 
 		try {
-			// Into the field one at a time, and not through an array expression: that evaluates both
-			// constructors before anything holds either, so a second one that throws leaks the first
-			// past a release() that has nothing to look at.
+
 			this.texels = new TargetSurface[SURFACES];
 			this.texels[0] = new TargetSurface("CoreVK centre depth", FORMAT, false, 1, 1);
 			this.texels[1] = new TargetSurface("CoreVK centre depth, the frame before", FORMAT,
 					false, 1, 1);
-			// Three buffers and a fence per turn, so a frame never writes over what the previous one
-			// is still being read for.
+
 			this.factor = new MappableRingBuffer(() -> LABEL,
 					GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, BLOCK_BYTES);
 		} catch (GpuDeviceLossException e) {
@@ -233,7 +210,6 @@ final class CenterDepth {
 		return true;
 	}
 
-	
 	private RenderPipeline pipeline(GpuDevice device) {
 		if (this.refused) {
 			return null;
@@ -247,10 +223,6 @@ final class CenterDepth {
 			return this.pipeline;
 		}
 
-		// Released and not merely refused, which is what makes the line below true. A compile is
-		// re-asked every frame, so this road is reached after frames have drawn: the pair would
-		// otherwise stand primed and every read would go on answering the last value folded, frozen
-		// for the session, while this says the reads stand at the far plane.
 		release();
 		this.refused = true;
 		this.pipeline = null;

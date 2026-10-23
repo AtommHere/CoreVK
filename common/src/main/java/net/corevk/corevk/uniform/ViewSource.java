@@ -10,23 +10,18 @@ public interface ViewSource {
 
 	Matrix4fc gbufferModelViewInverse();
 
-	
 	Matrix4fc passModelView();
 
 	Matrix4fc passModelViewInverse();
 
-	
 	Matrix4fc cameraBob();
 
-	
 	Matrix4fc passProjection();
 
 	Matrix4fc passProjectionInverse();
 
-	
 	Vector4fc passColour();
 
-	
 	float passAlphaTest();
 
 	Matrix4fc gbufferProjection();
@@ -37,7 +32,6 @@ public interface ViewSource {
 
 	Matrix4fc gbufferPreviousProjection();
 
-	
 	Matrix4fc shadowModelView();
 
 	Matrix4fc shadowModelViewInverse();
@@ -58,10 +52,8 @@ public interface ViewSource {
 
 	Matrix4fc dhProjectionInverse();
 
-	
 	Matrix4fc drawnDistantProjection();
 
-	
 	boolean distantDepthPair(Vector2f dest);
 
 	Matrix4fc dhPreviousProjection();
@@ -70,13 +62,11 @@ public interface ViewSource {
 
 	float dhFarPlane();
 
-	
 	int dhRenderDistance();
 
 	float near();
 
 	float far();
 
-	
 	Vector4fc depthConvention();
 }

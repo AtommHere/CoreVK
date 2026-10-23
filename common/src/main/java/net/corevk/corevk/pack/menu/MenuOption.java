@@ -11,11 +11,11 @@ public record MenuOption(String name, Form form, String defaultValue, List<Strin
 	private static final List<String> TOGGLE_VALUES = List.of("on", "off");
 
 	public enum Form {
-		
+
 		TOGGLE,
-		
+
 		CYCLE,
-		
+
 		FIXED
 	}
 
@@ -23,7 +23,6 @@ public record MenuOption(String name, Form form, String defaultValue, List<Strin
 		values = List.copyOf(values);
 	}
 
-	
 	public static MenuOption of(PackOption option, boolean slider) {
 		if (option.kind() == PackOption.Kind.TOGGLE) {
 			return new MenuOption(option.name(), Form.TOGGLE, option.defaultOff() ? "off" : "on",
@@ -46,7 +45,6 @@ public record MenuOption(String name, Form form, String defaultValue, List<Strin
 				slider && form == Form.CYCLE);
 	}
 
-	
 	public int indexOf(String value) {
 		int found = this.values.indexOf(value);
 		if (found >= 0) {
@@ -56,7 +54,6 @@ public record MenuOption(String name, Form form, String defaultValue, List<Strin
 		return Math.max(0, this.values.indexOf(this.defaultValue));
 	}
 
-	
 	public String at(int index) {
 		if (this.values.isEmpty()) {
 			return this.defaultValue;

@@ -11,7 +11,6 @@ public final class SodiumApi {
 	private SodiumApi() {
 	}
 
-	
 	public static void drawShadowLayer(SodiumWorldRenderer renderer, ChunkSectionLayerGroup group,
 			ChunkRenderMatrices matrices, Vec3 camera, GpuSampler sampler) {
 		renderer.drawChunkLayer(group, matrices, camera.x, camera.y, camera.z, sampler);

@@ -10,13 +10,10 @@ import java.util.regex.Pattern;
 
 public final class SharedMemory {
 
-	
 	public static final long THREADGROUP_BYTES = 32768L;
 
-	
 	public static final String BLOCK = "OfSharedMemory";
 
-	
 	private static final String BARRIER = "#define barrier() (memoryBarrierBuffer(), barrier())";
 
 	private static final Pattern WORD = Pattern.compile("\\bshared\\b");
@@ -29,7 +26,6 @@ public final class SharedMemory {
 
 	private static final Pattern VERSION = Pattern.compile("(?m)^[ \\t]*#[ \\t]*version\\b.*$");
 
-	
 	private static final Set<String> QUALIFIERS = Set.of("shared", "highp", "mediump", "lowp", "precise");
 
 	private static final Map<String, Layout> TYPES = types();
@@ -39,31 +35,25 @@ public final class SharedMemory {
 	private SharedMemory() {
 	}
 
-	
 	public record Reading(long threadgroupBytes, long bufferBytes, String moved, String unread) {
 
-		
 		public boolean over() {
 			return this.threadgroupBytes > THREADGROUP_BYTES;
 		}
 	}
 
-	
 	public static void serve(boolean moltenVkDriver) {
 		moltenVk = moltenVkDriver;
 	}
 
-	
 	public static boolean moltenVk() {
 		return moltenVk;
 	}
 
-	
 	public static boolean mentioned(String text) {
 		return WORD.matcher(text).find();
 	}
 
-	
 	public static Reading read(String preprocessed) {
 		String scanned = withoutDirectives(preprocessed);
 		List<int[]> spans = new ArrayList<>();
@@ -102,7 +92,7 @@ public final class SharedMemory {
 			}
 
 			Declaration declaration = declaration(tokens);
-			// A directive inside the statement would be lost with the span it sits in.
+
 			if (declaration == null || preprocessed.substring(from, i).indexOf('#') >= 0) {
 				return new Reading(-1L, 0L, null, statement.strip());
 			}
@@ -127,7 +117,6 @@ public final class SharedMemory {
 		return new Reading(threadgroup, bytes, moved(preprocessed, spans, members.toString()), null);
 	}
 
-	
 	private static String moved(String preprocessed, List<int[]> spans, String members) {
 		StringBuilder text = new StringBuilder(preprocessed.length() + 256);
 		int copied = 0;
@@ -154,11 +143,9 @@ public final class SharedMemory {
 	private record Layout(long size, long align, long stride) {
 	}
 
-	
 	private record Declaration(String member, Layout layout, List<Long> counts) {
 	}
 
-	
 	private static Map<String, Layout> types() {
 		Map<String, Layout> table = new HashMap<>();
 		for (String scalar : List.of("float", "int", "uint")) {
@@ -199,7 +186,6 @@ public final class SharedMemory {
 		return false;
 	}
 
-	
 	private static Declaration declaration(List<String> tokens) {
 		int at = 0;
 		while (at < tokens.size() && QUALIFIERS.contains(tokens.get(at))) {
@@ -268,7 +254,6 @@ public final class SharedMemory {
 		return new Declaration(String.join(" ", member) + ";", layout, List.copyOf(counts));
 	}
 
-	
 	private static long[] dimension(List<String> tokens, int at) {
 		long product = 1L;
 		int next = at + 1;
@@ -309,7 +294,6 @@ public final class SharedMemory {
 		return tokens;
 	}
 
-	
 	private static String withoutDirectives(String text) {
 		StringBuilder scanned = new StringBuilder(text.length());
 		for (String line : text.split("\n", -1)) {

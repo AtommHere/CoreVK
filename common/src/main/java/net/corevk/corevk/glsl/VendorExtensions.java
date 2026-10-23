@@ -16,10 +16,8 @@ import java.util.stream.Collectors;
 
 public final class VendorExtensions {
 
-	
 	private static final Map<String, String> DEVICE_EXTENSIONS = deviceExtensions();
 
-	
 	private static final List<String> SUBGROUP_PREFIXES =
 			List.of("GL_KHR_shader_subgroup_", "GL_EXT_shader_subgroup_extended_types_");
 
@@ -34,7 +32,6 @@ public final class VendorExtensions {
 	private VendorExtensions() {
 	}
 
-	
 	public static List<String> serve(Predicate<String> hasDeviceExtension, Consumer<String> enable) {
 		Set<String> missing = new TreeSet<>();
 		List<String> enabled = new ArrayList<>();
@@ -51,7 +48,6 @@ public final class VendorExtensions {
 		return enabled;
 	}
 
-	
 	public static Set<ProgramStage> serveSubgroupStages(Set<ProgramStage> supported) {
 		Set<ProgramStage> lacking = EnumSet.allOf(ProgramStage.class);
 		lacking.removeAll(supported);
@@ -60,23 +56,19 @@ public final class VendorExtensions {
 		return subgroupsAbsentIn;
 	}
 
-	
 	static boolean absent(String glslExtension, ProgramStage stage) {
 		return absent.contains(glslExtension)
 				|| (subgroupsAbsentIn.contains(stage) && subgroup(glslExtension));
 	}
 
-	
 	public static void serveMoltenVk(boolean moltenVkDriver) {
 		moltenVk = moltenVkDriver;
 	}
 
-	
 	static boolean moltenVk() {
 		return moltenVk;
 	}
 
-	
 	public static String key() {
 		String names = String.join(",", absent);
 		String stages = subgroupsAbsentIn.isEmpty() ? names : subgroupsAbsentIn.stream()
@@ -86,7 +78,6 @@ public final class VendorExtensions {
 		return moltenVk ? stages + ";MoltenVK" : stages;
 	}
 
-	
 	static String hidden(String glslExtension) {
 		return "OF_ABSENT_" + glslExtension;
 	}
@@ -103,8 +94,7 @@ public final class VendorExtensions {
 
 	private static Map<String, String> deviceExtensions() {
 		Map<String, String> table = new LinkedHashMap<>();
-		// Extensions that stand on their own: enabling the device extension is all a module
-		// using them needs.
+
 		table.put("GL_AMD_shader_trinary_minmax", "VK_AMD_shader_trinary_minmax");
 		table.put("GL_AMD_gpu_shader_half_float", "VK_AMD_gpu_shader_half_float");
 		table.put("GL_AMD_gpu_shader_int16", "VK_AMD_gpu_shader_int16");
@@ -114,9 +104,7 @@ public final class VendorExtensions {
 		table.put("GL_AMD_shader_image_load_store_lod", "VK_AMD_shader_image_load_store_lod");
 		table.put("GL_AMD_texture_gather_bias_lod", "VK_AMD_texture_gather_bias_lod");
 		table.put("GL_NV_shader_subgroup_partitioned", "VK_NV_shader_subgroup_partitioned");
-		// Absent on every device: no Vulkan form, a second extension or a device feature of their
-		// own that is not enabled here, so the module would be invalid with the extension enabled
-		// alone.
+
 		table.put("GL_NV_gpu_shader5", "");
 		table.put("GL_AMD_shader_ballot", "");
 		table.put("GL_INTEL_shader_integer_functions2", "");

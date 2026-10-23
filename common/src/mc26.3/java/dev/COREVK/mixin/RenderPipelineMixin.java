@@ -19,7 +19,6 @@ import java.util.List;
 @Mixin(RenderPipeline.class)
 public abstract class RenderPipelineMixin {
 
-	
 	@Unique
 	private @Nullable List<@Nullable VertexFormat> corevk$carried;
 

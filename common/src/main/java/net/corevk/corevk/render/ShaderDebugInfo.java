@@ -8,23 +8,19 @@ public final class ShaderDebugInfo {
 
 	private static final boolean ASKED = Boolean.getBoolean("corevk.shaderDebugInfo");
 
-	
 	private static final AtomicBoolean ANNOUNCED = new AtomicBoolean();
 
 	private ShaderDebugInfo() {
 	}
 
-	
 	public static boolean asked() {
 		return ASKED;
 	}
 
-	
 	public static String cacheWord() {
 		return ASKED ? "debug-info" : "no-debug-info";
 	}
 
-	
 	public static void announce() {
 		if (!ANNOUNCED.compareAndSet(false, true)) {
 			return;

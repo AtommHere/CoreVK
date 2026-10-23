@@ -17,7 +17,6 @@ public final class PushedDescriptor {
 	private PushedDescriptor() {
 	}
 
-	
 	public static void begin(VulkanBindGroupLayout.Entry entry) {
 		PushedDescriptor current = CURRENT.get();
 		current.entry = entry;
@@ -29,17 +28,14 @@ public final class PushedDescriptor {
 		return CURRENT.get();
 	}
 
-	
 	public VulkanBindGroupLayout.Entry entry() {
 		return this.entry;
 	}
 
-	
 	public StorageImages.Bound image() {
 		return this.image;
 	}
 
-	
 	public StorageBuffers.Bound buffer() {
 		return this.buffer;
 	}

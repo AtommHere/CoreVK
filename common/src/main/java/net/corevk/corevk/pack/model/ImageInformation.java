@@ -10,10 +10,8 @@ public record ImageInformation(String name, Optional<String> sampler, PackTextur
 		int width, int height, int depth, boolean clear, boolean relative, float relativeWidth,
 		float relativeHeight) {
 
-	
 	public static final int LIMIT = 16;
 
-	
 	public record Reading(List<ImageInformation> images, List<String> dropped) {
 
 		public Reading {
@@ -26,7 +24,6 @@ public record ImageInformation(String name, Optional<String> sampler, PackTextur
 		}
 	}
 
-	
 	public String describe() {
 		String size = this.relative
 				? this.relativeWidth + "x" + this.relativeHeight + " of the screen"
@@ -43,7 +40,6 @@ public record ImageInformation(String name, Optional<String> sampler, PackTextur
 				+ (this.clear ? ", cleared each frame" : "");
 	}
 
-	
 	public static String parse(String name, String value, Map<String, String> defines,
 			List<ImageInformation> images) {
 		String[] parts = value.split(" ", -1);
@@ -130,7 +126,6 @@ public record ImageInformation(String name, Optional<String> sampler, PackTextur
 		return null;
 	}
 
-	
 	private static OptionalInt dimension(String token, Map<String, String> defines) {
 		try {
 			return OptionalInt.of(Integer.parseInt(token));

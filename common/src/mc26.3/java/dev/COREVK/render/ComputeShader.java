@@ -25,15 +25,12 @@ public final class ComputeShader {
 	private ComputeShader() {
 	}
 
-	
 	public record Binding(boolean buffer, String name) {
 	}
 
-	
 	public record Compiled(long module, List<Binding> entries) {
 	}
 
-	
 	public static @Nullable Compiled build(VulkanDevice vulkan, String label, String source,
 			String stage, Function<String, @Nullable ByteBuffer> compile) throws Exception {
 		long began = System.nanoTime();
@@ -45,8 +42,6 @@ public final class ComputeShader {
 				return null;
 			}
 
-			// The same zeroes the game's compiler road gets in GlslCompilerMixin, and before the
-			// reflection, which has to read the module the driver will read.
 			try (SPIRVModule module = new SPIRVModule(RawLocals.patch(label, spirv),
 					ShaderType.VERTEX)) {
 				return compile(vulkan, module);
@@ -57,7 +52,6 @@ public final class ComputeShader {
 		}
 	}
 
-	
 	private static Compiled compile(VulkanDevice vulkan, SpvModule module) throws Exception {
 		SpvModule.Reflection reflection = module.reflect();
 		List<Binding> bindings = new ArrayList<>();

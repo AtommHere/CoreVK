@@ -51,12 +51,10 @@ public class Parser {
 		this.stack.add(element);
 	}
 
-	
 	private ExpressionElement expressionReducePop() {
 		return this.expressionReducePop(Integer.MAX_VALUE);
 	}
 
-	
 	private ExpressionElement expressionReducePop(int priority) {
 		ExpressionElement token = (ExpressionElement) this.pop();
 
@@ -74,13 +72,7 @@ public class Parser {
 		return token;
 	}
 
-	// visitor methods
-
-	
 	private void commaReduce(int index) throws ParseException {
-		// ( expr,
-		// UnfinishedArgs Expression (commaReduce)
-		// => UnfinishedArgs
 
 		ExpressionElement expr = this.expressionReducePop();
 		Element args = this.peek();
@@ -109,7 +101,6 @@ public class Parser {
 		return this.peek() instanceof AccessibleExpressionElement;
 	}
 
-	
 	void visitAccess(String access) {
 		AccessibleExpressionElement pop = (AccessibleExpressionElement) this.pop();
 		this.push(new AccessExpressionElement(pop, access));
@@ -131,11 +122,7 @@ public class Parser {
 		}
 	}
 
-	
 	void visitClosingParenthesis(int index) throws ParseException {
-		//
-		// ( ... )
-		// UnfinishedArgsExpression Expression? (callReduce)
 
 		boolean expressionOnTop = this.peek() instanceof ExpressionElement;
 		if (expressionOnTop) {
@@ -180,19 +167,9 @@ public class Parser {
 		return this.peek() instanceof ExpressionElement;
 	}
 
-	
 	void visitBinaryOperator(BinaryOp binaryOp) {
-		// reduce the expressions to the needed priority level
-		ExpressionElement left = this.expressionReducePop(binaryOp.priority());
-		// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
-		//                                      -> stack[{{'a', '*', 'b'}, '+'}]
-		// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}
-		//                                      -> stack[{{'a', '+', 'b'}, '+'}]
-		// stack[ {     '-'}, 'b'], token = '+' -> stack[], left = {'-', 'b'}
-		//                                      -> stack[{{     '-', 'b'}, '+'}]
 
-		// stack[ {'a', '+'}, 'b'], token = '*' -> stack[{'a', '+'}], left = {'b'}
-		//                                      -> stack[{'a', '+'}, {'b', '*'}]
+		ExpressionElement left = this.expressionReducePop(binaryOp.priority());
 
 		this.stack.add(new PartialBinaryExpression(left, binaryOp));
 	}

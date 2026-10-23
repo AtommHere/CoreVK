@@ -9,7 +9,6 @@ import org.joml.Vector3fc;
 
 public final class Val {
 
-	
 	private final float[] floats = new float[16];
 
 	private final int[] ints = new int[4];
@@ -19,7 +18,6 @@ public final class Val {
 	private int rank;
 	private boolean integral;
 
-	
 	private boolean flattened;
 
 	public Val set(float x) {
@@ -62,7 +60,6 @@ public final class Val {
 		return set(v.x(), v.y(), v.z());
 	}
 
-	
 	public Val set(Vector3dc v) {
 		return set((float) v.x(), (float) v.y(), (float) v.z());
 	}
@@ -85,7 +82,6 @@ public final class Val {
 		return this;
 	}
 
-	
 	public Val setFog(float r, float g, float b, float a,
 			float density, float start, float end, float scale) {
 		this.floats[0] = r;
@@ -107,7 +103,6 @@ public final class Val {
 		return this.rank;
 	}
 
-	
 	public boolean integral() {
 		return this.integral;
 	}
@@ -136,17 +131,14 @@ public final class Val {
 		return (int) this.floats[component];
 	}
 
-	
 	public Matrix4fc mat4() {
 		return this.mat4;
 	}
 
-	
 	public Matrix3fc mat3() {
 		return this.mat3;
 	}
 
-	
 	private void flatten() {
 		if (this.flattened) {
 			return;
@@ -178,8 +170,6 @@ public final class Val {
 		this.ints[2] = z;
 		this.ints[3] = w;
 
-		// Mirrored into the floats as well, so that a pack declaring one of the flags a float
-		// reads it through the same path as everything else rather than a case of its own.
 		return scalars(rank, true, x, y, z, w);
 	}
 }

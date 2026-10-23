@@ -10,12 +10,10 @@ public final class Desktop {
 	private Desktop() {
 	}
 
-	
 	public static void openPath(Path path) {
 		Util.getPlatform().openPath(path);
 	}
 
-	
 	public static boolean fullscreen() {
 		return Minecraft.getInstance().getWindow().isFullscreen();
 	}

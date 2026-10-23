@@ -7,7 +7,6 @@ public final class Smoothed {
 	private float accumulator;
 	private boolean started;
 
-	
 	public float updateAndGet(float value, float halfLifeUp, float halfLifeDown, float dt) {
 		if (!this.started) {
 			this.started = true;
@@ -31,7 +30,6 @@ public final class Smoothed {
 		this.accumulator = 0.0F;
 	}
 
-	
 	public static float blend(float halfLife, float dt) {
 		return 1.0F - (float) Math.exp(-decayConstant(halfLife) * dt);
 	}

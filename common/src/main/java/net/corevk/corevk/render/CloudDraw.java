@@ -28,10 +28,8 @@ import java.util.Optional;
 
 public final class CloudDraw extends FamilyDraw {
 
-	
 	private static volatile boolean wanted;
 
-	
 	private static final String PROGRAM = "gbuffers_clouds";
 
 	private final PackChain owner;
@@ -46,16 +44,12 @@ public final class CloudDraw extends FamilyDraw {
 	private final boolean chainRuns;
 	private final ColorTargets targets;
 
-	
 	private final Map<Boolean, CloudProgram> programs = new LinkedHashMap<>();
 
-	
 	private volatile boolean read;
 
-	
 	private volatile boolean announced;
 
-	
 	private CloudProgram drawing;
 
 	CloudDraw(PackChain owner, Path packPath, String place, Map<String, OptionValue> chosen,
@@ -74,22 +68,18 @@ public final class CloudDraw extends FamilyDraw {
 		this.targets = targets;
 	}
 
-	
 	static void wanted(boolean asked) {
 		wanted = asked;
 	}
 
-	
 	static boolean wanted() {
 		return wanted;
 	}
 
-	
 	void prefetch() {
 		prefetch(null);
 	}
 
-	
 	@Override
 	void prefetch(OpenedPack shared) {
 		if (!this.read && wanted()) {
@@ -97,7 +87,6 @@ public final class CloudDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static Optional<ShaderProperties.CloudSetting> setting() {
 		CloudDraw draw = PackChain.clouds();
 		if (draw == null || !wanted) {
@@ -110,7 +99,6 @@ public final class CloudDraw extends FamilyDraw {
 		return asked == ShaderProperties.CloudSetting.DEFAULT ? Optional.empty() : Optional.of(asked);
 	}
 
-	
 	private void announce(ShaderProperties.CloudSetting asked) {
 		if (this.announced) {
 			return;
@@ -129,7 +117,6 @@ public final class CloudDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static RenderPipeline pipeline(boolean fancy) {
 		CloudDraw draw = PackChain.clouds();
 		GpuDevice device = RenderSystem.tryGetDevice();
@@ -149,7 +136,6 @@ public final class CloudDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static RenderPassDescriptor descriptor(GpuTextureView colour, GpuTextureView depth) {
 		CloudDraw draw = PackChain.clouds();
 		if (draw == null || draw.drawing == null) {
@@ -159,7 +145,6 @@ public final class CloudDraw extends FamilyDraw {
 		return draw.drawing.descriptor(colour, depth);
 	}
 
-	
 	public static void bind(RenderPass pass, RenderPipeline bound) {
 		CloudDraw draw = PackChain.clouds();
 		if (draw != null && draw.drawing != null && draw.drawing.owns(bound)) {
@@ -167,12 +152,10 @@ public final class CloudDraw extends FamilyDraw {
 		}
 	}
 
-	
 	private boolean shown() {
 		return !this.chainRuns || this.owner.drawable();
 	}
 
-	
 	private void read(OpenedPack shared) {
 		try {
 			Optional<PackProgram.Loaded> loaded = shared != null
@@ -187,9 +170,7 @@ public final class CloudDraw extends FamilyDraw {
 			}
 
 			List<ChainPlan.Attachment> writes = writes();
-			// Both of them, because a cloud setting is changed in the middle of a session and neither
-			// answer is a compile: a module is only built when a pipeline is first prepared, so the
-			// setting nobody plays on costs one Java object and nothing on the device.
+
 			this.programs.put(Boolean.TRUE, CloudProgram.of(loaded.get(), true, this.values, this.load,
 					writes, this.chainTargets, this.targets, this.chainRuns));
 			this.programs.put(Boolean.FALSE, CloudProgram.of(loaded.get(), false, this.values,
@@ -208,7 +189,6 @@ public final class CloudDraw extends FamilyDraw {
 		}
 	}
 
-	
 	private List<ChainPlan.Attachment> writes() {
 		return this.plan.sky(PROGRAM)
 				.filter(clouds -> {
@@ -236,9 +216,6 @@ public final class CloudDraw extends FamilyDraw {
 			return null;
 		}
 
-		// The same two calls the terrain and the sky make, and for the same reasons. The clouds are
-		// drawn late in the frame and will not usually be what opens it, but they can be: the sky is
-		// refused in the Nether and the terrain can be turned off in one line.
 		this.owner.beginFrame();
 		if (!this.owner.openTargets(device)) {
 			return null;
@@ -251,13 +228,11 @@ public final class CloudDraw extends FamilyDraw {
 		return program.prepare(device);
 	}
 
-	
 	@Override
 	Collection<CloudProgram> programs() {
 		return this.programs.values();
 	}
 
-	
 	@Override
 	void rotate() {
 		this.drawing = null;

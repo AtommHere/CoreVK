@@ -26,7 +26,6 @@ import java.util.OptionalDouble;
 @Mixin(QuadParticleFeatureRenderer.class)
 public abstract class QuadParticleFeatureRendererMixin {
 
-	
 	@WrapMethod(method = "executeGroup", require = 1)
 	private void corevk$group(FeatureFrameContext context, @Nullable OitStage stage,
 			RenderPass pass, int groupIndex, List<QuadParticleFeatureRenderer.Submit> submits,
@@ -49,7 +48,6 @@ public abstract class QuadParticleFeatureRendererMixin {
 		}
 	}
 
-	
 	@Unique
 	private static RenderPass corevk$open(RenderPass pass,
 			List<QuadParticleFeatureRenderer.Submit> submits) {

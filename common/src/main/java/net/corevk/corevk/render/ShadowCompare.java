@@ -32,7 +32,6 @@ public final class ShadowCompare {
 	private static final Map<RenderPipeline, Set<String>> COMPARED =
 			Collections.synchronizedMap(new WeakHashMap<>());
 
-	
 	private static volatile boolean noted;
 
 	private static boolean announced;
@@ -42,7 +41,6 @@ public final class ShadowCompare {
 	private ShadowCompare() {
 	}
 
-	
 	public static void armIfAsked() {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft == null || minecraft.gameDirectory == null) {
@@ -61,7 +59,6 @@ public final class ShadowCompare {
 		}
 	}
 
-	
 	static void note(RenderPipeline pipeline, String path, PackProgram.Loaded loaded) {
 		Set<String> names = new LinkedHashSet<>();
 		for (TranslatedUnit unit : loaded.program().stages().values()) {
@@ -97,7 +94,6 @@ public final class ShadowCompare {
 		noted = true;
 	}
 
-	
 	static void noteBeside(RenderPipeline variant, RenderPipeline base) {
 		Set<String> names = COMPARED.get(base);
 		if (names != null) {
@@ -105,19 +101,16 @@ public final class ShadowCompare {
 		}
 	}
 
-	
 	public static boolean noted() {
 		return noted;
 	}
 
-	
 	public static Set<String> compared(RenderPipeline pipeline) {
 		Set<String> names = COMPARED.get(pipeline);
 
 		return names == null ? Set.of() : names;
 	}
 
-	
 	public static long sampler(VulkanDevice device) {
 		if (sampler != 0L) {
 			return sampler;
@@ -134,18 +127,7 @@ public final class ShadowCompare {
 					.addressModeW(VK12.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)
 					.compareEnable(true)
 					.compareOp(VK12.VK_COMPARE_OP_LESS_OR_EQUAL)
-					// Level nought and no further, and that is now a KEPT gap rather than an
-					// absence: the map may carry a chain, and CoreVK hands a compared read a
-					// mipmapped sampler where the pack asked for one
-					// (ShadowRenderTargets.getSamplerFor, MIPPED_LINEAR_HW). Lifting the ceiling
-					// here would serve it, and it is not lifted, for two reasons that hold
-					// together. This is ONE object for the device's life, so it cannot follow a
-					// per-image directive, and no pack of the corpus asks for a chain and a
-					// comparison on the same image, so nothing would measure the change. What the
-					// ceiling is NOT is a defence against the implicit level a compared read used
-					// to keep: the translation pins those now, and an equal ceiling on the ordinary
-					// samplers is exactly what was measured not to hold. Lifting it belongs with
-					// the second comparison sampler, and with a pack to prove it on.
+
 					.minLod(0.0F)
 					.maxLod(0.0F);
 			LongBuffer handle = stack.mallocLong(1);
@@ -160,7 +142,6 @@ public final class ShadowCompare {
 		return sampler;
 	}
 
-	
 	static void close() {
 		COMPARED.clear();
 		noted = false;

@@ -11,7 +11,6 @@ public final class LegacyTerrainFilter {
 
 	private static final String ARM_FILE = "legacy-terrain-filter";
 
-	
 	private static volatile boolean armed;
 
 	private static volatile boolean announced;
@@ -19,21 +18,18 @@ public final class LegacyTerrainFilter {
 	private LegacyTerrainFilter() {
 	}
 
-	
 	public static boolean armed() {
 		announce(armed);
 
 		return armed;
 	}
 
-	
 	public static void read(Path gameDirectory) {
 		armed = PROPERTY
 				|| Files.isRegularFile(gameDirectory.resolve(CoreVK.MOD_ID).resolve(ARM_FILE));
 		announced = false;
 	}
 
-	
 	private static void announce(boolean on) {
 		if (announced) {
 			return;

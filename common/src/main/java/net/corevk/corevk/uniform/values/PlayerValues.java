@@ -27,18 +27,13 @@ public final class PlayerValues {
 
 		builder.add("eyeBrightness", UniformShape.IVEC2,
 				(world, out) -> out.set(world.eyeBrightnessBlock(), world.eyeBrightnessSky()));
-		// Truncated to an integer after the smoothing and not before, which is what makes the
-		// value climb one step at a time on the way out of a cave instead of snapping.
+
 		builder.add("eyeBrightnessSmooth", UniformShape.IVEC2, (world, out) -> {
 			float halfLife = world.eyeBrightnessHalfLife();
 			out.set((int) EYE_BLOCK.get(world, world.eyeBrightnessBlock(), halfLife, halfLife),
 					(int) EYE_SKY.get(world, world.eyeBrightnessSky(), halfLife, halfLife));
 		});
 
-		// is_sneaking and nothing else. isSneaking is not an engine value: it is Body Camera's one
-		// custom uniform, if(is_sneaking, 1.0, 0.0), and a pack's declaration that shadows an
-		// engine name is refused. Answering it here would take the pack's only declaration away
-		// from it to hand back the same number under a shape it did not ask for.
 		builder.add("is_sneaking", UniformShape.INT, (world, out) -> out.set(world.sneaking()));
 		builder.add("is_sprinting", UniformShape.INT, (world, out) -> out.set(world.sprinting()));
 		builder.add("is_hurt", UniformShape.INT, (world, out) -> out.set(world.hurt()));

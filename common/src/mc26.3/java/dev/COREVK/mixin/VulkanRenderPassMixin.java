@@ -46,7 +46,6 @@ public abstract class VulkanRenderPassMixin {
 	@Final
 	private VulkanDevice device;
 
-	
 	@Unique
 	private @Nullable VulkanRenderPipeline corevk$comparedFor;
 
@@ -91,8 +90,7 @@ public abstract class VulkanRenderPassMixin {
 				|| (name != null && TargetName.imageIndex(name).isPresent())) {
 			sampler = 0L;
 		} else if (ShadowCompare.noted() && name != null && corevk$compared().contains(name)) {
-			// Behind the one flag, as on 26.2: until the first pack that compares is loaded, every
-			// pass of the game's own pays a volatile read here and nothing else.
+
 			sampler = ShadowCompare.sampler(this.device);
 		}
 
@@ -149,7 +147,6 @@ public abstract class VulkanRenderPassMixin {
 		return original.call(set, type);
 	}
 
-	
 	@WrapOperation(method = "pushDescriptors", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/vulkan/KHRPushDescriptor;vkCmdPushDescriptorSetKHR("

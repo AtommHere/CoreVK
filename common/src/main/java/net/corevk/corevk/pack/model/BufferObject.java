@@ -7,10 +7,8 @@ import java.util.Optional;
 public record BufferObject(int index, long size, boolean relative, float scaleX, float scaleY,
 		Optional<String> name) {
 
-	
 	public static final int LIMIT = 12;
 
-	
 	public record Reading(List<BufferObject> buffers, List<String> dropped) {
 
 		public Reading {
@@ -43,7 +41,6 @@ public record BufferObject(int index, long size, boolean relative, float scaleX,
 		}
 	}
 
-	
 	public String describe() {
 		String size = this.relative
 				? this.size + " bytes per pixel at " + this.scaleX + "x" + this.scaleY
@@ -55,7 +52,6 @@ public record BufferObject(int index, long size, boolean relative, float scaleX,
 				+ " " + size;
 	}
 
-	
 	public static String parse(String indexText, String value,
 			Map<Integer, BufferObject> buffers) {
 		int index;

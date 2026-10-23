@@ -16,10 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class WideSamplerSets {
 
-	
 	private static final int PUSH = 1;
 
-	
 	private static final int[] STAGES = {
 			VK10.VK_SHADER_STAGE_VERTEX_BIT,
 			VK10.VK_SHADER_STAGE_GEOMETRY_BIT,
@@ -27,10 +25,8 @@ public final class WideSamplerSets {
 			VK10.VK_SHADER_STAGE_COMPUTE_BIT,
 	};
 
-	
 	private static final Set<Long> ALLOCATED = ConcurrentHashMap.newKeySet();
 
-	
 	private static final Set<String> SAID = ConcurrentHashMap.newKeySet();
 
 	private static volatile boolean moltenVk;
@@ -39,20 +35,17 @@ public final class WideSamplerSets {
 
 	private static volatile int tableSamplers;
 
-	
 	private static volatile boolean any;
 
 	private WideSamplerSets() {
 	}
 
-	
 	public static void serve(boolean moltenVkDriver, int maxPerStageSamplers, int maxTableSamplers) {
 		perStageSamplers = maxPerStageSamplers;
 		tableSamplers = maxTableSamplers;
 		moltenVk = moltenVkDriver;
 	}
 
-	
 	public static boolean dropPush(VkDescriptorSetLayoutCreateInfo info, String name) {
 		if (!moltenVk || (info.flags() & PUSH) == 0) {
 			return false;
@@ -83,7 +76,6 @@ public final class WideSamplerSets {
 		return true;
 	}
 
-	
 	public static void created(long handle, boolean allocated) {
 		if (allocated) {
 			ALLOCATED.add(handle);
@@ -93,12 +85,10 @@ public final class WideSamplerSets {
 		}
 	}
 
-	
 	public static boolean allocated(long setLayout) {
 		return any && ALLOCATED.contains(setLayout);
 	}
 
-	
 	public static void bind(VulkanCommandEncoder encoder, VkCommandBuffer commands, int bindPoint,
 			long pipelineLayout, int set, long setLayout, VkWriteDescriptorSet.Buffer writes) {
 		long allocated = ((SetAllocator) encoder).corevk$allocateSet(setLayout, writes);
@@ -113,7 +103,6 @@ public final class WideSamplerSets {
 		}
 	}
 
-	
 	private static int widestStage(VkDescriptorSetLayoutBinding.Buffer bindings) {
 		if (bindings == null) {
 			return 0;
@@ -136,10 +125,8 @@ public final class WideSamplerSets {
 		return widest;
 	}
 
-	
 	public interface SetAllocator {
 
-		
 		long corevk$allocateSet(long setLayout, VkWriteDescriptorSet.Buffer writes);
 	}
 }

@@ -37,12 +37,9 @@ import org.jspecify.annotations.Nullable;
 @Mixin(value = DefaultChunkRenderer.class, remap = false)
 public abstract class MixinDefaultChunkRenderer {
 
-	
 	@Unique
 	private @Nullable RenderPass corevk$opened;
 
-	// require, because a silently unapplied probe prints the same zeros as an empty rotate, and
-	// the whole point of the clock is telling those two apart.
 	@Inject(method = "rotate", at = @At("HEAD"), require = 1)
 	private void corevk$rotateBegin(CallbackInfo ci) {
 		RingTimings.beginRotate();
@@ -53,7 +50,6 @@ public abstract class MixinDefaultChunkRenderer {
 		RingTimings.endRotate();
 	}
 
-	
 	@WrapOperation(
 			method = "prepare",
 			at = @At(value = "FIELD",
@@ -64,7 +60,6 @@ public abstract class MixinDefaultChunkRenderer {
 		return !TerrainDraw.drawingShadow() && original.call(settings);
 	}
 
-	
 	@ModifyVariable(method = "render", require = 1, argsOnly = true,
 			at = @At(value = "LOAD", ordinal = 0))
 	private RenderPass corevk$pass(RenderPass pass, ChunkRenderMatrices matrices,
@@ -93,7 +88,6 @@ public abstract class MixinDefaultChunkRenderer {
 		return this.corevk$opened;
 	}
 
-	
 	@Inject(method = "render", at = @At("RETURN"), require = 1)
 	private void corevk$close(CallbackInfo callback) {
 		RenderPass opened = this.corevk$opened;

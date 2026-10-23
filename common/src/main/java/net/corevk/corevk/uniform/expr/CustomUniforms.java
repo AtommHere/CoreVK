@@ -34,7 +34,6 @@ import java.util.Set;
 
 public final class CustomUniforms implements FunctionContext, FrameClock {
 
-	
 	private static final Map<String, Type> TYPES = Map.of(
 			"bool", Type.Boolean,
 			"float", Type.Float,
@@ -47,13 +46,11 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 	private final Map<String, Derived> declared = new LinkedHashMap<>();
 	private final Map<Node, List<Node>> dependsOn = new LinkedHashMap<>();
 
-	
 	private final Set<String> exposedNames = new LinkedHashSet<>();
 
 	private final List<Node> order = new ArrayList<>();
 	private final Set<Node> live = new LinkedHashSet<>();
 
-	
 	private final List<String> problems = new ArrayList<>();
 
 	private WorldState world;
@@ -66,7 +63,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return new BuilderImpl();
 	}
 
-	
 	public void update(WorldState world, float dt) {
 		this.world = world;
 		this.deltaSeconds = dt;
@@ -91,7 +87,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		}
 	}
 
-	
 	public List<String> drainProblems() {
 		if (this.problems.isEmpty()) {
 			return List.of();
@@ -103,7 +98,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return drained;
 	}
 
-	
 	private void drop(List<Node> failed) {
 		Set<Node> dead = new LinkedHashSet<>(failed);
 
@@ -136,7 +130,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return this.deltaSeconds;
 	}
 
-	
 	public UniformSource source(String name) {
 		Derived node = this.declared.get(name);
 		if (node == null || !this.live.contains(node)) {
@@ -146,14 +139,12 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return (_, out) -> node.writeInto(out);
 	}
 
-	
 	public UniformShape shape(String name) {
 		Derived node = this.declared.get(name);
 
 		return node == null ? null : Type.convert(node.type);
 	}
 
-	
 	public Set<String> exposed() {
 		Set<String> names = new LinkedHashSet<>();
 		for (String name : this.declared.keySet()) {
@@ -165,7 +156,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return Collections.unmodifiableSet(names);
 	}
 
-	
 	public UniformCatalog layerOn(UniformCatalog engine) {
 		UniformCatalog.Builder builder = UniformCatalog.builder(engine);
 		for (String name : exposed()) {
@@ -195,14 +185,11 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 
 	public interface Builder {
 
-		
 		Builder declare(String name, String type, String expression, boolean exposed);
 
-		
 		CustomUniforms build(UniformCatalog engine, List<String> problems);
 	}
 
-	
 	private record Declaration(String name, Type type, ExpressionElement tree, boolean exposed) {
 	}
 
@@ -214,8 +201,7 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		@Override
 		public Builder declare(String name, String type, String expression, boolean exposed) {
 			if (this.declarations.containsKey(name)) {
-				// The first one wins, as it does in CoreVK. Two live declarations of one name mean
-				// the conditionals around them were not read, which is a bug upstream of here.
+
 				this.refused.add(name + ": declared more than once, the later one is ignored");
 				return this;
 			}
@@ -277,7 +263,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		prune();
 	}
 
-	
 	private Type typeOf(UniformCatalog engine, Map<String, Declaration> declarations, String name) {
 		Input input = this.engineInputs.get(name);
 		if (input != null) {
@@ -299,7 +284,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return declaration == null ? null : declaration.type();
 	}
 
-	
 	private void sort(List<String> problems) {
 		Map<Node, List<Node>> requiredBy = new LinkedHashMap<>();
 		Map<Node, Integer> remaining = new LinkedHashMap<>();
@@ -364,13 +348,11 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 			problems.add(node.name + ": dropped, it or something it reads could not be resolved");
 		}
 
-		// Anything the walk never freed is in a cycle, or hangs off one.
 		for (Node node : remaining.keySet()) {
 			problems.add(node.name + ": dropped, it takes part in a circular reference");
 		}
 	}
 
-	
 	private void prune() {
 		Deque<Node> pending = new ArrayDeque<>();
 		for (String name : this.exposedNames) {
@@ -396,7 +378,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		return message == null || message.isBlank() ? e.getClass().getSimpleName() : message;
 	}
 
-	
 	private abstract static class Node implements VariableExpression {
 
 		final String name;
@@ -413,11 +394,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 			this.object = carrier(type);
 		}
 
-		// The same identity ladder as Type.convert, and safe for the same narrow reason: both kinds
-		// of node are built from a fixed set of constants. A Derived takes its type from TYPES
-		// above, which names six and no ivec or matrix among them; an Input takes Type.of(shape),
-		// and that is what makes the last five branches here reachable at all. A type equal but not
-		// identical would fall through to null and the uniform would carry nothing, silently.
 		@SuppressWarnings("ReferenceEquality")
 		private static Object carrier(Type type) {
 			if (type == VectorType.VEC2) return new Vector2f();
@@ -478,7 +454,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		}
 	}
 
-	
 	private final class Input extends Node {
 
 		private final UniformSource source;
@@ -518,7 +493,6 @@ public final class CustomUniforms implements FunctionContext, FrameClock {
 		}
 	}
 
-	
 	private final class Derived extends Node {
 
 		private final Expression expression;

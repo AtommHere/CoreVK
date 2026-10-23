@@ -21,7 +21,6 @@ public abstract class RenderSystemMixin {
 		GraphicsApi.purge();
 	}
 
-	
 	@Inject(method = "getCompiledPipelineNullable", at = @At("HEAD"), cancellable = true,
 			require = 1)
 	private static void corevk$ours(RenderPipeline pipeline,
@@ -32,7 +31,6 @@ public abstract class RenderSystemMixin {
 		}
 	}
 
-	
 	@Inject(method = "getCompiledPipelineNullable", at = @At("RETURN"), require = 1)
 	private static void corevk$note(RenderPipeline pipeline,
 			CallbackInfoReturnable<@Nullable CompiledRenderPipeline> callback) {

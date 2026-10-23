@@ -15,7 +15,6 @@ import org.jspecify.annotations.Nullable;
 @Mixin(RenderPipeline.class)
 public abstract class RenderPipelineMixin {
 
-	
 	@Unique
 	private VertexFormat @Nullable [] corevk$carried;
 

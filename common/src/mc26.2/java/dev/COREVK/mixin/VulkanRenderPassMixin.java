@@ -36,7 +36,6 @@ public abstract class VulkanRenderPassMixin {
 	@Final
 	private VulkanCommandEncoder encoder;
 
-	
 	@Unique
 	private RenderPipeline corevk$comparedFor;
 
@@ -80,9 +79,7 @@ public abstract class VulkanRenderPassMixin {
 				|| (pushed.entry() != null && TargetName.imageIndex(pushed.entry().name()).isPresent())) {
 			sampler = 0L;
 		} else if (ShadowCompare.noted()) {
-			// Behind the one flag: until the first pack that compares is loaded, every pass of the
-			// game's own pays a volatile read here and nothing else. Once one has been, the flag
-			// stays up for the session and the per-name lookup is the price of having the road.
+
 			VulkanBindGroupLayout.Entry entry = pushed.entry();
 			if (entry != null && this.pipeline != null && corevk$compared().contains(entry.name())) {
 				sampler = ShadowCompare.sampler(this.pipeline.device());
@@ -140,7 +137,6 @@ public abstract class VulkanRenderPassMixin {
 		return original.call(set, type);
 	}
 
-	
 	@WrapOperation(method = "pushDescriptors", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/vulkan/KHRPushDescriptor;vkCmdPushDescriptorSetKHR("

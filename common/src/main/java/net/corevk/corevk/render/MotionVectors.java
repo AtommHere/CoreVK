@@ -38,18 +38,14 @@ final class MotionVectors {
 	private static final Identifier FRAGMENT_ID =
 			Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, "pack/motion_vectors_fragment");
 
-	
 	private static final String SCENE = "DepthSampler";
 
 	private static final String UNIFORM_BLOCK = "OfMotionVectors";
 
-	
 	private static final int BLOCK_BYTES = 144;
 
-	
 	private static final int VERTICES = 6;
 
-	
 	private static final GpuFormat FORMAT = GpuFormat.RG16_FLOAT;
 
 	private static final String LABEL = "CoreVK motion vectors";
@@ -64,7 +60,6 @@ final class MotionVectors {
 			}
 			""";
 
-	
 	private static final String FRAGMENT = String.format("""
 			#version 460 core
 
@@ -114,32 +109,25 @@ final class MotionVectors {
 	private TargetSurface vectors;
 	private MappableRingBuffer block;
 
-	
 	private boolean broken;
 	private int brokenWidth;
 	private int brokenHeight;
 
-	
 	private boolean refused;
 
-	
 	private boolean drawn;
 
-	
 	private boolean fresh;
 
-	
 	void standDown() {
 		this.drawn = false;
 		release();
 	}
 
-	
 	GpuTextureView view() {
 		return this.drawn ? this.vectors.view() : null;
 	}
 
-	
 	void draw(CommandEncoder encoder, GpuDevice device, GpuBuffer quad, GpuTextureView depth,
 			int width, int height, ViewMatrices view, WorldState world) {
 		this.drawn = false;
@@ -147,10 +135,6 @@ final class MotionVectors {
 			return;
 		}
 
-		// The first frame at a new size has no history at that size: the matrices still describe a
-		// camera looking through a differently shaped window, and the vectors drawn from them are
-		// that reshaping rather than any movement. Skipped outright rather than drawn and ignored,
-		// so what reads this is handed nothing and falls back for the one frame it takes.
 		if (this.fresh) {
 			this.fresh = false;
 
@@ -162,14 +146,8 @@ final class MotionVectors {
 			return;
 		}
 
-		// Composed and inverted here rather than in the shader: it is two multiplies and one inverse
-		// a frame against one of each per pixel, and the shader stays a line of arithmetic anybody
-		// can check against the quoted convention.
 		this.fromScreen.set(view.rendered()).mul(view.gbufferModelView()).invert();
 
-		// Post-multiplied, so the offset reaches a point BEFORE the previous frame's rotation turns
-		// it: both are distances in player space, and one applied on the far side of the rotation
-		// would be a different place in the world. The same order the shadow pair is corrected in.
 		Vector3dc now = world.cameraPosition();
 		Vector3dc before = world.previousCameraPosition();
 		this.toPreviousClip.set(view.previousRendered()).mul(view.gbufferPreviousModelView())
@@ -191,8 +169,7 @@ final class MotionVectors {
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setUniform(UNIFORM_BLOCK, this.block.currentBuffer());
 			pass.setVertexBuffer(0, quad.slice());
-			// NEAREST, because a filtered depth between two surfaces is a position on neither of
-			// them and the vector drawn from it points at nothing.
+
 			GraphicsApi.bindTexture(pass, SCENE, depth,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 			pass.draw(VERTICES, 1, 0, 0);
@@ -201,7 +178,6 @@ final class MotionVectors {
 		this.drawn = true;
 	}
 
-	
 	void release() {
 		if (this.vectors != null) {
 			this.vectors.close();
@@ -217,9 +193,7 @@ final class MotionVectors {
 	}
 
 	private boolean ensure(int width, int height) {
-		// Before the latch and not after, the order PackDepth.ensure keeps and for the reason
-		// written there: a minimised window is another size, and lifting a refusal on a size nothing
-		// is ever allocated at only makes the real size pay the failure twice.
+
 		if (width <= 0 || height <= 0) {
 			return false;
 		}
@@ -255,8 +229,7 @@ final class MotionVectors {
 		}
 
 		try {
-			// The old one first: a resize that allocates before freeing holds two full screen images
-			// at once, and the size that fails is the size that was already tight.
+
 			if (this.vectors != null) {
 				this.vectors.close();
 				this.vectors = null;
@@ -281,7 +254,6 @@ final class MotionVectors {
 		return true;
 	}
 
-	
 	private RenderPipeline pipeline(GpuDevice device) {
 		if (this.refused) {
 			return null;

@@ -14,7 +14,6 @@ public final class TextureButton extends Button {
 	private final int u;
 	private final int v;
 
-	
 	private final int step;
 
 	private TextureButton(int x, int y, int width, int height, int u, int v, int step,
@@ -34,7 +33,7 @@ public final class TextureButton extends Button {
 
 	@Override
 	protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-		// Grey wins over lit, which is the order the game's own image button reads them in.
+
 		int row = this.v;
 		if (!isActive()) {
 			row = this.v + this.step * 2;

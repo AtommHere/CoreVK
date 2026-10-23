@@ -22,7 +22,7 @@ public record CustomImageView(String original, TargetFormat format) {
 		if (!name.startsWith(PREFIX)) {
 			return Optional.empty();
 		}
-		// Match the whole format prefix: snorm names contain an underscore themselves.
+
 		for (TargetFormat format : FORMATS) {
 			String head = PREFIX + CustomImages.glslLayout(format) + "_";
 			if (name.startsWith(head) && name.length() > head.length()) {
@@ -32,12 +32,10 @@ public record CustomImageView(String original, TargetFormat format) {
 		return Optional.empty();
 	}
 
-	
 	public static boolean compatible(TargetFormat base, TargetFormat view) {
 		return base.bytesPerPixel() == view.bytesPerPixel();
 	}
 
-	
 	public static Optional<TargetFormat> requested(TargetFormat base, String type, String layout) {
 		if (layout != null && !layout.isEmpty()) {
 			return Arrays.stream(TargetFormat.values())
@@ -48,8 +46,7 @@ public record CustomImageView(String original, TargetFormat format) {
 		if (suffix.isEmpty() || base.name().endsWith(suffix)) {
 			return Optional.empty();
 		}
-		// Integer samplers have no GLSL layout qualifier. Keep their channel widths and signedness;
-		// this is a view of the bits, never a conversion from floats to integer values.
+
 		return Arrays.stream(TargetFormat.values())
 				.filter(format -> format.name().endsWith(suffix)
 						&& format.components() == base.components() && compatible(base, format))

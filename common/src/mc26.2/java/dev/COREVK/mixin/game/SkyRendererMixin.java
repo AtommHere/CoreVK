@@ -32,14 +32,11 @@ import java.util.function.Supplier;
 @Mixin(SkyRenderer.class)
 public abstract class SkyRendererMixin {
 
-	
 	private RenderPipeline corevk$pipeline;
 
-	
 	private Matrix4f corevk$modelView;
 	private Vector4f corevk$colour;
 
-	
 	@Inject(method = "renderSunMoonAndStars",
 			at = @At(value = "INVOKE", ordinal = 0, shift = At.Shift.AFTER,
 					target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Quaternionfc;)V"))
@@ -51,7 +48,6 @@ public abstract class SkyRendererMixin {
 		}
 	}
 
-	
 	@Inject(method = "renderSun", at = @At("HEAD"), cancellable = true)
 	private void corevk$sun(float rainBrightness, PoseStack poseStack, CallbackInfo callback) {
 		corevk$refuse("Sky sun", callback);
@@ -63,14 +59,12 @@ public abstract class SkyRendererMixin {
 		corevk$refuse("Sky moon", callback);
 	}
 
-	
 	private static void corevk$refuse(String label, CallbackInfo callback) {
 		if (!SkyDraw.draws(label)) {
 			callback.cancel();
 		}
 	}
 
-	
 	@WrapOperation(
 			method = {"renderSkyDisc", "renderDarkDisc", "renderStars", "renderSunriseAndSunset", "renderSun",
 					"renderMoon", "renderEndFlash"},
@@ -88,7 +82,6 @@ public abstract class SkyRendererMixin {
 		return original.call(uniforms, modelView, colour);
 	}
 
-	
 	@WrapOperation(
 			method = "renderEndSky",
 			at = @At(value = "INVOKE",
@@ -141,7 +134,6 @@ public abstract class SkyRendererMixin {
 		original.call(pass, this.corevk$pipeline == null ? pipeline : this.corevk$pipeline);
 	}
 
-	
 	@WrapOperation(
 			method = {"renderSun", "renderMoon", "renderEndSky", "renderEndFlash"},
 			require = 4,
@@ -156,7 +148,6 @@ public abstract class SkyRendererMixin {
 		SkyDraw.texture(view, sampler);
 	}
 
-	
 	@WrapOperation(method = "renderSkyDisc",
 			at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;draw(IIII)V"))
 	private void corevk$horizon(RenderPass pass, int vertices, int instances, int firstVertex,
@@ -167,7 +158,6 @@ public abstract class SkyRendererMixin {
 		}
 	}
 
-	
 	@WrapOperation(
 			method = {"renderSkyDisc", "renderDarkDisc", "renderStars", "renderSunriseAndSunset", "renderSun",
 					"renderMoon", "renderEndSky", "renderEndFlash"},

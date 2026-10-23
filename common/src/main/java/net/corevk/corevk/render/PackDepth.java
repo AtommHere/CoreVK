@@ -36,23 +36,18 @@ final class PackDepth {
 
 	private static final String SAMPLER = "InSampler";
 
-	
 	private static final String BLENDED = "InBlended";
 	private static final String CARRIED = "InCarried";
 	private static final String PURE = "InPure";
 
-	
 	private static final int VERTICES = 6;
 
-	
 	private static final GpuFormat FORMAT = GpuFormat.R32_FLOAT;
 
-	
 	private static final Vector4f FAR_PLANE = new Vector4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 	private static final String LABEL = "CoreVK depth window";
 
-	
 	private static final String DISTANT_LABEL = "CoreVK far terrain depth window";
 
 	private static final String VERTEX = """
@@ -69,7 +64,6 @@ final class PackDepth {
 			}
 			""";
 
-	
 	private static final String FRAGMENT = String.format(Locale.ROOT, """
 			#version 460 core
 
@@ -84,7 +78,6 @@ final class PackDepth {
 			}
 			""", ClipSpace.REVERSED.z, ClipSpace.REVERSED.w);
 
-	
 	private static final String DISTANT_FRAGMENT = String.format(Locale.ROOT, """
 			#version 460 core
 
@@ -120,60 +113,46 @@ final class PackDepth {
 
 	private RenderPipeline pipeline;
 
-	
 	private boolean refused;
 
-	
 	private RenderPipeline distantPipeline;
 	private boolean distantRefused;
 
 	private TargetSurface opaque;
 	private TargetSurface scene;
 
-	
 	private TargetSurface preHand;
 
-	
 	private TargetSurface distantOpaque;
 	private TargetSurface distantScene;
 
-	
 	private boolean opaqueWritten;
 	private boolean sceneWritten;
 
-	
 	private boolean preHandWritten;
 
-	
 	private boolean distantOpaqueWritten;
 	private boolean distantSceneWritten;
 
-	
 	private boolean distantHoldsFar;
 
-	
 	private boolean preHandKept;
 	private boolean distantOpaqueKept;
 	private boolean distantSceneKept;
 
-	
 	private boolean frameBefore;
 
 	private boolean broken;
 
-	
 	private boolean preHandBroken;
 
-	
 	private boolean distantBroken;
 	private int distantBrokenWidth;
 	private int distantBrokenHeight;
 
-	
 	private int brokenWidth;
 	private int brokenHeight;
 
-	
 	boolean takeOpaque(CommandEncoder encoder, GpuDevice device, GpuBuffer quad, GpuTextureView live,
 			int width, int height) {
 		if (!ensure(width, height) || !fill(encoder, device, quad, live, this.opaque)) {
@@ -185,7 +164,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	boolean takeScene(CommandEncoder encoder, GpuDevice device, GpuBuffer quad, GpuTextureView live,
 			int width, int height) {
 		if (!ensure(width, height) || !fill(encoder, device, quad, live, this.scene)) {
@@ -197,7 +175,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	boolean takePreHand(CommandEncoder encoder, GpuDevice device, GpuBuffer quad, GpuTextureView live,
 			int width, int height) {
 		if (!ensure(width, height) || !ensurePreHand(width, height)
@@ -210,7 +187,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	boolean takeDistantOpaque(CommandEncoder encoder, GpuDevice device, GpuBuffer quad,
 			GpuTextureView distant, int width, int height) {
 		if (!ensureDistant(width, height) || !fill(encoder, device, quad, distant, this.distantOpaque)) {
@@ -223,7 +199,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	boolean takeDistantScene(CommandEncoder encoder, GpuDevice device, GpuBuffer quad,
 			GpuTextureView blended, GpuTextureView carried, GpuTextureView pure, int width,
 			int height) {
@@ -231,9 +206,6 @@ final class PackDepth {
 			return false;
 		}
 
-		// One image where the frame seeded nothing under the water half, and then the pure image
-		// carries that water itself and is the whole answer; three where it did, and then the water
-		// is in the blended one and the pure one is what the world is told back out with.
 		boolean filled = (blended == null || carried == null)
 				? fill(encoder, device, quad, pure, this.distantScene)
 				: fillDistant(encoder, device, quad, blended, carried, pure);
@@ -247,7 +219,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	boolean takeDistantNothing(CommandEncoder encoder, int width, int height) {
 		if (!ensureDistant(width, height)) {
 			return false;
@@ -265,43 +236,36 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	GpuTextureView opaque() {
 		return this.opaqueWritten ? this.opaque.view() : null;
 	}
 
-	
 	GpuTextureView scene() {
 		return this.sceneWritten ? this.scene.view() : null;
 	}
 
-	
 	GpuTextureView preHand() {
 		return this.preHandWritten || (this.frameBefore && this.preHandKept)
 				? this.preHand.view()
 				: null;
 	}
 
-	
 	boolean distantRefused() {
 		return this.distantRefused;
 	}
 
-	
 	GpuTextureView distantOpaque() {
 		return this.distantOpaqueWritten || (this.frameBefore && this.distantOpaqueKept)
 				? this.distantOpaque.view()
 				: null;
 	}
 
-	
 	GpuTextureView distantScene() {
 		return this.distantSceneWritten || (this.frameBefore && this.distantSceneKept)
 				? this.distantScene.view()
 				: null;
 	}
 
-	
 	void forgetDistant() {
 		this.distantOpaqueKept = this.distantOpaqueWritten;
 		this.distantSceneKept = this.distantSceneWritten;
@@ -309,7 +273,6 @@ final class PackDepth {
 		this.distantSceneWritten = false;
 	}
 
-	
 	void frameBefore(boolean before, int width, int height) {
 		this.frameBefore = before;
 
@@ -318,7 +281,6 @@ final class PackDepth {
 		}
 	}
 
-	
 	void forgetOutgrown(int width, int height) {
 		if (outgrown(this.opaque, width, height)) {
 			this.opaqueWritten = false;
@@ -341,7 +303,6 @@ final class PackDepth {
 		return surface != null && (surface.width() != width || surface.height() != height);
 	}
 
-	
 	void forgetPreHand(boolean held) {
 		this.preHandKept = this.preHandWritten;
 		this.preHandWritten = false;
@@ -353,7 +314,6 @@ final class PackDepth {
 		}
 	}
 
-	
 	void release() {
 		releaseWorld();
 		this.distantOpaque = close(this.distantOpaque);
@@ -366,7 +326,6 @@ final class PackDepth {
 		this.distantBroken = false;
 	}
 
-	
 	private void releaseWorld() {
 		this.opaque = close(this.opaque);
 		this.scene = close(this.scene);
@@ -378,11 +337,8 @@ final class PackDepth {
 		this.preHandBroken = false;
 	}
 
-	
 	private boolean ensure(int width, int height) {
-		// Before the latch and not after, the same order ColorTargets.ensure keeps and for the
-		// reason written there: a minimised window is another size, and lifting a refusal on a size
-		// nothing is ever allocated at only makes the real size pay the failure twice.
+
 		if (width <= 0 || height <= 0) {
 			return false;
 		}
@@ -400,8 +356,7 @@ final class PackDepth {
 		}
 
 		try {
-			// Both or neither, and always the same size: one of them left at the old size would be
-			// read at the new one and stretch the depth over the screen rather than fail.
+
 			releaseWorld();
 			this.opaque = new TargetSurface("CoreVK depth before the translucents", FORMAT, false,
 					width, height);
@@ -421,9 +376,6 @@ final class PackDepth {
 			return false;
 		}
 
-		// Said out loud rather than left to be discovered: this is two full screen images of a float
-		// each in place of one copy of the game's depth, about eight more mebibytes at
-		// 1080p and thirty-two at 4K.
 		CoreVK.logger().info("The world's depth is converted into the pack's window in two images at "
 				+ "{}x{}, {} MiB", width, height,
 				(this.opaque.bytes() + this.scene.bytes()) / (1024L * 1024L));
@@ -431,7 +383,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	private boolean ensurePreHand(int width, int height) {
 		if (this.preHandBroken) {
 			return false;
@@ -443,8 +394,7 @@ final class PackDepth {
 		}
 
 		try {
-			// The kept flag falls with the surface it described, or the stage that runs before the
-			// world would dereference an image this very line has just closed.
+
 			this.preHandKept = false;
 			this.preHand = close(this.preHand);
 			this.preHand =
@@ -465,8 +415,6 @@ final class PackDepth {
 			return false;
 		}
 
-		// Said out loud like the pair above, and worth saying apart from them: this one is the cost
-		// of hand=on and of nothing else.
 		CoreVK.logger().info("The depth before the hand is converted into the pack's window in one "
 				+ "more image at {}x{}, {} MiB", width, height,
 				this.preHand.bytes() / (1024L * 1024L));
@@ -474,7 +422,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	private boolean ensureDistant(int width, int height) {
 		if (width <= 0 || height <= 0) {
 			return false;
@@ -495,9 +442,7 @@ final class PackDepth {
 		}
 
 		try {
-			// Both or neither, like the world's own pair and for the same reason. The written flags
-			// fall with the surfaces they described, or a getter would dereference an image this
-			// very block has just closed.
+
 			this.distantOpaqueWritten = false;
 			this.distantSceneWritten = false;
 			this.distantOpaqueKept = false;
@@ -524,8 +469,6 @@ final class PackDepth {
 			return false;
 		}
 
-		// Said out loud like the world's pair: this is the cost of a pack that draws the far
-		// terrain, and of nothing else.
 		CoreVK.logger().info("The far terrain's depth is converted into the pack's window in two "
 				+ "more images at {}x{}, {} MiB", width, height,
 				(this.distantOpaque.bytes() + this.distantScene.bytes()) / (1024L * 1024L));
@@ -533,7 +476,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	private boolean fill(CommandEncoder encoder, GpuDevice device, GpuBuffer quad,
 			GpuTextureView live, TargetSurface into) {
 		if (quad == null || live == null || into == null) {
@@ -545,15 +487,11 @@ final class PackDepth {
 			return false;
 		}
 
-		// Loaded rather than cleared: the draw covers the image whole, so a clear would be one more
-		// write of the same texels.
 		try (RenderPass pass = encoder.createRenderPass(() -> LABEL, into.view(), Optional.empty())) {
 			GraphicsApi.setPipeline(pass, compiled);
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setVertexBuffer(0, quad.slice());
-			// NEAREST, and it is what makes this a rewrite of the value and not of the image: one
-			// destination texel covers one source texel, so what a pack fetches here is what it would
-			// have fetched from the depth itself.
+
 			GraphicsApi.bindTexture(pass, SAMPLER, live,
 					RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 			pass.draw(VERTICES, 1, 0, 0);
@@ -562,7 +500,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	private boolean fillDistant(CommandEncoder encoder, GpuDevice device, GpuBuffer quad,
 			GpuTextureView blended, GpuTextureView carried, GpuTextureView pure) {
 		if (quad == null || this.distantScene == null) {
@@ -591,7 +528,6 @@ final class PackDepth {
 		return true;
 	}
 
-	
 	private RenderPipeline distantPipeline(GpuDevice device) {
 		if (this.distantRefused) {
 			return null;
@@ -613,7 +549,6 @@ final class PackDepth {
 		return null;
 	}
 
-	
 	private RenderPipeline pipeline(GpuDevice device) {
 		if (this.refused) {
 			return null;

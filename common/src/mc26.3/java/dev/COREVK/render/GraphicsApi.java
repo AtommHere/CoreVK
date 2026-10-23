@@ -39,30 +39,23 @@ import java.util.function.BiFunction;
 
 public final class GraphicsApi {
 
-	
 	private static final boolean KEEP_ACROSS_RELOAD = Boolean.parseBoolean(
 			System.getProperty("corevk.keepPackAcrossReload", "true"));
 
-	
 	private static final Map<RenderPipeline, Held> COMPILED = new ConcurrentHashMap<>();
 
-	
 	private static final Map<Object, RenderPipeline> DESCRIBED = new ConcurrentHashMap<>();
 
-	
 	private static final Map<Same, RenderPipeline> SOURCES = new ConcurrentHashMap<>();
 
-	
 	private static final int SODIUM_PUSH_CONSTANTS = 20;
 
 	private GraphicsApi() {
 	}
 
-	
 	private record Held(@Nullable CompiledRenderPipeline compiled) {
 	}
 
-	
 	private record Same(Object held) {
 
 		@Override
@@ -76,13 +69,11 @@ public final class GraphicsApi {
 		}
 	}
 
-	
 	public static void bindTexture(RenderPass pass, String name, GpuTextureView view,
 			GpuSampler sampler) {
 		pass.setUniform(name, view, sampler);
 	}
 
-	
 	public static void setPipeline(RenderPass pass, RenderPipeline pipeline) {
 		Held held = COMPILED.get(pipeline);
 		CompiledRenderPipeline compiled = held != null ? held.compiled()
@@ -95,7 +86,6 @@ public final class GraphicsApi {
 		pass.setPipeline(compiled);
 	}
 
-	
 	public static @Nullable CompiledRenderPipeline compile(GpuDevice device, RenderPipeline pipeline,
 			@Nullable ShaderSource source) {
 		if (source == null) {
@@ -124,8 +114,7 @@ public final class GraphicsApi {
 
 		Held raced = COMPILED.putIfAbsent(pipeline, new Held(built));
 		if (raced != null) {
-			// Another thread compiled the same description meanwhile. Its copy is the one callers
-			// may already be holding, so ours is the one that goes.
+
 			if (built != null) {
 				built.close();
 			}
@@ -137,12 +126,10 @@ public final class GraphicsApi {
 		return built;
 	}
 
-	
 	public static boolean valid(@Nullable CompiledRenderPipeline compiled) {
 		return compiled != null && !compiled.isClosed();
 	}
 
-	
 	static boolean adopt(RenderPipeline pipeline, CompiledRenderPipeline compiled) {
 		if (COMPILED.putIfAbsent(pipeline, new Held(compiled)) != null) {
 			return false;
@@ -152,13 +139,11 @@ public final class GraphicsApi {
 		return true;
 	}
 
-	
 	public static @Nullable CompiledRenderPipeline held(RenderPipeline pipeline) {
 		Held held = COMPILED.get(pipeline);
 		return held == null ? null : held.compiled();
 	}
 
-	
 	public static @Nullable RenderPipeline describing(@Nullable Object backend) {
 		return backend == null ? null : DESCRIBED.get(backend);
 	}
@@ -173,7 +158,6 @@ public final class GraphicsApi {
 		}
 	}
 
-	
 	public static void noteGameCompiled(RenderPipeline pipeline,
 			@Nullable CompiledRenderPipeline compiled) {
 		if (compiled != null) {
@@ -181,12 +165,10 @@ public final class GraphicsApi {
 		}
 	}
 
-	
 	public static @Nullable RenderPipeline descriptionOf(@Nullable CompiledRenderPipeline compiled) {
 		return compiled == null ? null : SOURCES.get(new Same(compiled));
 	}
 
-	
 	public static @Nullable CompiledRenderPipeline compiledFor(RenderPipeline pipeline) {
 		CompiledRenderPipeline ours = held(pipeline);
 		return ours != null ? ours : RenderSystem.getCompiledPipelineNullable(pipeline);
@@ -202,7 +184,6 @@ public final class GraphicsApi {
 		}
 	}
 
-	
 	public static void forget(RenderPipeline pipeline) {
 		Held held = COMPILED.remove(pipeline);
 		if (held != null && held.compiled() != null) {
@@ -211,7 +192,6 @@ public final class GraphicsApi {
 		}
 	}
 
-	
 	public static void purge() {
 		int load = PackChain.liveLoad();
 		String live = load == 0 ? null : "pipeline/pack/" + load + "/";
@@ -239,8 +219,6 @@ public final class GraphicsApi {
 			}
 		}
 
-		// The game closes every pipeline of the cache it is replacing, so what it compiled is gone;
-		// what survives in the map is what this engine still holds.
 		SOURCES.keySet().removeIf(key -> COMPILED.values().stream()
 				.noneMatch(kept -> kept.compiled() == key.held()));
 
@@ -248,7 +226,6 @@ public final class GraphicsApi {
 				+ "property=corevk.keepPackAcrossReload", ofThePack, carried);
 	}
 
-	
 	private static boolean ofAPack(RenderPipeline pipeline) {
 		Identifier location = pipeline.getLocation();
 		String namespace = location.getNamespace();
@@ -257,7 +234,6 @@ public final class GraphicsApi {
 				&& location.getPath().startsWith("pipeline/pack/");
 	}
 
-	
 	public static ShaderSource source(BiFunction<Identifier, ShaderType, @Nullable String> shaders) {
 		return new ShaderSource() {
 			@Override
@@ -272,17 +248,15 @@ public final class GraphicsApi {
 
 			@Override
 			public void close() {
-				// Holds nothing native.
+
 			}
 		};
 	}
 
-	
 	public static @Nullable String shaderText(ShaderSource source, Identifier id, ShaderType type) {
 		return source.getShader(id, type);
 	}
 
-	
 	public static BindGroupLayout samplers(String... names) {
 		BindGroupLayout.Builder builder = BindGroupLayout.builder();
 		for (String name : names) {
@@ -292,7 +266,6 @@ public final class GraphicsApi {
 		return builder.build();
 	}
 
-	
 	public static BindGroupLayout blockAndSamplers(String block, String... samplers) {
 		BindGroupLayout.Builder builder = BindGroupLayout.builder()
 				.withUniform(block, UniformType.UNIFORM_BUFFER);
@@ -303,56 +276,46 @@ public final class GraphicsApi {
 		return builder.build();
 	}
 
-	
 	public static BindGroupLayout.Builder withSampler(BindGroupLayout.Builder builder, String name) {
 		return builder.withUniform(name, UniformType.COMBINED_IMAGE_SAMPLER);
 	}
 
-	
 	public static Identifier vertexShader(RenderPipeline pipeline) {
 		return pipeline.getShaders().get(ShaderType.VERTEX);
 	}
 
-	
 	public static Identifier fragmentShader(RenderPipeline pipeline) {
 		return pipeline.getShaders().get(ShaderType.FRAGMENT);
 	}
 
-	
 	public static @Nullable ColorTargetState colorTarget(RenderPipeline pipeline) {
 		List<@Nullable ColorTargetState> states = pipeline.getColorTargetStates();
 		return states.isEmpty() ? null : states.getFirst();
 	}
 
-	
 	public static List<@Nullable ColorTargetState> colorTargets(RenderPipeline pipeline) {
 		return pipeline.getColorTargetStates();
 	}
 
-	
 	public static TextureTarget textureTarget(@Nullable String label, int width, int height,
 			boolean depth, GpuFormat colour) {
 		return new TextureTarget(label, width, height, colour, depth ? GpuFormat.D32_FLOAT : null);
 	}
 
-	
 	public static boolean hasDepth(RenderTarget target) {
 		return target.hasDepth();
 	}
 
-	
 	public static RenderPass.@Nullable RenderArea renderArea(RenderPassDescriptor descriptor) {
 		return descriptor.renderArea();
 	}
 
-	
 	public static RenderPassDescriptor withDepthAttachment(RenderPassDescriptor descriptor,
 			GpuTextureView view, OptionalDouble clear) {
 		return new RenderPassDescriptor(descriptor.label(), descriptor.colorAttachments(),
 				new RenderPassDescriptor.Attachment<>(view, clear), descriptor.renderArea());
 	}
 
-	
 	public static @Nullable List<RenderPipeline> dropEntityPipelines(GpuDevice device) {
 		List<RenderPipeline> dropped = new ArrayList<>();
 		for (PipelineCache cache : new PipelineCache[] {RenderSystemAccessor.corevk$current(),
@@ -370,8 +333,6 @@ public final class GraphicsApi {
 					continue;
 				}
 
-				// Read before the removal: the map's entries are views of its slots, and a removed
-				// slot answers nothing.
 				CompiledRenderPipeline compiled = entry.getValue();
 				held.remove();
 				compiled.close();
@@ -382,7 +343,6 @@ public final class GraphicsApi {
 		return dropped;
 	}
 
-	
 	private static boolean declaresGameEntity(RenderPipeline pipeline) {
 		if (EntityMesh.movingBlock(pipeline)) {
 			return true;
@@ -399,17 +359,14 @@ public final class GraphicsApi {
 		return false;
 	}
 
-	
 	public static void suspendLevelPass() {
 		LevelPass.suspendCurrent();
 	}
 
-	
 	public static void withSodiumPushConstants(RenderPipeline.Builder builder) {
 		builder.withPushConstantSize(SODIUM_PUSH_CONSTANTS);
 	}
 
-	
 	public static void copyPushConstants(RenderPipeline.Builder builder, RenderPipeline from) {
 		builder.withPushConstantSize(from.pushConstantSize());
 	}

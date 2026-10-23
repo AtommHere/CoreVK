@@ -19,18 +19,15 @@ import java.util.Map;
 
 public final class GeometryStage {
 
-	
 	private static volatile boolean served;
 
 	private GeometryStage() {
 	}
 
-	
 	public static void serve(boolean answer) {
 		served = answer;
 	}
 
-	
 	public static boolean note(RenderPipeline pipeline, String path, PackProgram.Loaded loaded) {
 		if (loaded.program().stages().get(ProgramStage.GEOMETRY) == null) {
 			return true;
@@ -42,7 +39,6 @@ public final class GeometryStage {
 		return false;
 	}
 
-	
 	public static @Nullable String fragment(RenderPipeline pipeline, String path,
 			PackProgram.Loaded loaded) {
 		String fragment = loaded.program().stages().get(ProgramStage.FRAGMENT).text();
@@ -67,7 +63,6 @@ public final class GeometryStage {
 		return fold.fragment();
 	}
 
-	
 	private static GeometryFold.Result fold(RenderPipeline pipeline, String path, String geometry,
 			String fragment) {
 		long compiler = Shaderc.shaderc_compiler_initialize();
@@ -86,9 +81,6 @@ public final class GeometryStage {
 			Shaderc.shaderc_compile_options_add_macro_definition(options, flag, "");
 		}
 
-		// On the heap rather than through the overloads taking text, which encode on the thread's
-		// memory stack: a translated stage carries the pack's whole settings header and runs to tens
-		// of kilobytes, against a stack of sixty-four.
 		ByteBuffer source = MemoryUtil.memUTF8(geometry, false);
 		ByteBuffer name = MemoryUtil.memUTF8(path);
 		ByteBuffer entry = MemoryUtil.memUTF8("main");
@@ -120,23 +112,19 @@ public final class GeometryStage {
 		}
 	}
 
-	
 	public static void noteBeside(RenderPipeline variant, RenderPipeline base) {
-		// Nothing to carry: no geometry stage is bound, so no variant owes one.
+
 	}
 
-	
 	public static boolean noted() {
 		return false;
 	}
 
-	
 	public static boolean compiling() {
 		return false;
 	}
 
-	
 	public static void close() {
-		// Holds nothing between loads.
+
 	}
 }

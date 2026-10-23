@@ -19,7 +19,6 @@ import java.util.Set;
 
 public final class PackMenu {
 
-	
 	private static final int WIDE_PAGE = 18;
 
 	private static final MenuSlot BLANK = new MenuSlot.Blank();
@@ -35,7 +34,7 @@ public final class PackMenu {
 
 	private PackMenu(String packName, Map<String, MenuPage> pages, Map<String, MenuOption> options,
 			Map<String, Map<String, String>> profiles, PackLang lang, List<String> warnings) {
-		// Ordered rather than Map.copyOf: pages are walked in the order the pack writes them.
+
 		this.packName = packName;
 		this.pages = Collections.unmodifiableMap(new LinkedHashMap<>(pages));
 		this.options = Collections.unmodifiableMap(new LinkedHashMap<>(options));
@@ -45,7 +44,6 @@ public final class PackMenu {
 		this.warnings = List.copyOf(warnings);
 	}
 
-	
 	private static List<String> order(Map<String, Map<String, String>> profiles) {
 		List<String> names = new ArrayList<>(profiles.keySet());
 		names.sort(Comparator.comparingInt((String name) -> profiles.get(name).size()).reversed());
@@ -63,9 +61,6 @@ public final class PackMenu {
 		Map<String, MenuOption> options = new LinkedHashMap<>();
 		Map<String, List<MenuSlot>> slotsByPage = new LinkedHashMap<>();
 
-		// Where each * sits. The dump happens after every page has claimed its names, because
-		// the token means "everything no page shows", and what a later page shows is not known
-		// while an earlier one is being walked.
 		record Rest(List<MenuSlot> slots, int at) {
 		}
 		List<Rest> rests = new ArrayList<>();
@@ -105,8 +100,7 @@ public final class PackMenu {
 
 						slots.add(new MenuSlot.Link(target, resolved));
 					}
-					// A pack with nothing to choose from loses the token rather than keeping a
-					// blank where the selector would have been.
+
 					case ShaderProperties.ScreenToken.Profiles _ -> {
 						if (hasProfiles) {
 							slots.add(PROFILES);
@@ -120,20 +114,12 @@ public final class PackMenu {
 			slotsByPage.put(page.getKey(), slots);
 		}
 
-		// A pack that lays out no main screen means "everything", not "nothing": the reference
-		// reads the missing line as a single *. That token goes first, ahead of any * a sub-page
-		// carries, where the reference promises no winner at all, its dump walking a hash map.
 		if (!slotsByPage.containsKey("")) {
 			List<MenuSlot> main = new ArrayList<>();
 			rests.add(0, new Rest(main, 0));
 			slotsByPage.put("", main);
 		}
 
-		// The first * takes every offered setting no SUB-page names, in the order the pack
-		// declares them, and a second one takes what remains, which by then is nothing. What the
-		// main screen names pours out again on purpose: the reference fills its leftover list
-		// only after its main screen is built, so those names dump twice there, and a pack that
-		// laid its columns out against that must keep its shape here.
 		if (!rests.isEmpty()) {
 			List<MenuSlot> spill = new ArrayList<>();
 			for (PackOption declared : index.all()) {
@@ -160,7 +146,6 @@ public final class PackMenu {
 		return new PackMenu(packName, pages, options, profiles, lang, warnings);
 	}
 
-	
 	private static Map<String, String> expand(ShaderProperties properties, OptionIndex index,
 			List<String> warnings, String name) {
 		Map<String, String> expanded = new LinkedHashMap<>();
@@ -179,7 +164,6 @@ public final class PackMenu {
 		return Collections.unmodifiableMap(expanded);
 	}
 
-	
 	private static String text(OptionValue value) {
 		if (value.isBoolean()) {
 			return value.asBoolean() ? "on" : "off";
@@ -200,7 +184,6 @@ public final class PackMenu {
 		return Optional.ofNullable(this.pages.get(name));
 	}
 
-	
 	public Collection<MenuPage> pages() {
 		return this.pages.values();
 	}
@@ -209,22 +192,18 @@ public final class PackMenu {
 		return Optional.ofNullable(this.options.get(name));
 	}
 
-	
 	public int optionCount() {
 		return this.options.size();
 	}
 
-	
 	public Set<String> optionNames() {
 		return this.options.keySet();
 	}
 
-	
 	public List<String> profileNames() {
 		return this.profileOrder;
 	}
 
-	
 	public Map<String, String> profile(String name) {
 		return this.profiles.getOrDefault(name, Map.of());
 	}
@@ -233,7 +212,6 @@ public final class PackMenu {
 		return this.lang;
 	}
 
-	
 	public List<String> warnings() {
 		return this.warnings;
 	}

@@ -32,8 +32,6 @@ public final class WeatherValues {
 		builder.add("fogMode", UniformShape.INT, (world, out) -> out.set(world.fogMode()));
 		builder.add("fogShape", UniformShape.INT, (world, out) -> out.set(world.fogShape()));
 
-		// The fixed function fog block, whose scale member is the reciprocal of the range and not
-		// a factor: a program that wrote its own linear fog read gl_Fog.scale for exactly that.
 		builder.add("of_Fog", UniformShape.FOG, (world, out) -> {
 			float range = world.fogEnd() - world.fogStart();
 			out.setFog(world.fogR(), world.fogG(), world.fogB(), world.fogA(),

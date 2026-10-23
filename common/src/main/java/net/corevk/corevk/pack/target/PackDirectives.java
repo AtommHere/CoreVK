@@ -22,16 +22,12 @@ import java.util.TreeMap;
 
 public final class PackDirectives {
 
-	
 	public static final String HIGHER_SHADOWCOLOR = "HIGHER_SHADOWCOLOR";
 
-	
 	public static final int MAX_SHADOW_COLOURS = 8;
 
-	
 	public static final int SHADOW_COLOURS = 2;
 
-	
 	public static int shadowColours(boolean declared) {
 		return declared ? MAX_SHADOW_COLOURS : SHADOW_COLOURS;
 	}
@@ -54,12 +50,10 @@ public final class PackDirectives {
 	private final Map<Integer, ShadowColour> shadowColours;
 	private final List<ShadowDepth> shadowDepths;
 
-	
 	public record ShadowColour(TargetFormat.Resolution format, boolean clear,
 			TargetDirectives.Colour clearColour, boolean declaresClearColour) {
 	}
 
-	
 	public record ShadowDepth(boolean nearest, boolean mipmap) {
 	}
 
@@ -88,7 +82,6 @@ public final class PackDirectives {
 				new ShadowDepth(builder.depthNearest[1], builder.depthMipmap[1]));
 	}
 
-	
 	public static PackDirectives defaults() {
 		return builder().build();
 	}
@@ -97,7 +90,6 @@ public final class PackDirectives {
 		return new Builder();
 	}
 
-	
 	public static PackDirectives read(ShaderPackSource source, SettingSet settings, String dimension)
 			throws IOException {
 		ProgramSet programs = ProgramSet.enumerate(source, DimensionSet.discover(source));
@@ -118,7 +110,7 @@ public final class PackDirectives {
 			try {
 				builder.accept(expander.expand(file.get()));
 			} catch (IOException | RuntimeException e) {
-				// One unreadable composite must not cost the pack every other setting it declares.
+
 			}
 		}
 
@@ -133,12 +125,10 @@ public final class PackDirectives {
 		return this.ambientOcclusionLevel;
 	}
 
-	
 	public float wetnessHalflife() {
 		return this.wetnessHalflife;
 	}
 
-	
 	public float drynessHalflife() {
 		return Builder.DRYNESS_HALFLIFE;
 	}
@@ -151,12 +141,10 @@ public final class PackDirectives {
 		return this.centerDepthHalflife;
 	}
 
-	
 	public int noiseTextureResolution() {
 		return this.noiseTextureResolution;
 	}
 
-	
 	public int shadowMapResolution() {
 		return this.shadowMapResolution;
 	}
@@ -165,22 +153,18 @@ public final class PackDirectives {
 		return this.shadowDistance;
 	}
 
-	
 	public float shadowDistanceRenderMul() {
 		return this.shadowDistanceRenderMul;
 	}
 
-	
 	public boolean forcesShadowRenderDistance() {
 		return this.forcesShadowRenderDistance && this.shadowDistanceRenderMul >= 0.0F;
 	}
 
-	
 	public float voxelDistance() {
 		return this.voxelDistance;
 	}
 
-	
 	public float entityShadowDistanceMul() {
 		return this.entityShadowDistanceMul;
 	}
@@ -197,31 +181,26 @@ public final class PackDirectives {
 		return this.shadowIntervalSize;
 	}
 
-	
 	public ShadowColour shadowColour(int index) {
 		ShadowColour declared = this.shadowColours.get(index);
 
 		return declared == null ? Builder.SHADOW_COLOUR_DEFAULT : declared;
 	}
 
-	
 	public Set<Integer> shadowColoursDeclared() {
 		return this.shadowColours.keySet();
 	}
 
-	
 	public ShadowDepth shadowDepth(int index) {
 		return index >= 0 && index < this.shadowDepths.size()
 				? this.shadowDepths.get(index)
 				: new ShadowDepth(false, false);
 	}
 
-	
 	public boolean shadowDepthNearest(int index) {
 		return shadowDepth(index).nearest();
 	}
 
-	
 	public boolean shadowDepthMipmap(int index) {
 		return shadowDepth(index).mipmap();
 	}
@@ -230,12 +209,10 @@ public final class PackDirectives {
 
 		private static final float DRYNESS_HALFLIFE = 200.0F;
 
-		
 		private static final int MAX_NOISE_RESOLUTION = 4096;
 
 		private static final String SHADOW_COLOUR = "shadowcolor";
 
-		
 		private static final int SHADOW_DEPTHS = 2;
 
 		private final boolean[] depthNearest = new boolean[SHADOW_DEPTHS];
@@ -266,7 +243,6 @@ public final class PackDirectives {
 		private Builder() {
 		}
 
-		
 		public Builder accept(ExpandedUnit unit) {
 			for (ConstDirectives.Directive directive : ConstDirectives.read(unit)) {
 				apply(directive);
@@ -285,10 +261,7 @@ public final class PackDirectives {
 				case "ambientOcclusionLevel" -> asFloat(directive,
 						value -> this.ambientOcclusionLevel = Math.clamp(value, 0.0F, 1.0F));
 				case "wetnessHalflife" -> asFloat(directive, value -> this.wetnessHalflife = value);
-				// Not a typo and not ours. CoreVK registers the dryness directive against the rise as
-				// well, so the two names are one setting and the last one read wins. Reproduced
-				// rather than fixed, because correcting it would make our image diverge from the
-				// reference the packs were tuned against.
+
 				case "drynessHalflife" -> asFloat(directive, value -> this.wetnessHalflife = value);
 				case "eyeBrightnessHalflife" -> asFloat(directive, value -> this.eyeBrightnessHalflife = value);
 				case "centerDepthHalflife" -> asFloat(directive, value -> this.centerDepthHalflife = value);
@@ -296,9 +269,7 @@ public final class PackDirectives {
 						value -> this.noiseTextureResolution = Math.clamp(value, 1, MAX_NOISE_RESOLUTION));
 				case "shadowMapResolution" -> asInt(directive, value -> this.shadowMapResolution = value);
 				case "shadowDistance" -> asFloat(directive, value -> this.shadowDistance = value);
-				// The flag is raised inside the setter and not beside it, so that it follows the
-				// value: a line whose type or number does not parse is dropped without a word here
-				// as it is in CoreVK, and dropped means the pack never said anything at all.
+
 				case "shadowDistanceRenderMul" -> asFloat(directive, value -> {
 					this.shadowDistanceRenderMul = value;
 					this.forcesShadowRenderDistance = true;
@@ -309,25 +280,12 @@ public final class PackDirectives {
 				case "shadowNearPlane" -> asFloat(directive, value -> this.shadowNearPlane = value);
 				case "shadowFarPlane" -> asFloat(directive, value -> this.shadowFarPlane = value);
 				case "shadowIntervalSize" -> asFloat(directive, value -> this.shadowIntervalSize = value);
-				// How the depth pair is read back. The family is folded in text order like everything
-				// else here: CoreVK registers one consumer per name and then walks the declarations of
-				// every fragment stage in order, so a per-image spelling wins over the blanket one
-				// only by standing after it ({@code shaderpack/programs/ProgramSet.java:255-268}).
-				//
-				// shadowtexNearest is the older spelling of shadowtex0Nearest and has no shadowtex1
-				// equivalent, which is CoreVK's shape as well: it hands the name to the first sampler
-				// of the list ({@code shaderpack/properties/PackShadowDirectives.java:185-187}).
+
 				case "shadowtexNearest", "shadowtex0Nearest", "shadow0MinMagNearest" ->
 						asBool(directive, value -> this.depthNearest[0] = value);
 				case "shadowtex1Nearest", "shadow1MinMagNearest" ->
 						asBool(directive, value -> this.depthNearest[1] = value);
-				// Whether the map carries a chain, folded the same way and with the same shape of
-				// spellings: generateShadowMipmap covers both images at once where the per-image
-				// names cover one, and shadowtexMipmap is the older spelling of shadowtex0Mipmap
-				// with no shadowtex1 equivalent (PackShadowDirectives.java:147-168). The blanket
-				// name wins or loses on where it stands and not on being the blanket, which is
-				// CoreVK's own shape: it registers one consumer per name and walks the declarations
-				// in text order.
+
 				case "generateShadowMipmap" -> asBool(directive, value -> {
 					this.depthMipmap[0] = value;
 					this.depthMipmap[1] = value;
@@ -339,7 +297,6 @@ public final class PackDirectives {
 			}
 		}
 
-		
 		private void shadowColour(ConstDirectives.Directive directive) {
 			String name = directive.name();
 			if (!name.startsWith(SHADOW_COLOUR)) {
@@ -361,9 +318,6 @@ public final class PackDirectives {
 			String type = directive.type();
 			String value = directive.value().trim();
 
-			// The declared type is checked on every one of them, as it is on the colour targets and
-			// for the same reason: CoreVK ignores a directive written under the wrong type, so a pack
-			// neither of us has seen has to be ignored here too.
 			switch (suffix) {
 				case "Format" -> {
 					if (type.equals("int")) {
@@ -395,13 +349,10 @@ public final class PackDirectives {
 				return;
 			}
 
-			// A pack writes 2.0f as often as 2.0, and Float.parseFloat takes both; what it also
-			// takes is a bare name, which is why the type is checked first and the failure is
-			// silent afterwards.
 			try {
 				setter.set(Float.parseFloat(directive.value().trim().toLowerCase(Locale.ROOT)));
 			} catch (NumberFormatException e) {
-				// A directive left standing behind a setting nobody expanded. CoreVK drops it too.
+
 			}
 		}
 
@@ -413,11 +364,10 @@ public final class PackDirectives {
 			try {
 				setter.set(Integer.parseInt(directive.value().trim()));
 			} catch (NumberFormatException e) {
-				// As above.
+
 			}
 		}
 
-		
 		private static void asBool(ConstDirectives.Directive directive, BooleanSetter setter) {
 			if (!directive.type().equals("bool")) {
 				return;
@@ -429,7 +379,6 @@ public final class PackDirectives {
 			}
 		}
 
-		
 		private static final class ShadowSetting {
 
 			private TargetFormat.Resolution format;

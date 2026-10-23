@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererSkyMixin {
 
-	
 	@Inject(method = { PatchedMethods.SKY_PASS, PatchedMethods.SKY_PASS_WIDENED },
 			require = 1, at = @At("HEAD"), cancellable = true)
 	private void corevk$sky(CallbackInfo callback,

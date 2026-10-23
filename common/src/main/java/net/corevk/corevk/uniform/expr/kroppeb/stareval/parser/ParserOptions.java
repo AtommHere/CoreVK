@@ -29,7 +29,6 @@ public final class ParserOptions {
 		return this.binaryOpResolvers.get(c);
 	}
 
-	
 	public interface TokenRules {
 		TokenRules DEFAULT = new TokenRules() {
 		};

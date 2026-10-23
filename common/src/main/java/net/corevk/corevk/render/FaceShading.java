@@ -6,28 +6,23 @@ import net.minecraft.client.Minecraft;
 
 public final class FaceShading {
 
-	
 	private static volatile boolean dropped;
 
 	private FaceShading() {
 	}
 
-	
 	public static boolean dropped() {
 		return dropped;
 	}
 
-	
 	public static void install(boolean oldLighting) {
 		follow(!oldLighting && TerrainDraw.asked(), true);
 	}
 
-	
 	public static void none() {
 		follow(false, false);
 	}
 
-	
 	private static void follow(boolean asked, boolean said) {
 		if (said) {
 			CoreVK.logger().info("The game's own per face brightness is {} the chunk mesh",

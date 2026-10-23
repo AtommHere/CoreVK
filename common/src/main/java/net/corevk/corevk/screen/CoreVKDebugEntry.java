@@ -19,15 +19,12 @@ import org.jspecify.annotations.Nullable;
 
 public final class CoreVKDebugEntry implements DebugScreenEntry {
 
-	
 	public static final Identifier ID = Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, CoreVK.MOD_ID);
 
-	
 	private static final Identifier GROUP = Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, "name");
 
 	private static final String PREFIX = "[" + CoreVK.MOD_NAME + "] ";
 
-	
 	private static PackSession profiledSession;
 	private static String profileLine = "";
 
@@ -60,7 +57,6 @@ public final class CoreVKDebugEntry implements DebugScreenEntry {
 		return profileLine;
 	}
 
-	
 	private static void shadowLines(DebugScreenDisplayer displayer) {
 		ShadowTerrain.Walk walk = ShadowTerrain.lastWalk();
 		int drawn = walk == null ? 0 : walk.drawn();
@@ -69,7 +65,6 @@ public final class CoreVKDebugEntry implements DebugScreenEntry {
 				+ " D: " + Minecraft.getInstance().options.getEffectiveRenderDistance());
 	}
 
-	
 	private static String undrawnLine() {
 		if (PackChoice.noPackWanted()) {
 			return "Shaders are disabled";

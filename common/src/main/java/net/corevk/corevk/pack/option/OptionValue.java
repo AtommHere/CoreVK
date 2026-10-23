@@ -29,7 +29,6 @@ public final class OptionValue {
 		return new OptionValue(false, false, text);
 	}
 
-	
 	public static OptionValue parse(String text) {
 		String value = text.trim();
 
@@ -48,12 +47,10 @@ public final class OptionValue {
 		return this.enabled;
 	}
 
-	
 	public String text() {
 		return this.text;
 	}
 
-	
 	public String asText() {
 		if (!this.bool) {
 			return this.text;

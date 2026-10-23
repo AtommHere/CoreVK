@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class SamplerReach {
 
-	
 	private static final int SAMPLED_IMAGE = Spvc.SPVC_RESOURCE_TYPE_SAMPLED_IMAGE;
 
 	private static final boolean DECLARED = Boolean.getBoolean("corevk.declaredSamplers");
@@ -29,12 +28,10 @@ public final class SamplerReach {
 	private SamplerReach() {
 	}
 
-	
 	public static String cacheWord() {
 		return DECLARED ? "declared-samplers" : "reached-samplers";
 	}
 
-	
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static void narrow(String filename, IntermediaryShaderModule module) {
 		if (DECLARED || module == null || module.spirv() == null || !RawLocals.ours(filename)) {
@@ -50,18 +47,10 @@ public final class SamplerReach {
 		List samplers = ((IntermediaryShaderModuleAccessor) (Object) module).corevk$samplers();
 		int before = samplers.size();
 		try {
-			// By NAME and not by rank. The two readings list the module's resources in the same
-			// order today, but a rank is only right for as long as that holds and for as long as
-			// nothing has been appended to the list in between, where a name is right either way.
+
 			samplers.removeIf(sampler -> unreached.contains(ComputeShader.samplerName(sampler)));
 		} catch (RuntimeException e) {
-			// A narrowing is not worth a pack. Reading that name is reflection over a record of
-			// the game's: not over a shape this build never found, which ComputeShader's own
-			// initialiser refuses long before anything compiles, but the invoke can still throw,
-			// and thrown from here it would come out of the compiler's own method and take every
-			// pack on the machine down rather than cost one layout its density. Said at WARN,
-			// because a load that lost this quietly is a load that binds allocated sets on Apple
-			// hardware, or is refused there, with nothing in the log to explain why.
+
 			CoreVK.logger().warn("Could not read a module's sampler names, so its layout keeps a "
 					+ "binding for every declared sampler: on Apple hardware a stage numbered past "
 					+ "Metal's sixteen slots needs an allocated set, and is refused where no argument "
@@ -77,7 +66,6 @@ public final class SamplerReach {
 		}
 	}
 
-	
 	public static void say(long compiled) {
 		long walked = WALKED.getAndSet(0L);
 		long narrowed = NARROWED.getAndSet(0L);
@@ -98,7 +86,6 @@ public final class SamplerReach {
 						+ "game's and Sodium's among them)", dropped, narrowed, walked, compiled);
 	}
 
-	
 	private static Set<String> unreached(ByteBuffer spirv) {
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			PointerBuffer pointer = stack.callocPointer(1);
@@ -164,8 +151,7 @@ public final class SamplerReach {
 		List<String> names = new ArrayList<>(found);
 		SpvcReflectedResource.Buffer reflected = SpvcReflectedResource.create(list.get(0), found);
 		for (int index = 0; index < found; index++) {
-			// The same string the game's own reflection puts on the record, taken from the same
-			// call, so the two spellings of one resource cannot differ.
+
 			names.add(reflected.get(index).nameString());
 		}
 

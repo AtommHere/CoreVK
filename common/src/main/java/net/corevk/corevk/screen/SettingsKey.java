@@ -25,10 +25,6 @@ public final class SettingsKey {
 	public static final KeyMapping.Category CATEGORY =
 			new KeyMapping.Category(Identifier.fromNamespaceAndPath(CoreVK.MOD_ID, "keybinds"));
 
-	// The default key is a number, and the two games number keys differently: 26.2 hands a mapping
-	// a GLFW key code, 26.3 an SDL scancode, where I is 73 in the first and 12 in the second. The
-	// game's own InputConstants carries each key under one name in the numbering that game uses, so
-	// naming the key through it binds the same physical key under either game.
 	public static final KeyMapping OPEN =
 			new KeyMapping(ScreenText.OPEN_SETTINGS, InputConstants.KEY_I, CATEGORY);
 
@@ -38,13 +34,11 @@ public final class SettingsKey {
 	public static final KeyMapping TOGGLE =
 			new KeyMapping(ScreenText.TOGGLE_SHADERS, InputConstants.KEY_K, CATEGORY);
 
-	
 	private static final String COREVK_SCREEN_KEY = "corevk.keybind.shaderPackSelection";
 
 	private SettingsKey() {
 	}
 
-	
 	public static void beforeTick() {
 		if (!CoreVKBeside.installed() || HostReport.otherBackend()) {
 			return;
@@ -56,7 +50,6 @@ public final class SettingsKey {
 		}
 	}
 
-	
 	public static void poll() {
 		if (HostReport.otherBackend()) {
 			drain(OPEN);
@@ -83,27 +76,24 @@ public final class SettingsKey {
 		}
 	}
 
-	
 	private static @Nullable KeyMapping sharedCoreVKKey() {
 		KeyMapping corevk = KeyMapping.get(COREVK_SCREEN_KEY);
 
 		return corevk != null && corevk.same(OPEN) ? corevk : null;
 	}
 
-	
 	private static boolean drain(KeyMapping key) {
 		if (!key.consumeClick()) {
 			return false;
 		}
 
 		while (key.consumeClick()) {
-			// Nothing to do: the queue is only being emptied.
+
 		}
 
 		return true;
 	}
 
-	
 	private static void reload() {
 		PackChoice.reload(directory());
 
@@ -113,7 +103,6 @@ public final class SettingsKey {
 				.orElseGet(() -> Component.translatable(ScreenText.PACK_RELOADED)));
 	}
 
-	
 	private static void toggle() {
 		Path directory = directory();
 		Path file = PackChoice.packFile(directory);
@@ -146,12 +135,10 @@ public final class SettingsKey {
 			return;
 		}
 
-		// Said before the switch goes back, which reads the pack again and forgets the reason.
 		turnBackOff(directory, file);
 		say(refused);
 	}
 
-	
 	private static @Nullable MutableComponent refusal(PackFile asked) {
 		if (PackChoice.noPackWanted() || !asked.wantsPack() || asked.namesNone()) {
 			return Component.translatable(ScreenText.NO_PACK).withStyle(ChatFormatting.YELLOW);
@@ -168,7 +155,6 @@ public final class SettingsKey {
 				.orElse(null);
 	}
 
-	
 	private static void turnBackOff(Path directory, Path file) {
 		try {
 			PackFile.write(file, PackFile.read(file).withEnabled(false));
@@ -181,14 +167,12 @@ public final class SettingsKey {
 		PackChoice.reload(directory);
 	}
 
-	
 	private static Path directory() {
 		return PackChoice.session()
 				.map(PackSession::gameDirectory)
 				.orElseGet(() -> CoreVK.platform().gameDirectory());
 	}
 
-	
 	private static void say(MutableComponent said) {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.player != null) {

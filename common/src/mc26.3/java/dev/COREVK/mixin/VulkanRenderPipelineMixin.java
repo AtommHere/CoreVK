@@ -26,7 +26,6 @@ import java.util.List;
 @Mixin(VulkanRenderPipeline.class)
 public abstract class VulkanRenderPipelineMixin {
 
-	
 	@Unique
 	private static final ThreadLocal<String> CURRENT = new ThreadLocal<>();
 
@@ -64,7 +63,6 @@ public abstract class VulkanRenderPipelineMixin {
 		return original.call(binding, type);
 	}
 
-	
 	@WrapOperation(method = "compile", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/vulkan/VK12;vkCreateDescriptorSetLayout("

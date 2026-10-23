@@ -60,7 +60,6 @@ public abstract class VulkanBindGroupLayoutMixin {
 		return original.call(binding, type);
 	}
 
-	
 	@WrapOperation(method = "create", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/vulkan/VkDescriptorSetLayoutBinding;stageFlags(I)"
@@ -72,7 +71,6 @@ public abstract class VulkanBindGroupLayoutMixin {
 				GeometryStage.buildingHere() ? flags | GeometryStage.STAGE_BIT : flags);
 	}
 
-	
 	@WrapOperation(method = "create", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lorg/lwjgl/vulkan/VK12;vkCreateDescriptorSetLayout("

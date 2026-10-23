@@ -47,20 +47,16 @@ public final class StorageImages implements AutoCloseable {
 
 	private static volatile StorageImages current = none();
 
-	
 	private static final Map<TargetFormat, Boolean> VIEWABLE = new ConcurrentHashMap<>();
 
-	
 	private static final boolean CLEAR_AT_BIRTH = Boolean.parseBoolean(
 			System.getProperty("corevk.clearStorageAtBirth", "true"));
 
-	
 	private static final long CLEAR_AT_BIRTH_BUDGET = 64L * 1024L * 1024L;
 
 	private final ImageInformation.Reading declared;
 	private final List<Allocated> allocated = new ArrayList<>();
 
-	
 	private volatile Map<String, Bound> bindings = Map.of();
 	private volatile Map<String, Allocated> imagesByName = Map.of();
 	private final Map<String, Bound> typedBindings = new ConcurrentHashMap<>();
@@ -68,7 +64,6 @@ public final class StorageImages implements AutoCloseable {
 	private int lastHeight;
 	private boolean laidOut;
 
-	
 	private boolean refusedForGood;
 
 	public StorageImages(ImageInformation.Reading declared) {
@@ -79,7 +74,6 @@ public final class StorageImages implements AutoCloseable {
 		return new StorageImages(ImageInformation.Reading.empty());
 	}
 
-	
 	public static Bound bound(String name) {
 		return current.lookup(name);
 	}
@@ -89,7 +83,6 @@ public final class StorageImages implements AutoCloseable {
 		return bound != null && bound.storage();
 	}
 
-	
 	public static List<String> unusableViews(Collection<String> names) {
 		List<String> unusable = new ArrayList<>();
 		VulkanDevice device = vulkan();
@@ -129,7 +122,6 @@ public final class StorageImages implements AutoCloseable {
 				image.declared.name().equals(request.get().original()), request.get().format().integer()));
 	}
 
-	
 	private void rebind() {
 		Map<String, Bound> bound = new HashMap<>();
 		Map<String, Allocated> named = new HashMap<>();
@@ -147,16 +139,13 @@ public final class StorageImages implements AutoCloseable {
 		this.typedBindings.clear();
 	}
 
-	
 	public record Bound(long view, boolean storage, boolean integer) {
 	}
 
-	
 	public boolean refusedForGood() {
 		return this.refusedForGood;
 	}
 
-	
 	public void ensure(int screenWidth, int screenHeight) {
 		install();
 		if (this.declared.images().isEmpty()) {
@@ -174,9 +163,6 @@ public final class StorageImages implements AutoCloseable {
 			return;
 		}
 
-		// Everything or nothing: a refusal halfway through gives back what was allocated, so the
-		// next screen size the colour targets try again at starts from the first image rather
-		// than skipping the one that failed as already dealt with.
 		try {
 			allocate(vulkan, first, resized, screenWidth, screenHeight);
 		} catch (RuntimeException e) {
@@ -205,10 +191,7 @@ public final class StorageImages implements AutoCloseable {
 				try {
 					this.allocated.add(Allocated.create(vulkan, image, image.width(), image.height(),
 							Math.max(image.depth(), 1), movable));
-					// Which volumes follow the camera and which do not, said once per pack rather
-					// than left to be guessed from the picture: a volume left behind keeps a frame
-					// of lag at every block crossed, and a volume that follows costs a second
-					// image of its own size. Neither shows as itself on screen.
+
 					CoreVK.logger().info("storage image {}{}", image.describe(), movable
 							? ", moved onto each frame's camera block for " + scratchCost(image)
 									+ " more"
@@ -245,8 +228,7 @@ public final class StorageImages implements AutoCloseable {
 				int width = Math.max(1, (int) (screenWidth * image.relativeWidth()));
 				int height = Math.max(1, (int) (screenHeight * image.relativeHeight()));
 				try {
-					// Never movable: a relative image is a screen and not a volume, and it goes
-					// back and is built again on every resize.
+
 					this.allocated.add(Allocated.create(vulkan, image, width, height, 1, false));
 					CoreVK.logger().info("storage image {} at {}x{}", image.describe(), width,
 							height);
@@ -259,14 +241,12 @@ public final class StorageImages implements AutoCloseable {
 		}
 	}
 
-	
 	private static IllegalStateException refused(ImageInformation image, RuntimeException cause) {
 		return new IllegalStateException("storage image " + image.describe()
 				+ " could not be allocated, and a program declaring it cannot be drawn without it",
 				cause);
 	}
 
-	
 	public void clearMarked(CommandEncoder encoder) {
 		GpuRecording.endPass(encoder);
 		VkCommandBuffer commands = commands(encoder);
@@ -275,8 +255,7 @@ public final class StorageImages implements AutoCloseable {
 		}
 
 		try (MemoryStack stack = MemoryStack.stackPush()) {
-			// The volume being emptied was sampled by the previous frame's gbuffers and stored by
-			// the previous dispatch, and nothing else orders those against a transfer write.
+
 			GpuRecording.beforeTransfer(commands, stack);
 			for (Allocated image : this.allocated) {
 				if (!image.declared.clear()) {
@@ -290,7 +269,6 @@ public final class StorageImages implements AutoCloseable {
 		}
 	}
 
-	
 	private static String scratchCost(ImageInformation image) {
 		long texels = (long) Math.max(image.width(), 1) * Math.max(image.height(), 1)
 				* Math.max(image.depth(), 1);
@@ -301,7 +279,6 @@ public final class StorageImages implements AutoCloseable {
 				: bytes / 1024L + " KiB";
 	}
 
-	
 	private boolean movable(ImageInformation image) {
 		if (!image.clear() || image.relative() || image.depth() <= 1) {
 			return false;
@@ -317,7 +294,6 @@ public final class StorageImages implements AutoCloseable {
 		return false;
 	}
 
-	
 	public void reanchor(CommandEncoder encoder, int dx, int dy, int dz) {
 		if (dx == 0 && dy == 0 && dz == 0) {
 			return;
@@ -336,10 +312,6 @@ public final class StorageImages implements AutoCloseable {
 					continue;
 				}
 
-				// Past the extent nothing of the volume survives the move, which is a teleport
-				// rather than a step. Emptied and not moved: the pack's own floodfill reprojection
-				// is just as lost there, and identities from the world the player has left would
-				// block light all over the one they arrived in.
 				if (Math.abs(dx) >= image.width || Math.abs(dy) >= image.height
 						|| Math.abs(dz) >= image.depth) {
 					clearImage(commands, stack, image);
@@ -353,14 +325,9 @@ public final class StorageImages implements AutoCloseable {
 		}
 	}
 
-	
 	private static void move(VkCommandBuffer commands, MemoryStack stack, Allocated image,
 			int dx, int dy, int dz) {
-		// The reader wants index p to hold what index p + d holds, d being the blocks the camera has
-		// crossed since the write: so the source starts d planes in where the camera moved forward,
-		// and the destination does where it moved back. Written once and used by both copies, which
-		// is what makes the pair agree by construction rather than by two readings of the same
-		// arithmetic.
+
 		int fromX = Math.max(dx, 0);
 		int fromY = Math.max(dy, 0);
 		int fromZ = Math.max(dz, 0);
@@ -414,18 +381,14 @@ public final class StorageImages implements AutoCloseable {
 		List<Allocated> born = new ArrayList<>();
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			for (Allocated image : this.allocated) {
-				// Only the images created since the last pass here. An UNDEFINED transition
-				// DISCARDS contents, so re-running it over a surviving absolute volume on a
-				// window resize would throw away the floodfill the frames carry forward.
+
 				if (image.laidOut) {
 					continue;
 				}
 
 				image.laidOut = true;
 				born.add(image);
-				// The scratch beside its image and in the same breath: it is a transfer end of the
-				// same volume, so it has to leave UNDEFINED before the first copy names it, and a
-				// copy is the only thing that ever will.
+
 				int count = image.scratch == 0L ? 1 : 2;
 				VkImageMemoryBarrier.Buffer barriers = VkImageMemoryBarrier.calloc(count, stack)
 						.sType$Default();
@@ -455,13 +418,11 @@ public final class StorageImages implements AutoCloseable {
 		this.laidOut = true;
 	}
 
-	
 	private void clearBornImages(VkCommandBuffer commands, MemoryStack stack, List<Allocated> born) {
 		List<Allocated> emptying = new ArrayList<>();
 		long spent = 0L;
 		for (Allocated image : born) {
-			// The marked ones are emptied at the head of every shadow stage anyway, so a clear here
-			// would be the same write twice in one frame.
+
 			if (image.declared.clear()) {
 				continue;
 			}
@@ -473,9 +434,7 @@ public final class StorageImages implements AutoCloseable {
 			}
 
 			long bytes = bytes(image);
-			// Against what this pass has already spent, so the answer is about the command buffer
-			// and not about the image. A volume refused here does not stop a smaller one after it:
-			// the budget is what the buffer may carry, and a volume that fits in what is left fits.
+
 			if (spent + bytes > CLEAR_AT_BIRTH_BUDGET) {
 				CoreVK.logger().info("Storage volume {} is {} MiB and this pass has {} MiB of its "
 						+ "{} MiB left, so it is left as the allocator handed it back and a pack "
@@ -498,13 +457,8 @@ public final class StorageImages implements AutoCloseable {
 			clearImage(commands, stack, image);
 		}
 
-		// The one fence between these zeros and the pack's first dispatch. See the javadoc above.
 		GpuRecording.afterTransfer(commands, stack);
 
-		// Said per allocation pass rather than per pack load, which is the same thing for a volume
-		// of the pack's own size and is NOT for one sized on the screen: those are destroyed and
-		// built again at every resize, so this line follows a window being dragged. The words say
-		// "created" and not "carried forward" for that reason.
 		CoreVK.logger().info("{} storage volume(s) emptied as they were created, "
 				+ "property=corevk.clearStorageAtBirth", emptying.size());
 	}
@@ -568,7 +522,6 @@ public final class StorageImages implements AutoCloseable {
 		return backend instanceof VulkanDevice vulkan ? vulkan : null;
 	}
 
-	
 	private static final class Allocated {
 
 		private final ImageInformation declared;
@@ -582,11 +535,9 @@ public final class StorageImages implements AutoCloseable {
 		private final Map<TargetFormat, Long> alternateViews = new HashMap<>();
 		private List<TargetFormat> allowedViews = List.of();
 
-		
 		private long scratch;
 		private long scratchAllocation;
 
-		
 		private boolean laidOut;
 
 		private Allocated(ImageInformation declared, boolean relative, int width, int height,
@@ -615,17 +566,14 @@ public final class StorageImages implements AutoCloseable {
 						.filter(format -> CustomImageView.compatible(base, format))
 						.filter(format -> supportsView(vulkan, format)).toList();
 				if (!compatible.contains(base)) {
-					// Created as it was before any other view existed, and left to the driver to
-					// refuse: the pack gets no view of it in another format.
+
 					CoreVK.logger().warn("Storage image {} is declared {}, which this device does "
 							+ "not both sample and store, so it takes no view in another format",
 							declared.name(), base);
 					compatible = List.of(base);
 				}
 				VkImageCreateInfo imageInfo = VkImageCreateInfo.calloc(stack).sType$Default();
-				// These are views of one allocation, never copies. An explicit list lets the driver
-				// optimise the mutable image instead of considering every Vulkan format, and an
-				// image no other format can view is not made mutable at all.
+
 				if (compatible.size() > 1) {
 					VkImageFormatListCreateInfo formats = VkImageFormatListCreateInfo.calloc(stack)
 							.sType$Default().pViewFormats(stack.ints(compatible.stream()
@@ -675,14 +623,6 @@ public final class StorageImages implements AutoCloseable {
 						extentHeight, extentDepth, image, allocation, viewPtr.get(0));
 				allocated.allowedViews = compatible;
 
-				// The scratch only where the volume may be moved at all, which movable settles. It
-				// is a second image of the same shape, so it is not owed to a volume nothing will
-				// ever copy.
-				//
-				// A failure here is not the image's failure, and that is why it is caught rather
-				// than raised. The volume itself is allocated and bound; with no scratch it simply
-				// keeps the frame of lag it carried before, which is a worse picture. Raising here
-				// would drop the volume outright and take the pack's coloured light with it.
 				if (movable) {
 					try {
 						VulkanUtils.crashIfFailure(vulkan,
@@ -703,13 +643,11 @@ public final class StorageImages implements AutoCloseable {
 			}
 		}
 
-		
 		private synchronized long typedView(TargetFormat format) {
 			if (format == this.declared.internalFormat().used()) return this.view;
 			Long cached = this.alternateViews.get(format);
 			if (cached != null) return cached;
-			// A program asking for a view this device cannot give is refused where it is prepared,
-			// through unusableViews, so this only keeps a recording pass from throwing.
+
 			VulkanDevice device = vulkan();
 			if (!this.allowedViews.contains(format) || this.image == 0L || device == null) {
 				CoreVK.logger().warn("Custom image {} has no {} view here, so its own is bound",
@@ -732,7 +670,6 @@ public final class StorageImages implements AutoCloseable {
 			}
 		}
 
-		
 		private synchronized void destroy(VulkanDevice vulkan) {
 			long view = this.view;
 			List<Long> alternate = List.copyOf(this.alternateViews.values());
@@ -763,7 +700,6 @@ public final class StorageImages implements AutoCloseable {
 		}
 	}
 
-	
 	private static boolean supportsView(VulkanDevice device, TargetFormat format) {
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			VkFormatProperties properties = VkFormatProperties.calloc(stack);

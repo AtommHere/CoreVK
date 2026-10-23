@@ -59,44 +59,33 @@ import org.joml.Vector4fc;
 
 public final class FrameState implements WorldState {
 
-	
 	private static final float COUNTER_WRAP = 3600.0F;
 
-	
 	private static final int FRAME_WRAP = 720720;
 
-	
 	private static final Vector3f NOTHING_SELECTED = new Vector3f(-256.0F);
 
-	
 	private static final float MAX_HUNGER = 20.0F;
 	private static final float MAX_ARMOR = 50.0F;
 
-	
 	private static final int FOG_OFF = 0;
 	private static final int FOG_SHAPE_OFF = -1;
 
 	private final ViewMatrices view = new ViewMatrices();
 
-	
 	private final Vector2f distantPlanes = new Vector2f();
 	private final CameraShift shift = new CameraShift();
 
 	private PackDirectives directives = PackDirectives.defaults();
 
-	
 	private RenderStage stage = RenderStage.NONE;
 
-	
 	private boolean endFlashShadows;
 
-	
 	private boolean oldHandLight = true;
 
-	
 	private Object lastLevel;
 
-	// frame and time
 	private long lastFrameNanos;
 	private boolean timed;
 	private int frameCounter;
@@ -108,7 +97,6 @@ public final class FrameState implements WorldState {
 	private float viewWidth;
 	private float viewHeight;
 
-	// world
 	private long worldTime;
 	private long worldDay;
 	private int moonPhase;
@@ -126,7 +114,7 @@ public final class FrameState implements WorldState {
 	private float ambientLight;
 	private int dimensionOrdinal;
 	private int seaLevel;
-	
+
 	private Holder<Biome> biomeHolder;
 	private int biomeId;
 	private int biomeCategory;
@@ -134,20 +122,17 @@ public final class FrameState implements WorldState {
 	private float rainfall;
 	private float temperature;
 
-	// end flash
 	private boolean hasEndFlash;
 	private float endFlashXAngle;
 	private float endFlashYAngle;
 	private float endFlashIntensity;
 	private float previousEndFlashIntensity;
 
-	// fog
 	private final Vector4f fogColor = new Vector4f();
 	private float fogStart;
 	private float fogEnd;
 	private boolean heavyFog;
 
-	// player
 	private int isEyeInWater;
 	private final Vector3d eyePosition = new Vector3d();
 	private final Vector3f playerLookVector = new Vector3f();
@@ -188,81 +173,67 @@ public final class FrameState implements WorldState {
 	private final Vector3f selectedBlockPos = new Vector3f(NOTHING_SELECTED);
 	private int selectedBlockId;
 	private final Vector4f lightningBoltPosition = new Vector4f();
-	
+
 	private long lightningTick = Long.MIN_VALUE;
 	private int heldItemId = NameIds.NONE;
 	private int heldItemId2 = NameIds.NONE;
 	private int heldBlockLight;
 	private int heldBlockLight2;
 
-	// engine
 	private int atlasWidth;
 	private int atlasHeight;
 	private float anisotropy;
 	private int textureFilteringMode;
 	private float chunkFadeTimeInv;
 
-	
 	public FrameState() {
 		FrameSmoothed.forgetAll();
 	}
 
-	
 	public void directives(PackDirectives directives) {
 		this.directives = directives;
 	}
 
-	
 	public PackDirectives directives() {
 		return this.directives;
 	}
 
-	
 	public void endFlashShadows(boolean endFlashShadows) {
 		this.endFlashShadows = endFlashShadows;
 	}
 
-	
 	public void oldHandLight(boolean oldHandLight) {
 		this.oldHandLight = oldHandLight;
 	}
 
-	
 	public ViewMatrices view() {
 		return this.view;
 	}
 
-	
 	public void convention(Vector4fc convention) {
 		this.view.convention(convention);
 	}
 
-	
 	public void passModelView(Matrix4fc matrix, Matrix4fc bob) {
 		this.view.passModelView(matrix, bob);
 	}
 
-	
 	public void passProjection(Matrix4fc matrix) {
 		this.view.passProjection(matrix);
 	}
 
-	
 	public void passColour(Vector4fc colour) {
 		this.view.passColour(colour);
 	}
 
-	
 	public void passAlphaTest(float reference) {
 		this.view.passAlphaTest(reference);
 	}
 
-	
 	public void renderStage(RenderStage stage) {
 		this.stage = stage;
 	}
 
-	
 	@SuppressWarnings("ReferenceEquality")
 	public void advance() {
 		advanceClock();
@@ -277,13 +248,7 @@ public final class FrameState implements WorldState {
 		}
 
 		if (this.lastLevel != level) {
-			// A different world, so nothing carried over from the previous frame means anything:
-			// the camera has jumped a dimension's worth of coordinates and the shift, the history
-			// and every motion vector built from them would be one frame of nonsense. The clock is
-			// part of that and the half easiest to leave out, which only shows on a dimension the
-			// pack serves out of the directory it was already loaded from: nothing is read again
-			// there, so the first frame on the far side would publish a frameTime measuring the
-			// whole change, seconds of it, into every value a pack integrates over one.
+
 			this.lastLevel = level;
 			reset();
 		}
@@ -293,26 +258,16 @@ public final class FrameState implements WorldState {
 		CameraRenderState cameraState = renderer.gameRenderState().levelRenderState.cameraRenderState;
 		this.partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
 		this.gameTime = renderer.gameRenderState().levelRenderState.gameTime;
-		// The frame's own snapshot of the setting and not a second reading of the option: this is the
-		// very field the game hands its globals block for its own glint shader
-		// (renderer/GameRenderer.java:419 out of :623), so a pack's glint fades with the slider on the
-		// same frame the game's would have.
+
 		this.glintAlpha = (float) renderer.gameRenderState().optionsRenderState.glintStrength;
 
 		RenderTarget main = renderer.mainRenderTarget();
 		if (main != null) {
-			// The main target and not the window. A pack divides by these to step across a
-			// texture, and what it steps across is the target that was drawn into: the game only
-			// brings the target to the window's size where it builds a frame, and the panorama
-			// capture goes round that path, resizing the target to 4096 square itself in
-			// Minecraft.grabPanoramixScreenshot.
+
 			this.viewWidth = main.width;
 			this.viewHeight = main.height;
 		}
 
-		// The shift moves first. Two of the values below are differences against the camera, the
-		// lightning bolt and the vehicle, and reading them against last frame's position would
-		// give both of them a lag that only shows while the player moves.
 		this.shift.advance(cameraState.pos);
 
 		readWorld(level, camera);
@@ -322,15 +277,10 @@ public final class FrameState implements WorldState {
 		readEngine(minecraft);
 		advanceView(minecraft, cameraState);
 
-		// Cleared last, so that a frame in which nothing captured falls back rather than
-		// publishing the frame before it. The bob goes with it and for the same reason: a frame
-		// that took none must not be handed the last one's, or the world would keep swinging after
-		// the player had stopped.
 		CapturedProjection.clear();
 		CameraBob.clear();
 	}
 
-	
 	public void reset() {
 		this.view.reset();
 		this.shift.reset();
@@ -339,22 +289,17 @@ public final class FrameState implements WorldState {
 		this.frameCounter = 0;
 		this.frameTime = 0.0F;
 		this.frameTimeCounter = 0.0F;
-		// The bolt with them, and it is the tick beside it that makes this necessary rather than
-		// tidy: a client that leaves a save and rejoins it comes back at the tick it left on, so a
-		// counter kept across that would match, the search would be skipped, and the position of
-		// the session before would be served as this one's.
+
 		this.lightningTick = Long.MIN_VALUE;
 		this.lightningBoltPosition.zero();
 		this.biomeHolder = null;
 	}
 
-	
 	public void leaveWorld() {
 		reset();
 		this.lastLevel = null;
 	}
 
-	
 	@SuppressWarnings("NarrowCalculation")
 	private void advanceClock() {
 		long now = System.nanoTime();
@@ -375,56 +320,14 @@ public final class FrameState implements WorldState {
 		int renderDistance = minecraft.options.getEffectiveRenderDistance();
 		Matrix4fc rendered = CapturedProjection.rendered(cameraState.projectionMatrix);
 
-		// The bob goes to the model view and the projection is published clean, which is where a
-		// pack expects both. Only once the two have been multiplied back together and found to be
-		// the matrix the level was really drawn with: a term this engine failed to intercept would
-		// otherwise be missing from one and not made up for by the other.
 		boolean split = CameraBob.agrees(cameraState.projectionMatrix, rendered);
 
-		// The render distance in blocks, which is a quarter of the plane the game actually clips
-		// at: Camera sets depthFar to max(renderDistance * 4, cloudRange * 16). That quarter is
-		// what CoreVK hands out, so every linearisation in every pack of the corpus is written
-		// against it, and correcting it here would make all of them wrong at once.
 		this.view.advance(cameraState.viewRotationMatrix, CameraBob.taken(),
 				split ? cameraState.projectionMatrix : rendered, renderDistance * 16.0F,
 				renderDistance);
 
-		// And what Distant Horizons drew with, which is nothing at all on the sessions that have no
-		// far terrain. The distance answers on its own and the two planes answer on theirs, which is
-		// how CoreVK asks them, and advanceDistant carries what the pair being short of the distance
-		// costs.
-		//
-		// What the planes carry is the projection DH drew the PREVIOUS frame with, and that is worth
-		// saying rather than hiding. DH fills its render parameter from the opaque chunk pass, while
-		// the pack's frame opens ahead of it at the first sky draw. Reading them later would not
-		// mend it: the block is written once, here, so a value taken after it would reach a pack one
-		// frame later still. What it costs is nothing measurable, both planes moving with DH's own
-		// settings and with the player's height above the world rather than with the camera.
-		//
-		// And the volume beside them, which is the row rather than the pair of planes the planes
-		// were worked out from: a row put back together out of two planes would be the same
-		// arithmetic done twice and rounded twice. Handed a zero offset where there is no row to be
-		// had, and then the volume published is the frame's own, which is what a pack reads where
-		// this engine draws no far terrain at all.
-		//
-		// ALL THREE ARE TAKEN BEFORE ANY OF THEM IS PUBLISHED, and that is what stands in for the
-		// coupling rather than the coupling itself. Each of the three reads can latch this engine's
-		// whole view of that mod off on a reflective failure, and the frame that latch lands in is
-		// the only frame that could hold answers from both sides of it: far terrain still on screen,
-		// and the numbers that place it disagreeing. Ordering the reads mends nothing, it only
-		// chooses which of them is the stale one, so the frame asks after all three instead and
-		// takes the fallback whole. On a latch inside the distance or inside the planes that is what
-		// this method already did while the three moved together. On a latch inside the row it is
-		// new: that read used to come after the pair was published, so the frame went out with a
-		// real distance, real planes and a volume that had given up.
-		//
-		// It does NOT cover the three partings that OUTLIVE the coupling: the ordinary one this
-		// batch exists for, one that is CoreVK's own answer, and one that is a hole older than any of
-		// this. They are named one by one in ViewMatrices.advanceDistant.
 		int distance = DhDepth.renderDistanceBlocks();
 
-		// One reflective read of the row, and the planes worked out of it, rather than the row
-		// read twice through four field gets a frame.
 		boolean row = DhDepth.zRow(this.distantPlanes);
 		float scale = row ? this.distantPlanes.x : 0.0F;
 		float offset = row ? this.distantPlanes.y : 0.0F;
@@ -444,14 +347,10 @@ public final class FrameState implements WorldState {
 		this.view.advanceDistant(near, far, distance);
 		this.view.advanceDistantVolume(scale, offset);
 
-		// Settled here and nowhere else, because the answer decides which pair of shadow matrices
-		// every sampling pass of this frame is handed, and that is built two lines down. The stage
-		// at the end of the frame reads the same decision back rather than making its own.
 		float shadowAngle = sunAngle(isDay()) / 360.0F;
 		boolean drewLastFrame = ShadowAmortisation.beginFrame(this.shift.unshifted(), shadowAngle,
 				TerrainDraw.shadowAmortisable());
-		// Counted where the decision is read rather than where it is made, so one frame is counted
-		// once and only a frame that reached the decision counts at all.
+
 		PassTimings.shadowMap(ShadowAmortisation.missedLastPlan());
 
 		this.view.advanceShadow(shadowAngle, this.directives.sunPathRotation(),
@@ -461,7 +360,6 @@ public final class FrameState implements WorldState {
 				this.endFlashYAngle, drewLastFrame);
 	}
 
-	
 	private float sunAngle(boolean sun) {
 		float angle = (sun ? this.sunAngleDegrees : this.moonAngleDegrees) + 90.0F;
 		if (angle < 0.0F) {
@@ -477,23 +375,19 @@ public final class FrameState implements WorldState {
 		return sunAngle(true) < 180.0F;
 	}
 
-	
 	private boolean inEndFlash() {
 		return this.endFlashShadows && this.hasEndFlash && this.dimensionOrdinal == 1;
 	}
 
-	
 	private void readWorld(ClientLevel level, Camera camera) {
 		float pt = this.partialTick;
 		this.sunAngleDegrees = camera.attributeProbe().getValue(EnvironmentAttributes.SUN_ANGLE, pt);
 		this.moonAngleDegrees = camera.attributeProbe().getValue(EnvironmentAttributes.MOON_ANGLE, pt);
 		this.moonPhase = camera.attributeProbe().getValue(EnvironmentAttributes.MOON_PHASE, pt).index();
-		// Packed on 26.2 and three floats on 26.3; GameRender hands both back packed.
+
 		this.skyColorPacked = GameRender.skyColor(camera, pt);
 		this.cloudHeight = camera.attributeProbe().getValue(EnvironmentAttributes.CLOUD_HEIGHT, pt);
 
-		// Clamped because some servers send values outside the range, and a pack that trusts them
-		// draws weather harder than weather.
 		this.rainStrength = Mth.clamp(level.getRainLevel(pt), 0.0F, 1.0F);
 		this.thunderStrength = Mth.clamp(level.getThunderLevel(pt), 0.0F, 1.0F);
 
@@ -501,9 +395,7 @@ public final class FrameState implements WorldState {
 
 		long clock = level.getDefaultClockTime();
 		this.worldDay = clock / 24000L;
-		// The Nether and the End keep the raw modulus rather than honouring hasFixedTime. That is
-		// an oversight of CoreVK's that packs now depend on: Complementary's ender beams stop moving
-		// without it.
+
 		boolean nowhere = this.dimensionOrdinal == -1 || this.dimensionOrdinal == 1;
 		this.worldTime = !nowhere && level.dimensionType().hasFixedTime() ? 0L : clock % 24000L;
 
@@ -524,8 +416,6 @@ public final class FrameState implements WorldState {
 		this.endFlashIntensity = flash == null ? 0.0F : flash.getIntensity(pt);
 	}
 
-	// A dimension key is interned by the game, so the three names below are the instances a level
-	// carries and not copies of them.
 	@SuppressWarnings("ReferenceEquality")
 	private static int dimensionOrdinal(ClientLevel level) {
 		if (level.dimension() == Level.OVERWORLD) {
@@ -539,7 +429,6 @@ public final class FrameState implements WorldState {
 		return 2;
 	}
 
-	
 	private void readFog(CameraRenderState cameraState) {
 		this.fogColor.set(cameraState.fogData.color);
 		this.fogStart = cameraState.fogData.environmentalStart;
@@ -569,8 +458,6 @@ public final class FrameState implements WorldState {
 			Vec3 forward = cameraEntity.getForward();
 			this.playerBodyVector.set((float) forward.x, (float) forward.y, (float) forward.z);
 
-			// At the block the eyes are in, which is not the block the feet are in and is the
-			// whole reason a pack can tell that the player's head is above the water.
 			BlockPos eyeBlock = BlockPos.containing(eye.x, cameraEntity.getEyeY(), eye.z);
 			this.eyeBrightnessBlock = level.getBrightness(LightLayer.BLOCK, eyeBlock) * 16;
 			this.eyeBrightnessSky = level.getBrightness(LightLayer.SKY, eyeBlock) * 16;
@@ -597,7 +484,6 @@ public final class FrameState implements WorldState {
 		readHeld(player);
 	}
 
-	
 	private static int eyeInWater(FogType submersion, boolean spectator) {
 		if (submersion == FogType.WATER) {
 			return 1;
@@ -610,7 +496,6 @@ public final class FrameState implements WorldState {
 		return 0;
 	}
 
-	
 	private static float blindness(LivingEntity living) {
 		MobEffectInstance blindness = living.getEffect(MobEffects.BLINDNESS);
 		if (blindness == null) {
@@ -621,7 +506,6 @@ public final class FrameState implements WorldState {
 				: Mth.clamp(blindness.getDuration() / 20.0F, 0.0F, 1.0F);
 	}
 
-	
 	private static float nightVision(LocalPlayer player, Entity cameraEntity, float pt) {
 		if (cameraEntity instanceof LivingEntity living
 				&& living.hasEffect(MobEffects.NIGHT_VISION)) {
@@ -636,7 +520,6 @@ public final class FrameState implements WorldState {
 		return 0.0F;
 	}
 
-	
 	private static float darknessLightFactor(Minecraft minecraft, LocalPlayer player, float pt) {
 		if (player == null) {
 			return 0.0F;
@@ -652,11 +535,7 @@ public final class FrameState implements WorldState {
 
 	private void readFlags(LocalPlayer player) {
 		if (player == null) {
-			// The mount goes back to nothing rather than standing: each of the four names it answers
-			// asks after the player before it asks after the vehicle and gives up on the first
-			// question (uniforms/CoreVKExclusiveUniforms.java:106, :119, :126 and :137). A number
-			// carried over is the last world's mount read against this world's table, which names a
-			// different animal.
+
 			noVehicle();
 
 			noFlags();
@@ -666,8 +545,7 @@ public final class FrameState implements WorldState {
 
 		this.sneaking = player.isCrouching();
 		this.sprinting = player.isSprinting();
-		// hurtTime and not isHurt. The second one answers a different question, and CoreVK's comment
-		// on the line is emphatic about it.
+
 		this.hurt = player.hurtTime > 0;
 		this.invisible = player.isInvisible();
 		this.burning = player.isOnFire();
@@ -691,7 +569,6 @@ public final class FrameState implements WorldState {
 		}
 	}
 
-	
 	private void noVehicle() {
 		this.vehicleInWater = false;
 		this.vehicleId = 0;
@@ -699,7 +576,6 @@ public final class FrameState implements WorldState {
 		this.relativeVehiclePosition.zero();
 	}
 
-	
 	private void noFlags() {
 		this.sneaking = false;
 		this.sprinting = false;
@@ -713,7 +589,6 @@ public final class FrameState implements WorldState {
 		this.swimming = false;
 	}
 
-	
 	private void readStats(Minecraft minecraft, LocalPlayer player) {
 		boolean survival = player != null && minecraft.gameMode != null
 				&& minecraft.gameMode.getPlayerMode().isSurvival();
@@ -736,7 +611,6 @@ public final class FrameState implements WorldState {
 		this.playerMaxAir = player.getMaxAirSupply();
 	}
 
-	
 	private void readSelection(Minecraft minecraft, ClientLevel level, Camera camera) {
 		HitResult hit = minecraft.hitResult;
 		if (hit == null || hit.getType() != HitResult.Type.BLOCK
@@ -765,13 +639,11 @@ public final class FrameState implements WorldState {
 				: BlockStateIds.id(state);
 	}
 
-	
 	private void nothingSelected() {
 		this.selectedBlockPos.set(NOTHING_SELECTED);
 		this.selectedBlockId = 0;
 	}
 
-	
 	private static boolean outlined(Minecraft minecraft, ClientLevel level, Player player,
 			BlockPos block) {
 		if (minecraft.gameMode != null
@@ -786,7 +658,6 @@ public final class FrameState implements WorldState {
 				|| held.canPlaceOnBlockInAdventureMode(inWorld));
 	}
 
-	
 	private void readLightning(ClientLevel level, float pt) {
 		long tick = level.getGameTime();
 		if (tick == this.lightningTick) {
@@ -808,7 +679,6 @@ public final class FrameState implements WorldState {
 		}
 	}
 
-	
 	private void readHeld(LocalPlayer player) {
 		if (player == null) {
 			this.heldItemId = NameIds.NONE;
@@ -830,7 +700,6 @@ public final class FrameState implements WorldState {
 		this.heldBlockLight2 = off;
 	}
 
-	
 	private static int itemId(ItemStack stack) {
 		if (stack == null) {
 			return NameIds.NONE;
@@ -841,7 +710,6 @@ public final class FrameState implements WorldState {
 		return PackNameIds.item(name == null ? BuiltInRegistries.ITEM.getKey(stack.getItem()) : name);
 	}
 
-	
 	private static int emission(ItemStack stack) {
 		if (stack == null || stack.isEmpty()) {
 			return 0;
@@ -858,17 +726,9 @@ public final class FrameState implements WorldState {
 			return;
 		}
 
-		// At the player's block and not the camera's. They are different in third person, and very
-		// different when the camera has backed through a wall.
 		BlockPos position = player.blockPosition();
 		Holder<Biome> holder = level.getBiome(position);
-		// The number and the category are properties of the biome, and the registry hands the
-		// same holder back for it frame after frame: the sixteen tag tests of the category and
-		// the key lookup of the number run when the player crosses into another biome, which is
-		// how CoreVK reads them too, off a value it keeps on the biome itself. What neither
-		// follows is a data pack reload rebinding the tags of a biome the player is standing in:
-		// the category catches up when they leave it, where CoreVK keeps its first answer for the
-		// session.
+
 		if (holder != this.biomeHolder) {
 			this.biomeHolder = holder;
 			this.biomeId = BiomeClassifier.identify(holder);
@@ -895,21 +755,12 @@ public final class FrameState implements WorldState {
 			case ANISOTROPIC -> 2;
 		};
 
-		// Divided without a guard, because Chunk Fade set to none is a normal setting and not the
-		// accident a guard would suggest, and because infinity is what CoreVK hands there
-		// (uniforms/CoreVKExclusiveUniforms.java:46). A section weighted by
-		// min(1.0, age * chunkFadeTimeInv) then reads as already faded in for every age but nought,
-		// where a zero would hold every section at the start of a fade that never advances. At an
-		// age of nought the product is a NaN and the min is what the driver makes of it, which is
-		// the same hole CoreVK has: the value is handed as CoreVK hands it rather than corrected here,
-		// so a pack tuned against one engine reads the same from the other.
 		double fadeMillis = minecraft.options.chunkSectionFadeInTime().get() * 1000.0;
 		this.chunkFadeTimeInv = (float) (1.0 / fadeMillis);
 
 		readAtlas(minecraft);
 	}
 
-	
 	private void readAtlas(Minecraft minecraft) {
 		try {
 			AbstractTexture atlas = minecraft.getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS);
@@ -918,12 +769,10 @@ public final class FrameState implements WorldState {
 				this.atlasHeight = atlas.getTexture().getHeight(0);
 			}
 		} catch (RuntimeException e) {
-			// Asked for before the atlases are stitched, which is a state that fixes itself. Not
-			// logged, because this runs every frame and the answer arrives on its own.
+
 		}
 	}
 
-	
 	private static final class CameraShift {
 
 		private static final double WALK_RANGE = 30000.0;
@@ -944,10 +793,7 @@ public final class FrameState implements WorldState {
 			this.current.set(this.currentUnshifted).add(this.shift);
 
 			if (!this.seeded) {
-				// The same guard the matrices give themselves, and for the same reason: the first
-				// frame after a world change has no previous position, and the origin standing in
-				// for it is a motion vector the width of the world. It also keeps the teleport test
-				// below from reading the spawn itself as a teleport.
+
 				this.previous.set(this.current);
 				this.previousUnshifted.set(this.currentUnshifted);
 				this.seeded = true;
@@ -959,8 +805,6 @@ public final class FrameState implements WorldState {
 				return;
 			}
 
-			// This frame and the previous one move by the same amount, so that the difference
-			// between them, which is all a motion vector is, survives the shift.
 			this.shift.x += dX;
 			this.current.x += dX;
 			this.previous.x += dX;
@@ -1003,8 +847,6 @@ public final class FrameState implements WorldState {
 		}
 	}
 
-	// frame and time
-
 	@Override
 	public int frameCounter() {
 		return this.frameCounter;
@@ -1035,8 +877,6 @@ public final class FrameState implements WorldState {
 		return this.glintAlpha;
 	}
 
-	// viewport
-
 	@Override
 	public float viewWidth() {
 		return this.viewWidth;
@@ -1046,8 +886,6 @@ public final class FrameState implements WorldState {
 	public float viewHeight() {
 		return this.viewHeight;
 	}
-
-	// camera positions
 
 	@Override
 	public Vector3dc cameraPosition() {
@@ -1068,8 +906,6 @@ public final class FrameState implements WorldState {
 	public Vector3dc previousCameraPositionUnshifted() {
 		return this.shift.previousUnshifted();
 	}
-
-	// world
 
 	@Override
 	public long worldTime() {
@@ -1176,7 +1012,6 @@ public final class FrameState implements WorldState {
 		return this.biomePrecipitation;
 	}
 
-	
 	@Override
 	public float rainfall() {
 		return this.rainfall;
@@ -1186,8 +1021,6 @@ public final class FrameState implements WorldState {
 	public float temperature() {
 		return this.temperature;
 	}
-
-	// end flash
 
 	@Override
 	public boolean hasEndFlash() {
@@ -1219,8 +1052,6 @@ public final class FrameState implements WorldState {
 		return this.previousEndFlashIntensity;
 	}
 
-	// fog
-
 	@Override
 	public float fogR() {
 		return this.fogColor.x;
@@ -1251,19 +1082,16 @@ public final class FrameState implements WorldState {
 		return this.fogEnd;
 	}
 
-	
 	@Override
 	public float fogDensity() {
 		return 0.0F;
 	}
 
-	
 	@Override
 	public int fogMode() {
 		return FOG_OFF;
 	}
 
-	
 	@Override
 	public int fogShape() {
 		return FOG_SHAPE_OFF;
@@ -1273,8 +1101,6 @@ public final class FrameState implements WorldState {
 	public boolean heavyFog() {
 		return this.heavyFog;
 	}
-
-	// player
 
 	@Override
 	public int isEyeInWater() {
@@ -1331,7 +1157,6 @@ public final class FrameState implements WorldState {
 		return this.playerMood;
 	}
 
-	
 	@Override
 	public float constantMood() {
 		return 0.0F;
@@ -1512,8 +1337,6 @@ public final class FrameState implements WorldState {
 		return this.heldBlockLight2;
 	}
 
-	// engine settings and atlas
-
 	@Override
 	public int atlasWidth() {
 		return this.atlasWidth;
@@ -1524,7 +1347,6 @@ public final class FrameState implements WorldState {
 		return this.atlasHeight;
 	}
 
-	// The same number EngineDefines writes for the stage, and it is the ordinal on both sides.
 	@Override
 	@SuppressWarnings("EnumOrdinal")
 	public int renderStage() {
@@ -1536,7 +1358,6 @@ public final class FrameState implements WorldState {
 		return this.anisotropy;
 	}
 
-	
 	@Override
 	public int colorSpace() {
 		return 0;
@@ -1552,14 +1373,11 @@ public final class FrameState implements WorldState {
 		return this.chunkFadeTimeInv;
 	}
 
-	// pack directives
-
 	@Override
 	public float wetnessHalfLife() {
 		return this.directives.wetnessHalflife();
 	}
 
-	
 	@Override
 	public float drynessHalfLife() {
 		return this.directives.drynessHalflife();
@@ -1604,8 +1422,6 @@ public final class FrameState implements WorldState {
 	public float shadowIntervalSize() {
 		return this.directives.shadowIntervalSize();
 	}
-
-	// view geometry, delegated
 
 	@Override
 	public Matrix4fc gbufferModelView() {

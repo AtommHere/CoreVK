@@ -17,19 +17,14 @@ import java.util.regex.Pattern;
 
 final class VaryingSplit {
 
-	
 	private static final String MATRIX_COLUMN = "of_vmat_";
 
-	
 	private static final String STRUCT_MEMBER = "of_vstruct_";
 
-	
 	private static final String ARRAY_ELEMENT = "of_varr_";
 
-	
 	private static final Pattern ARRAY_SUFFIX = Pattern.compile("\\[\\s*([1-9]\\d{0,2})\\s*\\]$");
 
-	
 	private static final Set<String> STRUCT_MEMBER_TYPES = Set.of(
 			"float", "vec2", "vec3", "vec4", "int", "ivec2", "ivec3", "ivec4",
 			"uint", "uvec2", "uvec3", "uvec4", "double", "dvec2", "dvec3", "dvec4");
@@ -39,16 +34,12 @@ final class VaryingSplit {
 	private final ProgramStage stage;
 	private final Declarations declarations;
 
-	
 	private final Map<String, String> macroAliases;
 
-	
 	private final List<SplitMatrix> matrices = new ArrayList<>();
 
-	
 	private final List<SplitStruct> structs = new ArrayList<>();
 
-	
 	private final List<SplitArray> arrays = new ArrayList<>();
 
 	VaryingSplit(TokenStream tokens, ExpandedUnit unit, ProgramStage stage,
@@ -60,22 +51,18 @@ final class VaryingSplit {
 		this.macroAliases = macroAliases;
 	}
 
-	
 	@FunctionalInterface
 	interface Declarations {
 
-		
 		FileScope read(int keyword, Set<String> types);
 	}
 
-	
 	void split() {
 		splitMatrixVaryings();
 		splitStructVaryings();
 		splitArrayVaryings();
 	}
 
-	
 	boolean any() {
 		return !this.matrices.isEmpty() || !this.structs.isEmpty() || !this.arrays.isEmpty();
 	}
@@ -92,7 +79,6 @@ final class VaryingSplit {
 		return this.arrays;
 	}
 
-	
 	List<String> interfaceNames(boolean input) {
 		List<String> names = new ArrayList<>();
 		for (SplitMatrix split : this.matrices) {
@@ -121,7 +107,6 @@ final class VaryingSplit {
 		return List.copyOf(names);
 	}
 
-	
 	List<String> interfaceNamesOf(String name) {
 		List<String> names = new ArrayList<>();
 		for (SplitMatrix split : this.matrices) {
@@ -150,7 +135,6 @@ final class VaryingSplit {
 		return List.copyOf(names);
 	}
 
-	
 	List<String> splitInputs() {
 		List<String> names = new ArrayList<>();
 		this.matrices.forEach(split -> {
@@ -172,7 +156,6 @@ final class VaryingSplit {
 		return List.copyOf(names);
 	}
 
-	
 	boolean forgetInput(String name) {
 		boolean any = this.matrices.removeIf(split -> split.input() && split.name().equals(name));
 		any |= this.structs.removeIf(split -> split.input() && split.name().equals(name));
@@ -181,12 +164,10 @@ final class VaryingSplit {
 		return any;
 	}
 
-	
 	record SplitMatrix(String name, String matrixType, String columnType, int columns,
 			String qualifier, boolean input) {
 	}
 
-	
 	private void splitMatrixVaryings() {
 		if (this.stage == ProgramStage.COMPUTE) {
 			return;
@@ -234,11 +215,9 @@ final class VaryingSplit {
 		}
 	}
 
-	
 	record MatrixColumns(String columnType, int columns) {
 	}
 
-	
 	private static MatrixColumns matrixColumns(String type) {
 		String prefix = "";
 		String rest = type;
@@ -278,16 +257,13 @@ final class VaryingSplit {
 		return MATRIX_COLUMN + matrix + "_" + column;
 	}
 
-	
 	record StructMember(String type, String name) {
 	}
 
-	
 	record SplitStruct(String name, String structType, List<StructMember> members,
 			String qualifier, boolean input) {
 	}
 
-	
 	private void splitStructVaryings() {
 		if (this.stage == ProgramStage.COMPUTE) {
 			return;
@@ -315,8 +291,6 @@ final class VaryingSplit {
 				continue;
 			}
 
-			// Read against the struct types the unit defines: the plain reader only knows the
-			// language's own types, which is why a struct varying was never a declaration to it.
 			FileScope declared = this.declarations.read(index, definitions.keySet());
 			if (declared == null) {
 				continue;
@@ -338,9 +312,6 @@ final class VaryingSplit {
 			}
 		}
 
-		// The definition moves to the header with the global that carries the pack's name: the
-		// wrapper that rebuilds the struct stands in the header, above the body, and the type has
-		// to exist there. The body's own definition goes blank so the type is not defined twice.
 		Set<String> moved = new HashSet<>();
 		for (SplitStruct split : this.structs) {
 			if (!moved.add(split.structType())) {
@@ -354,7 +325,6 @@ final class VaryingSplit {
 		}
 	}
 
-	
 	private Map<String, List<StructMember>> structDefinitions() {
 		Map<String, List<StructMember>> definitions = new LinkedHashMap<>();
 		int[] lines = this.tokens.lineNumbers();
@@ -374,8 +344,7 @@ final class VaryingSplit {
 
 			int close = this.tokens.matchingBracket(open);
 			int semicolon = this.tokens.significantAfter(close);
-			// A definition that declares an instance in the same breath, "struct T { ... } t;",
-			// is left alone: taking it out of the body would take the instance with it.
+
 			if (close < 0 || semicolon < 0 || !this.tokens.get(semicolon).operator(";")) {
 				continue;
 			}
@@ -389,7 +358,6 @@ final class VaryingSplit {
 		return definitions;
 	}
 
-	
 	private List<StructMember> structMembers(int start, int end) {
 		List<StructMember> members = new ArrayList<>();
 		List<Integer> statement = new ArrayList<>();
@@ -428,7 +396,6 @@ final class VaryingSplit {
 		return statement.isEmpty() ? members : null;
 	}
 
-	
 	private int[] definitionRange(String structType) {
 		int[] lines = this.tokens.lineNumbers();
 		for (int index = 0; index < this.tokens.size(); index++) {
@@ -459,11 +426,9 @@ final class VaryingSplit {
 		return STRUCT_MEMBER + struct + "_" + member;
 	}
 
-	
 	record SplitArray(String name, String type, int size, String qualifier, boolean input) {
 	}
 
-	
 	private void splitArrayVaryings() {
 		boolean output = this.stage == ProgramStage.VERTEX;
 		if (!output && this.stage != ProgramStage.FRAGMENT) {
@@ -513,7 +478,6 @@ final class VaryingSplit {
 		return ARRAY_ELEMENT + array + "_" + element;
 	}
 
-	
 	String matrixPrologue() {
 		StringBuilder assignments = new StringBuilder();
 		for (SplitMatrix split : this.matrices) {
@@ -536,7 +500,6 @@ final class VaryingSplit {
 		return assignments.toString();
 	}
 
-	
 	String matrixEpilogue() {
 		StringBuilder assignments = new StringBuilder();
 		for (SplitMatrix split : this.matrices) {
@@ -553,7 +516,6 @@ final class VaryingSplit {
 		return assignments.toString();
 	}
 
-	
 	String structPrologue() {
 		StringBuilder assignments = new StringBuilder();
 		for (SplitStruct split : this.structs) {
@@ -577,7 +539,6 @@ final class VaryingSplit {
 		return assignments.toString();
 	}
 
-	
 	String structEpilogue() {
 		StringBuilder assignments = new StringBuilder();
 		for (SplitStruct split : this.structs) {
@@ -595,7 +556,6 @@ final class VaryingSplit {
 		return assignments.toString();
 	}
 
-	
 	String arrayPrologue() {
 		StringBuilder assignments = new StringBuilder();
 		for (SplitArray split : this.arrays) {
@@ -612,7 +572,6 @@ final class VaryingSplit {
 		return assignments.toString();
 	}
 
-	
 	String arrayEpilogue() {
 		StringBuilder assignments = new StringBuilder();
 		for (SplitArray split : this.arrays) {

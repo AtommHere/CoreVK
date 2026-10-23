@@ -10,7 +10,6 @@ public final class SodiumPasses {
 	private SodiumPasses() {
 	}
 
-	
 	@SuppressWarnings("ReferenceEquality")
 	public static TerrainPass of(TerrainRenderPass pass) {
 		if (pass == DefaultTerrainRenderPasses.SOLID) {

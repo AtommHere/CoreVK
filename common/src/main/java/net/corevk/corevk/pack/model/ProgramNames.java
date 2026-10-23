@@ -8,35 +8,27 @@ import java.util.regex.Pattern;
 
 public final class ProgramNames {
 
-	
 	private static Set<String> named() {
 		return ProgramFallbacks.names();
 	}
 
-	
 	private static final Set<String> NUMBERED = Set.of(
 			"composite", "deferred", "prepare", "shadowcomp", "setup", "begin");
 
-	
 	private static final Set<String> SIMPLE = Set.of("shadow", "final");
 
-	
 	private static final Set<String> CHAINED = Set.of("begin", "prepare", "deferred", "composite",
 			"final");
 
-	
 	private static final int MAX_SLOT = 99;
 
-	
 	private static final Pattern COMPUTE_SUFFIX = Pattern.compile("^(.*?)_([a-z])$");
 
-	
 	public static final int GEOMETRY_RANK = 3;
 
 	private ProgramNames() {
 	}
 
-	
 	public static int frameRank(String family) {
 		if (geometry(family)) {
 			return GEOMETRY_RANK;
@@ -52,7 +44,6 @@ public final class ProgramNames {
 		};
 	}
 
-	
 	public static Comparator<String> frameOrder() {
 		return Comparator
 				.comparingInt((String program) -> frameRank(familyOf(program)))
@@ -61,12 +52,10 @@ public final class ProgramNames {
 						.orElse(Integer.MAX_VALUE));
 	}
 
-	
 	public static boolean before(String program, String other) {
 		return frameOrder().compare(program, other) < 0;
 	}
 
-	
 	public static int directiveRank(String family) {
 		return switch (family) {
 			case "shadowcomp" -> 0;
@@ -78,35 +67,29 @@ public final class ProgramNames {
 		};
 	}
 
-	
 	public static boolean geometry(String family) {
 		return family.startsWith("gbuffers") || family.startsWith("dh_")
 				|| shadowGeometry(family);
 	}
 
-	
 	public static boolean shadowComposite(String family) {
 		return family.equals("shadowcomp");
 	}
 
-	
 	public static boolean shadowGeometry(String family) {
 		return family.equals("shadow") || family.startsWith("shadow_") || family.equals("dh_shadow");
 	}
 
-	
 	public static String familyOf(String baseName) {
 		return parse(baseName).map(ProgramName::family).orElse(baseName);
 	}
 
-	
 	public static Optional<String> computeBase(String file) {
 		return parse(file)
 				.filter(name -> CHAINED.contains(name.family()))
 				.map(ProgramName::baseName);
 	}
 
-	
 	public static String computeLetter(String file) {
 		return parse(file).map(ProgramName::computeSuffix).orElse("");
 	}
@@ -121,8 +104,6 @@ public final class ProgramNames {
 			return numbered;
 		}
 
-		// Only after the plain forms have failed: a compute pass is written by hanging a letter
-		// off a name that has to be valid on its own.
 		Matcher compute = COMPUTE_SUFFIX.matcher(baseName);
 		if (compute.matches()) {
 			String stem = compute.group(1);
@@ -164,7 +145,6 @@ public final class ProgramNames {
 		return Optional.empty();
 	}
 
-	
 	public record ProgramName(String family, int slot, String computeSuffix) {
 
 		public boolean isCompute() {

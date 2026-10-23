@@ -7,22 +7,17 @@ import java.util.Set;
 
 public final class LinesVertex {
 
-	
 	public static final List<String> ATTRIBUTES = List.of("Position", "Color", "Normal", "LineWidth");
 
-	
 	public static final Set<String> ANSWERED = Set.of("vaPosition", "vaNormal", "vaColor");
 
-	
 	public static final String OFFSET = "of_LineOffset";
 
-	
 	public static final String WIDEN = "of_WidenLine";
 
 	private LinesVertex() {
 	}
 
-	
 	public static List<String> prologue(Set<String> used, Map<String, String> synthesized) {
 		List<String> lines = new ArrayList<>();
 
@@ -38,9 +33,6 @@ public final class LinesVertex {
 		lines.add("#define of_MultiTexCoord2 " + EntityVertex.FULL_LIGHT);
 		lines.addAll(VertexPrologue.blankTexCoords());
 
-		// The element is the edge's direction and not a surface normal, so what a pack takes for
-		// the normal is the constant every mesh without one gets, which is CoreVK's own answer for
-		// this mesh (VanillaTransformer.java:146-147).
 		lines.add("#define of_Normal vec3(0.0, 0.0, 1.0)");
 
 		VertexPrologue.globals(used, synthesized, Map.of()).forEach((name, type) -> lines.add(
@@ -51,7 +43,6 @@ public final class LinesVertex {
 		return List.copyOf(lines);
 	}
 
-	
 	public static List<String> widen() {
 		return List.of(
 				"void " + WIDEN + "(inout vec4 lineStart, vec4 lineEnd) {",

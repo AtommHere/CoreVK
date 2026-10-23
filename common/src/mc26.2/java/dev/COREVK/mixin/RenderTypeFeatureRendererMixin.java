@@ -20,7 +20,6 @@ import java.util.List;
 @Mixin(RenderTypeFeatureRenderer.class)
 public abstract class RenderTypeFeatureRendererMixin {
 
-	
 	@WrapOperation(method = "executeGroup", require = 1,
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/StagedVertexBuffer;"
 					+ "getExecuteInfo(Lnet/minecraft/client/renderer/StagedVertexBuffer$Draw;)"
@@ -45,7 +44,6 @@ public abstract class RenderTypeFeatureRendererMixin {
 		}
 	}
 
-	
 	@Inject(method = "executeGroup", at = @At("RETURN"), require = 1)
 	private void corevk$close(FeatureFrameContext context, int groupIndex, List<?> submits,
 			boolean strictlyOrdered, CallbackInfo callback) {

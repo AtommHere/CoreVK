@@ -18,7 +18,6 @@ public abstract class OptionsCloudsMixin {
 		CloudDraw.setting().map(OptionsCloudsMixin::corevk$status).ifPresent(callback::setReturnValue);
 	}
 
-	
 	private static CloudStatus corevk$status(ShaderProperties.CloudSetting asked) {
 		return switch (asked) {
 			case OFF -> CloudStatus.OFF;

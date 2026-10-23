@@ -15,16 +15,13 @@ import java.util.Map;
 
 public final class GlyphIntensity {
 
-	
 	private static final Map<GpuTexture, GpuTextureView> VIEWS = new IdentityHashMap<>();
 
-	
 	private static final ThreadLocal<Boolean> SWIZZLING = ThreadLocal.withInitial(() -> false);
 
 	private GlyphIntensity() {
 	}
 
-	
 	static GpuTextureView view(GpuTextureView sheet) {
 		release();
 
@@ -64,12 +61,10 @@ public final class GlyphIntensity {
 		return made;
 	}
 
-	
 	public static boolean swizzling() {
 		return SWIZZLING.get();
 	}
 
-	
 	private static void release() {
 		Iterator<Map.Entry<GpuTexture, GpuTextureView>> held = VIEWS.entrySet().iterator();
 		while (held.hasNext()) {

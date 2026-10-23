@@ -9,13 +9,10 @@ import java.util.Map;
 
 public final class LocalZeroes {
 
-	
 	public static final String VERSION = "locals-2";
 
-	
 	public record Result(int[] words, int variables, int undefs) {
 
-		
 		public boolean changed() {
 			return this.variables > 0 || this.undefs > 0;
 		}
@@ -64,19 +61,15 @@ public final class LocalZeroes {
 	private static final int STORAGE_PRIVATE = 6;
 	private static final int STORAGE_FUNCTION = 7;
 
-	
 	private static final int CONSTANT_NULL_HEAD = (3 << 16) | OP_CONSTANT_NULL;
 
-	
 	private static final int VARIABLE_WITH_INITIALISER_HEAD = (5 << 16) | OP_VARIABLE;
 
-	
 	private static final int MOST_ROUNDS = 32;
 
 	private LocalZeroes() {
 	}
 
-	
 	public static Result apply(int[] words) {
 		if (!readable(words)) {
 			return new Result(words, 0, 0);
@@ -84,13 +77,10 @@ public final class LocalZeroes {
 
 		Types types = Types.read(words);
 
-		// The bare globals, in declaration order, which is the index every function knows them by
-		// behind its own parameters; the entry points; the undefined values, wherever they stand;
-		// then each function.
 		List<Integer> entryPoints = new ArrayList<>();
 		List<Integer> privateIds = new ArrayList<>();
 		List<Integer> privateAt = new ArrayList<>();
-		// An undefined value's instruction position, and the type whose null it becomes.
+
 		Map<Integer, Integer> undefAt = new LinkedHashMap<>();
 		int at = HEADER_WORDS;
 		while (at < words.length) {
@@ -123,7 +113,6 @@ public final class LocalZeroes {
 			at += count;
 		}
 
-		// The variables to zero, keyed by the position of their instruction.
 		Map<Integer, Integer> zeroAt = new LinkedHashMap<>();
 		readFirst(words, functions, entryPoints, privateAt, types, zeroAt);
 
@@ -131,9 +120,6 @@ public final class LocalZeroes {
 			return new Result(words, 0, 0);
 		}
 
-		// One null constant per pointee type, in first-use order so the output is deterministic.
-		// An undefined value keeps its own id, and its constant is declared where a new one would
-		// be: behind the type, which stands before every use of the value wherever the value was.
 		Map<Integer, Integer> nulls = new LinkedHashMap<>();
 		Map<Integer, List<Integer>> undefsByType = new LinkedHashMap<>();
 		int bound = words[3];
@@ -169,7 +155,7 @@ public final class LocalZeroes {
 			}
 
 			if (undefAt.containsKey(at)) {
-				// Declared behind its type instead, under the same id.
+
 				at += count;
 				continue;
 			}
@@ -178,10 +164,6 @@ public final class LocalZeroes {
 			to += count;
 			at += count;
 
-			// Right behind the type it zeroes: that is after the type and before any pointer to it,
-			// so before any variable of it, wherever the module declares those. A struct or an
-			// array is a type like any other here, which is what a textual initialiser could not
-			// have said in one line. A forward pointer declaration names no type of its own.
 			if (opcode >= OP_TYPE_FIRST && opcode <= OP_TYPE_LAST && opcode != OP_TYPE_FORWARD_POINTER
 					&& count >= 2) {
 				int type = words[at - count + 1];
@@ -205,12 +187,10 @@ public final class LocalZeroes {
 		return new Result(out, zeroAt.size(), undefAt.size());
 	}
 
-	
 	static boolean readable(int[] words) {
 		return words.length >= HEADER_WORDS && words[0] == MAGIC && wellFormed(words);
 	}
 
-	
 	private static boolean wellFormed(int[] words) {
 		int at = HEADER_WORDS;
 		while (at < words.length) {
@@ -225,7 +205,6 @@ public final class LocalZeroes {
 		return true;
 	}
 
-	
 	private record Types(Map<Integer, Integer> opcodes, Map<Integer, int[]> members,
 			Map<Integer, Integer> pointees) {
 
@@ -237,8 +216,7 @@ public final class LocalZeroes {
 			while (at < words.length) {
 				int count = words[at] >>> 16;
 				int opcode = words[at] & 0xFFFF;
-				// A forward pointer declaration's first operand is the pointer type it announces,
-				// not a result id of its own.
+
 				if (opcode >= OP_TYPE_FIRST && opcode <= OP_TYPE_LAST
 						&& opcode != OP_TYPE_FORWARD_POINTER && count >= 2) {
 					int id = words[at + 1];
@@ -260,14 +238,12 @@ public final class LocalZeroes {
 			return new Types(opcodes, members, pointees);
 		}
 
-		
 		Integer zeroablePointee(int pointerType) {
 			Integer pointee = this.pointees.get(pointerType);
 
 			return pointee != null && zeroable(pointee) ? pointee : null;
 		}
 
-		
 		boolean zeroable(int type) {
 			Integer opcode = this.opcodes.get(type);
 			if (opcode == null
@@ -290,14 +266,11 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private record Block(int start, int end, List<Integer> successors, boolean returns) {
 	}
 
-	
 	private record Summary(BitSet readsFirst, BitSet defines) {
 
-		
 		static Summary unknown(int shared) {
 			BitSet reads = new BitSet(shared);
 			reads.set(0, shared);
@@ -306,7 +279,6 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private record Function(int id, int end, int parameters, int shared, List<Block> blocks,
 			Map<Integer, Integer> labelToBlock, Map<Integer, Integer> index,
 			List<Integer> localAt, Map<Integer, Integer> aliases) {
@@ -321,8 +293,7 @@ public final class LocalZeroes {
 			int parameters = 0;
 			int at = start + (words[start] >>> 16);
 			while (at < words.length && (words[at] & 0xFFFF) == OP_FUNCTION_PARAMETER) {
-				// Every parameter takes an index, opaque ones included, so that a call site's
-				// argument positions and the summary's bits line up.
+
 				if (types.zeroablePointee(words[at + 1]) != null) {
 					index.put(words[at + 2], parameters);
 				}
@@ -355,8 +326,7 @@ public final class LocalZeroes {
 					}
 				} else if (opcode == OP_ACCESS_CHAIN || opcode == OP_IN_BOUNDS_ACCESS_CHAIN
 						|| opcode == OP_PTR_ACCESS_CHAIN || opcode == OP_COPY_OBJECT) {
-					// In the module's order, which is the order a definition precedes its uses in
-					// the structured control flow glslang emits.
+
 					Integer base = base(words[at + 3], index, aliases);
 					if (base != null) {
 						aliases.put(words[at + 2], base);
@@ -379,7 +349,6 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private static void readFirst(int[] words, List<Function> functions, List<Integer> entryPoints,
 			List<Integer> privateAt, Types types, Map<Integer, Integer> zeroAt) {
 		Map<Integer, Function> byId = new HashMap<>();
@@ -425,7 +394,6 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private static Summary walk(int[] words, Function function, Map<Integer, Function> byId,
 			Map<Integer, Summary> summaries, BitSet read) {
 		int tracked = function.tracked();
@@ -484,8 +452,6 @@ public final class LocalZeroes {
 			}
 		}
 
-		// What is defined on every path that returns: a path that kills never hands anything back,
-		// so it does not weaken the meet. A function with no returning block defines everything.
 		BitSet defined = new BitSet(tracked);
 		defined.set(0, tracked);
 		for (int index = 0; index < blocks.size(); index++) {
@@ -498,7 +464,6 @@ public final class LocalZeroes {
 		return new Summary(read.get(0, function.shared()), defined.get(0, function.shared()));
 	}
 
-	
 	private static BitSet transfer(int[] words, Function function, Block block, BitSet in,
 			Map<Integer, Function> byId, Map<Integer, Summary> summaries, BitSet read) {
 		BitSet defined = (BitSet) in.clone();
@@ -517,8 +482,7 @@ public final class LocalZeroes {
 				}
 				case OP_FUNCTION_CALL -> call(words, at, function, byId, summaries, defined, read);
 				default -> {
-					// Nothing else in what glslang emits for GLSL reads or writes a variable
-					// through its pointer.
+
 				}
 			}
 
@@ -528,7 +492,6 @@ public final class LocalZeroes {
 		return defined;
 	}
 
-	
 	private static void call(int[] words, int at, Function caller, Map<Integer, Function> byId,
 			Map<Integer, Summary> summaries, BitSet defined, BitSet read) {
 		int count = words[at] >>> 16;
@@ -548,7 +511,7 @@ public final class LocalZeroes {
 		}
 
 		if (callee == null || summary == null) {
-			// A callee this module does not define reads every global and defines none.
+
 			for (int k = caller.parameters(); k < caller.shared(); k++) {
 				if (!defined.get(k) && read != null) {
 					read.set(k);
@@ -572,7 +535,6 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private static void define(int pointer, BitSet defined, Map<Integer, Integer> index) {
 		Integer whole = index.get(pointer);
 		if (whole != null) {
@@ -580,7 +542,6 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private static void use(int pointer, BitSet defined, Map<Integer, Integer> index,
 			Map<Integer, Integer> aliases, BitSet read) {
 		Integer base = base(pointer, index, aliases);
@@ -589,7 +550,6 @@ public final class LocalZeroes {
 		}
 	}
 
-	
 	private static Integer base(int pointer, Map<Integer, Integer> index,
 			Map<Integer, Integer> aliases) {
 		Integer direct = index.get(pointer);
@@ -603,7 +563,6 @@ public final class LocalZeroes {
 				|| opcode == OP_UNREACHABLE || opcode == OP_TERMINATE_INVOCATION;
 	}
 
-	
 	private static List<Integer> successors(int[] words, int at) {
 		int count = words[at] >>> 16;
 		int opcode = words[at] & 0xFFFF;

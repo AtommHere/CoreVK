@@ -35,7 +35,6 @@ import org.jspecify.annotations.Nullable;
 @Mixin(VulkanDevice.class)
 public abstract class VulkanDeviceMixin implements StalePipelines {
 
-	
 	@Inject(method = {
 			"createTexture(Ljava/util/function/Supplier;ILcom/mojang/blaze3d/GpuFormat;IIII)Lcom/mojang/blaze3d/textures/GpuTexture;",
 			"createTexture(Ljava/lang/String;ILcom/mojang/blaze3d/GpuFormat;IIII)Lcom/mojang/blaze3d/textures/GpuTexture;"
@@ -44,14 +43,12 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 		GeometryHold.flushIdle(() -> "texture allocation");
 	}
 
-	
 	@Inject(method = "createBuffer(Ljava/util/function/Supplier;ILjava/nio/ByteBuffer;)"
 			+ "Lcom/mojang/blaze3d/buffers/GpuBuffer;", at = @At("HEAD"), require = 1)
 	private void corevk$flushBeforeBufferUpload(CallbackInfoReturnable<GpuBuffer> callback) {
 		GeometryHold.flushIdle(() -> "initial buffer upload");
 	}
 
-	
 	@Unique
 	private static final boolean COREVK$KEEP_ACROSS_RELOAD = Boolean.parseBoolean(
 			System.getProperty("corevk.keepPackAcrossReload", "true"));
@@ -60,16 +57,13 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 	@Final
 	private Map<RenderPipeline, VulkanRenderPipeline> pipelineCache;
 
-	
 	@Unique
 	private final List<VulkanRenderPipeline> corevk$setAside = new ArrayList<>();
 
-	
 	@Unique
 	private final Map<RenderPipeline, VulkanRenderPipeline> corevk$carriedOver =
 			new LinkedHashMap<>();
 
-	
 	@Unique
 	private boolean corevk$closing;
 
@@ -92,7 +86,6 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 		return dropped;
 	}
 
-	
 	@Unique
 	private static boolean declaresGameEntity(RenderPipeline pipeline) {
 		if (EntityMesh.movingBlock(pipeline)) {
@@ -116,16 +109,9 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 		return this.pipelineCache.putIfAbsent(pipeline, compiled) == null;
 	}
 
-	
 	@Inject(method = "clearPipelineCache", at = @At("HEAD"), require = 1)
 	private void corevk$carryTheLivePackOver(CallbackInfo callback) {
-		// Anything a purge that threw before its tail left standing is DESTROYED with this purge
-		// rather than put back, and the difference is the whole of it. Those keys left the map and
-		// were never returned, so the chain missed on them the very next frame, compiled fresh ones
-		// and filled the map with those; putting the old values back would overwrite live entries
-		// with dead ones, leak the fresh pipelines the chain is still binding, and leave the two
-		// disagreeing for the rest of the session. They join the set aside instead, which the tail
-		// frees after the wait this purge already pays for.
+
 		this.corevk$setAside.addAll(this.corevk$carriedOver.values());
 		this.corevk$carriedOver.clear();
 
@@ -138,8 +124,7 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 				this.pipelineCache.entrySet().iterator();
 		while (held.hasNext()) {
 			Map.Entry<RenderPipeline, VulkanRenderPipeline> entry = held.next();
-			// Counted for every load of the pack and not only the live one, or a session whose pack
-			// was stopped would read "0 pipelines of the pack" off a purge destroying its whole set.
+
 			if (!ofAPack(entry.getKey())) {
 				continue;
 			}
@@ -159,13 +144,11 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 				this.corevk$closing ? ", the device is closing" : "");
 	}
 
-	
 	@Inject(method = "close", at = @At("HEAD"), require = 1)
 	private void corevk$deviceClosing(CallbackInfo callback) {
 		this.corevk$closing = true;
 	}
 
-	
 	@Unique
 	private static boolean ofAPack(RenderPipeline pipeline) {
 		Identifier location = pipeline.getLocation();
@@ -179,8 +162,7 @@ public abstract class VulkanDeviceMixin implements StalePipelines {
 	private void corevk$closeThePurge(CallbackInfo callback) {
 		this.corevk$setAside.forEach(VulkanRenderPipeline::destroy);
 		this.corevk$setAside.clear();
-		// Put back into a map the emptying has just cleared, so nothing here can land on a key the
-		// purge left standing.
+
 		this.pipelineCache.putAll(this.corevk$carriedOver);
 		this.corevk$carriedOver.clear();
 	}

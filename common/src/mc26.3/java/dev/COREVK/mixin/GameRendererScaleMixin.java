@@ -23,13 +23,11 @@ public abstract class GameRendererScaleMixin {
 	@Shadow
 	public abstract RenderTarget mainRenderTarget();
 
-	
 	@Inject(method = "render", at = @At("HEAD"))
 	private void corevk$recover(CallbackInfo ci) {
 		RenderScale.recover(mainRenderTarget());
 	}
 
-	
 	@Inject(method = "extract", at = @At("HEAD"))
 	private void corevk$frameIntent(DeltaTracker deltaTracker, boolean advanceGameTime,
 			CallbackInfo ci) {

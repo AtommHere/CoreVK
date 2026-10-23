@@ -1,7 +1,5 @@
 package net.corevk.corevk.screen;
 
-// Imported although it is in this package: a nested type is not otherwise in scope by its own name,
-// and @Nullable cannot annotate a qualified one.
 import net.corevk.corevk.screen.ScreenDraw.Icon;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -12,11 +10,9 @@ import org.jspecify.annotations.Nullable;
 
 public final class PanelButton extends Button {
 
-	
 	private static final int ICON_REST = 0xFFAAAAAA;
 	private static final int ICON_LIT = 0xFF737373;
 
-	
 	private final @Nullable Icon icon;
 
 	private PanelButton(int x, int y, int width, int height, Component message,
@@ -38,7 +34,6 @@ public final class PanelButton extends Button {
 		return button;
 	}
 
-	
 	public static PanelButton icon(int x, int y, int size, Icon icon, Component message,
 			Runnable action) {
 		PanelButton button = new PanelButton(x, y, size, size, message, icon, _ -> action.run());
@@ -60,7 +55,6 @@ public final class PanelButton extends Button {
 			return;
 		}
 
-		// The label is the game's, so it greys itself when inactive and narrates like every other.
 		extractDefaultLabel(
 				graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
 	}

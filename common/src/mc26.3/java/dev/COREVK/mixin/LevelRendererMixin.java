@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
 
-	
 	@Inject(method = "executeAlwaysOnTop", at = @At("HEAD"), require = 1)
 	private void corevk$scene(CallbackInfo callback) {
 		PackChain.markSceneDepth();

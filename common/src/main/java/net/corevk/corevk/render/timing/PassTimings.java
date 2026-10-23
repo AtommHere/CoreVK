@@ -23,20 +23,16 @@ import java.util.function.Supplier;
 
 public final class PassTimings {
 
-	
 	private static final int REPORT_SECONDS = Integer.getInteger("corevk.passTimings", 0);
 
 	private static final boolean ENABLED = REPORT_SECONDS > 0;
 
-	
 	private static final int PASSES_PER_FRAME = 256;
 
 	private static final int QUERIES_PER_FRAME = PASSES_PER_FRAME * 2;
 
-	
 	private static final int SLOTS = 8;
 
-	
 	private static final int ROWS = 24;
 
 	private static final long NANOS_PER_SECOND = 1_000_000_000L;
@@ -56,14 +52,12 @@ public final class PassTimings {
 	private static long frameEnds;
 	private static long lastReport;
 
-	
 	private static final int CENSUS_PROPERTY = Integer.getInteger("corevk.passCensus", 0);
 
 	private static final boolean KEEP_PROPERTY = Boolean.getBoolean("corevk.keepRedoneWork");
 
 	private static final String KEEP_ARM_FILE = "keep-redone-work";
 
-	
 	private static int keepRedone = -1;
 
 	private static final boolean FIRST_DRAW_PROPERTY =
@@ -71,18 +65,14 @@ public final class PassTimings {
 
 	private static final String FIRST_DRAW_ARM_FILE = "keep-first-draw-compiles";
 
-	
 	private static int keepFirstDraw = -1;
 
-	
 	private static final int ARMED_BY_FILE_SECONDS = 5;
 
 	private static final String CENSUS_ARM_FILE = "pass-census";
 
-	
 	private static int censusSeconds = -1;
 
-	
 	private static long lastCensus;
 
 	private static boolean censusPrinted;
@@ -92,37 +82,29 @@ public final class PassTimings {
 	private static int censusClears;
 	private static int censusCopies;
 
-	
 	private static int censusSubmits;
 	private static Supplier<String> censusOpenLabel;
 	private static final Map<String, Integer> censusLabels = new HashMap<>();
 
-	
 	private static final Map<String, Map<String, Integer>> censusReopens = new HashMap<>();
 
-	
 	private static int censusSlices;
 
 	private static int censusProgramWalks;
 	private static int censusFarSections;
 
-	
 	private static long censusFrames;
 
 	private static long censusFramesAt;
 
-	
 	private static final long[] censusIntervals = new long[4096];
 
-	
 	private static int censusIntervalsAt;
 
 	private static int censusIntervalsHeld;
 
-	
 	private static long lastFrameAt;
 
-	
 	private static long censusFramesMissingMap;
 
 	private static long censusFramesDecidingMap;
@@ -130,7 +112,6 @@ public final class PassTimings {
 	private PassTimings() {
 	}
 
-	
 	public static void shadowMap(boolean missed) {
 		censusFramesDecidingMap++;
 		if (missed) {
@@ -138,14 +119,11 @@ public final class PassTimings {
 		}
 	}
 
-	
 	public static void armCensus() {
 		if (censusPrinted || censusArmed) {
 			return;
 		}
 
-		// The repeating census waits its interval out. Without this it would count and print every
-		// frame, which is a line a second at best and a log nobody can read at worst.
 		if (lastCensus != 0L
 				&& System.nanoTime() - lastCensus < censusSeconds() * NANOS_PER_SECOND) {
 			return;
@@ -165,12 +143,10 @@ public final class PassTimings {
 		censusReopens.clear();
 	}
 
-	
 	public static boolean censusArmed() {
 		return censusArmed;
 	}
 
-	
 	public static void censusReopen(Supplier<String> label, String cause) {
 		if (!censusArmed) {
 			return;
@@ -180,7 +156,6 @@ public final class PassTimings {
 		censusReopens.computeIfAbsent(name, key -> new HashMap<>()).merge(cause, 1, Integer::sum);
 	}
 
-	
 	public static void finishCensus() {
 		if (censusPrinted || !censusArmed) {
 			return;
@@ -189,7 +164,6 @@ public final class PassTimings {
 		censusComplete = true;
 	}
 
-	
 	public static void resetCensus() {
 		censusPrinted = false;
 		censusArmed = false;
@@ -202,15 +176,13 @@ public final class PassTimings {
 		censusFarSections = 0;
 		censusSubmits = 0;
 		lastCensus = 0L;
-		// The interval that spans a pack load is the load itself, seconds of it, and left in the
-		// window it would be the worst frame of the next reading and a late frame in its count.
+
 		lastFrameAt = 0L;
 		censusIntervalsAt = 0;
 		censusIntervalsHeld = 0;
 		censusFramesMissingMap = 0;
 		censusFramesDecidingMap = 0;
-		// Read again, so an arming file written or changed while the game runs is picked up by the
-		// next pack load rather than by the next launch.
+
 		censusSeconds = -1;
 		keepRedone = -1;
 		keepFirstDraw = -1;
@@ -219,7 +191,6 @@ public final class PassTimings {
 		censusReopens.clear();
 	}
 
-	
 	private static int censusSeconds() {
 		if (censusSeconds >= 0) {
 			return censusSeconds;
@@ -230,7 +201,6 @@ public final class PassTimings {
 		return censusSeconds;
 	}
 
-	
 	public static boolean keepRedoneWork() {
 		if (keepRedone < 0) {
 			keepRedone = KEEP_PROPERTY || armFile(KEEP_ARM_FILE) != null ? 1 : 0;
@@ -239,7 +209,6 @@ public final class PassTimings {
 		return keepRedone == 1;
 	}
 
-	
 	public static boolean keepFirstDrawCompiles() {
 		if (keepFirstDraw < 0) {
 			keepFirstDraw = FIRST_DRAW_PROPERTY || armFile(FIRST_DRAW_ARM_FILE) != null ? 1 : 0;
@@ -248,7 +217,6 @@ public final class PassTimings {
 		return keepFirstDraw == 1;
 	}
 
-	
 	private static Path armFile(String name) {
 		try {
 			Path file = CoreVK.platform().gameDirectory().resolve("corevk").resolve(name);
@@ -259,7 +227,6 @@ public final class PassTimings {
 		}
 	}
 
-	
 	private static int armedByFile() {
 		Path file = armFile(CENSUS_ARM_FILE);
 		if (file == null) {
@@ -280,49 +247,42 @@ public final class PassTimings {
 		}
 	}
 
-	
 	public static void censusSubmit() {
 		if (censusArmed) {
 			censusSubmits++;
 		}
 	}
 
-	
 	public static void censusClear() {
 		if (censusArmed) {
 			censusClears++;
 		}
 	}
 
-	
 	public static void censusCopy() {
 		if (censusArmed) {
 			censusCopies++;
 		}
 	}
 
-	
 	public static void censusSlice() {
 		if (censusArmed) {
 			censusSlices++;
 		}
 	}
 
-	
 	public static void censusProgramWalk() {
 		if (censusArmed) {
 			censusProgramWalks++;
 		}
 	}
 
-	
 	public static void censusFarSections(int built) {
 		if (censusArmed) {
 			censusFarSections += built;
 		}
 	}
 
-	
 	public static void open(CommandEncoder encoder, Supplier<String> label) {
 		if (censusArmed) {
 			censusOpenLabel = label;
@@ -338,7 +298,7 @@ public final class PassTimings {
 		}
 
 		if (frame.open) {
-			// A pass inside a pass, which the encoder refuses before this is reached.
+
 			return;
 		}
 
@@ -352,7 +312,6 @@ public final class PassTimings {
 		frame.open = true;
 	}
 
-	
 	public static void close(CommandEncoder encoder) {
 		if (censusArmed && censusOpenLabel != null) {
 			String name = censusOpenLabel.get();
@@ -377,7 +336,6 @@ public final class PassTimings {
 		frame.openLabel = null;
 	}
 
-	
 	public static void endFrame() {
 		censusFrames++;
 		long frameAt = System.nanoTime();
@@ -398,8 +356,7 @@ public final class PassTimings {
 		if (censusComplete && !censusPrinted) {
 			printCensus();
 			lastCensus = System.nanoTime();
-			// One shot unless a flag asked for more, in which case the next arm is what the
-			// interval above gates rather than this.
+
 			censusPrinted = censusSeconds() <= 0;
 		}
 
@@ -428,7 +385,6 @@ public final class PassTimings {
 		}
 	}
 
-	
 	private static void printCensus() {
 		CoreVK.logger().info("{} opened {} render passes, cleared {} textures and copied {}, for {} "
 						+ "queue submits",
@@ -459,7 +415,6 @@ public final class PassTimings {
 		}
 	}
 
-	
 	private static void printRate() {
 		long now = System.nanoTime();
 		double seconds = (now - censusFramesAt) / (double) NANOS_PER_SECOND;
@@ -468,8 +423,7 @@ public final class PassTimings {
 					String.format(Locale.ROOT, "%.1f", censusFrames / seconds),
 					String.format(Locale.ROOT, "%.1f", seconds),
 					String.format(Locale.ROOT, "%.2f", seconds * 1000 / censusFrames));
-			// Left to the timed report when that one is armed, or one frame carries both and the
-			// same two lines print twice off the same state, which reads as two windows.
+
 			if (!ENABLED) {
 				printSpread();
 				printMissedMaps();
@@ -480,7 +434,6 @@ public final class PassTimings {
 		censusFramesAt = now;
 	}
 
-	
 	private static void printSpread() {
 		int held = censusIntervalsHeld;
 		if (held < 200) {
@@ -506,7 +459,6 @@ public final class PassTimings {
 				wallMillis(sorted[held - 1]), lateFrames, held);
 	}
 
-	
 	private static void printMissedMaps() {
 		if (censusFramesMissingMap == 0) {
 			return;
@@ -516,12 +468,10 @@ public final class PassTimings {
 				+ "planned it never drew", censusFramesMissingMap, censusFramesDecidingMap);
 	}
 
-	
 	private static String wallMillis(long nanos) {
 		return String.format(Locale.ROOT, "%.2f", nanos / 1_000_000.0);
 	}
 
-	
 	private static void printReopens(String label) {
 		Map<String, Integer> causes = censusReopens.get(label);
 		if (causes == null) {
@@ -544,8 +494,7 @@ public final class PassTimings {
 
 		int slot = (int) (frameNumber % SLOTS);
 		frameNumber++;
-		// The frame that last used this slot is SLOTS frames old. Still unread, its queries are
-		// about to be reset under it, so it goes now rather than being read over the new writes.
+
 		Frame oldest = pending.peekFirst();
 		if (oldest != null && oldest.slot == slot) {
 			pending.pollFirst();
@@ -557,7 +506,6 @@ public final class PassTimings {
 		return frame;
 	}
 
-	
 	private static void resolve() {
 		while (!pending.isEmpty()) {
 			Frame frame = pending.peekFirst();
@@ -637,8 +585,6 @@ public final class PassTimings {
 			}
 		}
 
-		// Outside the branch above, because how evenly the frames arrived is a reading of the wall
-		// clock and does not need the card to have answered a single query.
 		printSpread();
 		printMissedMaps();
 
@@ -664,7 +610,6 @@ public final class PassTimings {
 		return String.format(Locale.ROOT, "%-5.1f", count / frames);
 	}
 
-	
 	private static final class Frame {
 
 		final int slot;

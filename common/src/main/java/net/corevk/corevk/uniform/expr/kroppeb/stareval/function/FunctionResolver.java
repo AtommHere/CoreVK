@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class FunctionResolver {
 	private final Map<String, Map<Type, List<TypedFunction>>> functions;
-	// TODO: instead of a suplier we could use an int->function to make varargs
+
 	private final Map<String, Map<Type, List<Supplier<? extends TypedFunction>>>> dynamicFunctions;
 
 	public FunctionResolver(
@@ -50,7 +50,6 @@ public class FunctionResolver {
 		return u;
 	}
 
-	
 	public List<String> names() {
 		List<String> names = new ArrayList<>(this.functions.keySet());
 		for (String name : this.dynamicFunctions.keySet()) {

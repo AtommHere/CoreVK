@@ -45,7 +45,6 @@ public abstract class LevelRendererFeaturesMixin {
 		}
 	}
 
-	
 	@WrapMethod(method = "executeSeeThrough", require = 1)
 	private void corevk$seeThrough(FeatureRenderDispatcher.PreparedFrame frame, RenderTarget target,
 			Operation<Void> original) {

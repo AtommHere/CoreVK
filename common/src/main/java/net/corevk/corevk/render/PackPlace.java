@@ -14,29 +14,23 @@ public final class PackPlace {
 	private static final String OVERWORLD = "minecraft:overworld";
 	private static final String END = "minecraft:the_end";
 
-	
 	private static volatile DimensionSet known;
 
-	
 	private static volatile String seen = OVERWORLD;
 
-	
 	private static volatile String loaded = OVERWORLD;
 
-	
 	private static volatile String loadedPlace = "";
 
 	private PackPlace() {
 	}
 
-	
 	public static String place(ShaderPackSource source) throws IOException {
 		known = DimensionSet.discover(source);
 
 		return known.place(world());
 	}
 
-	
 	public static String world() {
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft == null ? null : minecraft.level;
@@ -60,19 +54,16 @@ public final class PackPlace {
 		return world;
 	}
 
-	
 	public static boolean moved() {
 		DimensionSet dimensions = known;
 
 		return dimensions != null && !dimensions.place(world()).equals(loadedPlace);
 	}
 
-	
 	public static String settled() {
 		return loaded;
 	}
 
-	
 	public static void settle() {
 		DimensionSet dimensions = known;
 		loaded = world();

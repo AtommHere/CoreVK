@@ -17,11 +17,9 @@ import java.util.TreeSet;
 
 public final class TargetSchedule {
 
-	
 	private static final List<String> PRE_STAGES =
 			List.of("begin", "prepare", "deferred", "composite");
 
-	
 	private static final String PRE = "_pre";
 
 	private final List<Bound> steps;
@@ -35,8 +33,7 @@ public final class TargetSchedule {
 			Set<Integer> afterDeferred, Map<String, Map<Integer, Boolean>> forced,
 			Map<String, Set<Integer>> passingHalves) {
 		this.steps = List.copyOf(steps);
-		// Sorted rather than Set.copyOf: these end up in a log, and an index that moves about
-		// between two runs of the same pack reads as a difference that is not one.
+
 		this.doubled = sortedCopy(doubled);
 		this.flippedAtEnd = sortedCopy(flippedAtEnd);
 		this.afterDeferred = sortedCopy(afterDeferred);
@@ -52,11 +49,9 @@ public final class TargetSchedule {
 
 	public enum Side { MAIN, ALT }
 
-	
 	public record Step(String program, List<Integer> writes, boolean fullscreen) {
 	}
 
-	
 	public record Bound(String program, List<Integer> writes, boolean fullscreen,
 			Set<Integer> readsAlt, Set<Integer> writesAlt) {
 
@@ -69,12 +64,10 @@ public final class TargetSchedule {
 		}
 	}
 
-	
 	public static TargetSchedule of(List<Step> steps, List<ShaderProperties.FlipDirective> explicit) {
 		return of(steps, explicit, List.of());
 	}
 
-	
 	public static TargetSchedule of(List<Step> steps, List<ShaderProperties.FlipDirective> explicit,
 			List<String> passing) {
 		Map<String, Map<Integer, Boolean>> forced = byProgram(explicit);
@@ -90,10 +83,6 @@ public final class TargetSchedule {
 			int reached =
 					ProgramNames.frameRank(ProgramNames.familyOf(TargetName.bareName(item.program())));
 
-			// The snapshot is taken between the last deferred and the first thing after it, with
-			// the deferred stage opened and the composite one not. That is the moment CoreVK takes
-			// flippedAfterTranslucent at: the deferred renderer has played its own pre directives
-			// and run, and the composite renderer has not yet played its.
 			if (afterDeferred == null && reached > deferredRank) {
 				opened = openStages(opened, deferredRank, forced, flipped, doubled);
 				afterDeferred = sortedCopy(flipped);
@@ -101,9 +90,6 @@ public final class TargetSchedule {
 
 			opened = openStages(opened, reached, forced, flipped, doubled);
 
-			// Its stage is open and no pass of it has run, which is where CoreVK takes the snapshot
-			// it hands a compute whose program has no valid source. Recorded and not bound: a step
-			// here would say a pass runs, and none does.
 			if (item.step() == null) {
 				halves.put(TargetName.bareName(item.program()), sortedCopy(flipped));
 				continue;
@@ -114,8 +100,7 @@ public final class TargetSchedule {
 			Set<Integer> writesAlt = new TreeSet<>();
 
 			for (int index : step.writes()) {
-				// A geometry pass writes where it reads. A full screen one writes the other half,
-				// which is the whole point of having two.
+
 				if (step.fullscreen() != flipped.contains(index)) {
 					writesAlt.add(index);
 				}
@@ -138,21 +123,15 @@ public final class TargetSchedule {
 				}
 			}
 
-			// Transcribed from CoreVK rather than tidied: a target the program writes and that a
-			// directive also asks to flip is flipped twice, which leaves it where it was.
 			here.forEach((index, shouldFlip) -> {
 				if (shouldFlip) {
 					flip(flipped, index);
-					// A directive may turn over a target no pass writes. Every read past this
-					// point still lands on the far half, so that half has to exist.
+
 					doubled.add(index);
 				}
 			});
 		}
 
-		// A stage the place ships nothing for still opens, at the end of the walk if nowhere else,
-		// and the snapshot is still taken: a place running nothing past the deferreds still draws
-		// its translucents, on the halves the walk stands at when the deferred stage has opened.
 		if (afterDeferred == null) {
 			opened = openStages(opened, deferredRank, forced, flipped, doubled);
 			afterDeferred = sortedCopy(flipped);
@@ -163,11 +142,9 @@ public final class TargetSchedule {
 		return new TargetSchedule(bound, doubled, flipped, afterDeferred, forced, halves);
 	}
 
-	
 	private record Item(String program, Step step) {
 	}
 
-	
 	private static List<Item> merge(List<Step> steps, List<String> passing) {
 		if (passing.isEmpty()) {
 			return steps.stream().map(step -> new Item(step.program(), step)).toList();
@@ -193,7 +170,6 @@ public final class TargetSchedule {
 		return List.copyOf(items);
 	}
 
-	
 	private static int openStages(int opened, int reached,
 			Map<String, Map<Integer, Boolean>> forced, Set<Integer> flipped, Set<Integer> doubled) {
 		int next = opened;
@@ -201,8 +177,7 @@ public final class TargetSchedule {
 			forced.getOrDefault(PRE_STAGES.get(next) + PRE, Map.of()).forEach((index, shouldFlip) -> {
 				if (shouldFlip) {
 					flip(flipped, index);
-					// Nothing else will double it: no step writes it, so without this the alternate
-					// half never exists and every read past here silently lands back on the main one.
+
 					doubled.add(index);
 				}
 			});
@@ -224,13 +199,11 @@ public final class TargetSchedule {
 				.findFirst();
 	}
 
-	
 	public Optional<Bound> passing(String program) {
 		return Optional.ofNullable(this.passingHalves.get(TargetName.bareName(program)))
 				.map(readsAlt -> new Bound(program, List.of(), true, readsAlt, Set.of()));
 	}
 
-	
 	public Optional<Bound> stepAfterDeferred(String program) {
 		return step(program)
 				.filter(step -> !step.fullscreen())
@@ -238,7 +211,6 @@ public final class TargetSchedule {
 						within(this.afterDeferred, step.writes())));
 	}
 
-	
 	private static Set<Integer> within(Set<Integer> flipped, List<Integer> writes) {
 		Set<Integer> found = new TreeSet<>();
 		for (int index : writes) {
@@ -250,17 +222,14 @@ public final class TargetSchedule {
 		return sortedCopy(found);
 	}
 
-	
 	public Set<Integer> doubled() {
 		return this.doubled;
 	}
 
-	
 	public Set<Integer> flippedAtEnd() {
 		return this.flippedAtEnd;
 	}
 
-	
 	public Set<Integer> doubledFor(Set<String> programs) {
 		Set<String> wanted = new LinkedHashSet<>();
 		programs.forEach(program -> wanted.add(TargetName.bareName(program)));

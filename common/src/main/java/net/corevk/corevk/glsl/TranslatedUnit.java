@@ -7,7 +7,6 @@ import java.util.List;
 public record TranslatedUnit(String entry, ProgramStage stage, String text, Notes notes,
 		List<Integer> drawBuffers, List<Uniform> blockMembers, List<Uniform> samplers) {
 
-	
 	public record Uniform(String name, String type, String declaration) {
 
 		public static Uniform of(String name, String declaration) {
@@ -18,11 +17,9 @@ public record TranslatedUnit(String entry, ProgramStage stage, String text, Note
 		}
 	}
 
-	
 	public record StorageBlock(String name, int binding) {
 	}
 
-	
 	public record Notes(int fragmentOutputs, int dynamicFragData, int uniformConflicts,
 			int shadowCalls, int unwrappedShadow, int strippedExtensions,
 			int depthEpilogue, int alphaEpilogue, int coverage,

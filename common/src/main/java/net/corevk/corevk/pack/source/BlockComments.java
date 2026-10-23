@@ -5,7 +5,6 @@ public final class BlockComments {
 	private BlockComments() {
 	}
 
-	
 	public static boolean openAfter(String line, boolean commented) {
 		for (int at = 0; at < line.length() - 1; at++) {
 			if (commented) {

@@ -31,24 +31,20 @@ public final class GameRender {
 	private GameRender() {
 	}
 
-	
 	public static boolean redirectsFeatures() {
 		return true;
 	}
 
-	
 	public static void redirectFeatures(GpuTextureView colour, GpuTextureView depth) {
 		RenderSystem.outputColorTextureOverride = colour;
 		RenderSystem.outputDepthTextureOverride = depth;
 	}
 
-	
 	public static void endFeatureRedirect() {
 		RenderSystem.outputColorTextureOverride = null;
 		RenderSystem.outputDepthTextureOverride = null;
 	}
 
-	
 	@SuppressWarnings("ReferenceEquality")
 	public static boolean drawsOnMainTarget(PreparedRenderType prepared) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -57,12 +53,10 @@ public final class GameRender {
 		return main != null && prepared.outputTarget().getRenderTarget() == main;
 	}
 
-	
 	public static String drawTargetName(PreparedRenderType prepared) {
 		return String.valueOf(prepared.outputTarget());
 	}
 
-	
 	public static GpuTextureView drawColour(PreparedRenderType prepared) {
 		RenderTarget target = prepared.outputTarget().getRenderTarget();
 
@@ -71,7 +65,6 @@ public final class GameRender {
 				: target.getColorTextureView();
 	}
 
-	
 	public static @Nullable GpuTextureView drawDepth(PreparedRenderType prepared) {
 		RenderTarget target = prepared.outputTarget().getRenderTarget();
 
@@ -81,45 +74,37 @@ public final class GameRender {
 						: target.getDepthTextureView();
 	}
 
-	
 	public static void renderAllFeatures(FeatureRenderDispatcher dispatcher,
 			SubmitNodeStorage submits, Supplier<String> label) {
 		dispatcher.renderAllFeatures(submits);
 	}
 
-	
 	public static void submitHands(GameRenderer gameRenderer, float partialTicks, PoseStack pose,
 			SubmitNodeCollector into, LocalPlayer player, int light) {
 		gameRenderer.itemInHandRenderer.submitHandsWithItems(partialTicks, pose, into, player, light);
 	}
 
-	
 	public static void extractCamera(Camera camera, CameraRenderState into, DeltaTracker delta) {
 		camera.extractRenderState(into, camera.getCameraEntityPartialTicks(delta));
 	}
 
-	
 	public static boolean shouldRender(EntityRenderDispatcher entities, Entity entity,
 			Frustum frustum, Vec3 at, float partialTicks) {
 		return entities.shouldRender(entity, frustum, at.x, at.y, at.z);
 	}
 
-	
 	public static boolean sectionShown(LevelRenderer level, BlockPos block) {
 		return level.isSectionCompiledAndVisible(block);
 	}
 
-	
 	public static int skyColor(Camera camera, float partialTick) {
 		return camera.attributeProbe().getValue(EnvironmentAttributes.SKY_COLOR, partialTick);
 	}
 
-	
 	public static boolean particlesApart() {
 		return Minecraft.getInstance().levelRenderer.particlesTarget() != null;
 	}
 
-	
 	public static boolean weatherApart() {
 		return Minecraft.getInstance().levelRenderer.weatherTarget() != null;
 	}

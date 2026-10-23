@@ -11,7 +11,6 @@ import java.util.Properties;
 
 public final class PackLang {
 
-	
 	private static final String FALLBACK_CODE = "en_us";
 
 	private static final PackLang EMPTY = new PackLang("", Map.of());
@@ -24,7 +23,6 @@ public final class PackLang {
 		this.entries = entries;
 	}
 
-	
 	public static PackLang read(ShaderPackSource source, String languageCode) throws IOException {
 		Optional<Path> found = find(source, languageCode);
 		if (found.isEmpty()) {
@@ -34,11 +32,10 @@ public final class PackLang {
 		Path file = found.get();
 		Properties properties = new Properties();
 		try {
-			// Read through the source rather than from the file, which is what caps the size, drops
-			// a byte order mark and replaces anything that is not UTF-8 instead of failing.
+
 			properties.load(new StringReader(String.join("\n", source.readLines(file))));
 		} catch (IllegalArgumentException e) {
-			// What Properties throws, rather than an IOException, on a broken \\u escape.
+
 			throw new IOException(source.rel(file) + " is not readable as a language file", e);
 		}
 
@@ -64,7 +61,6 @@ public final class PackLang {
 		return EMPTY;
 	}
 
-	
 	public String file() {
 		return this.file;
 	}
@@ -73,17 +69,14 @@ public final class PackLang {
 		return this.entries.size();
 	}
 
-	
 	public String option(String name) {
 		return this.entries.getOrDefault("option." + name, name);
 	}
 
-	
 	public Optional<String> optionComment(String name) {
 		return entry("option." + name + ".comment");
 	}
 
-	
 	public String value(String name, String value) {
 		String prefix = this.entries.getOrDefault("prefix." + name, "");
 		String named = this.entries.get("value." + name + "." + value);
@@ -94,22 +87,18 @@ public final class PackLang {
 		return prefix + value + this.entries.getOrDefault("suffix." + name, "");
 	}
 
-	
 	public String page(String id) {
 		return this.entries.getOrDefault("screen." + id, id);
 	}
 
-	
 	public Optional<String> pageComment(String id) {
 		return entry("screen." + id + ".comment");
 	}
 
-	
 	public String profile(String name) {
 		return this.entries.getOrDefault("profile." + name, name);
 	}
 
-	
 	public Optional<String> profileComment() {
 		return entry("profile.comment");
 	}

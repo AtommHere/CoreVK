@@ -7,7 +7,6 @@ import java.util.Set;
 
 public final class SourceMentions {
 
-	
 	private static final String PASTING = "##";
 
 	private final Set<String> found;
@@ -19,7 +18,6 @@ public final class SourceMentions {
 		this.pasting = pasting;
 	}
 
-	
 	public static SourceMentions of(ShaderPackSource source, Set<String> names) throws IOException {
 		Set<String> found = new LinkedHashSet<>();
 		boolean pasting = false;
@@ -37,9 +35,6 @@ public final class SourceMentions {
 				}
 			}
 
-			// Only once everything is known: the pasting flag makes every name answer yes, so
-			// leaving early on a full set would miss a paste in a file further down and hand back an
-			// answer narrower than the pack deserves.
 			if (found.size() == names.size() && pasting) {
 				break;
 			}
@@ -50,8 +45,7 @@ public final class SourceMentions {
 		}
 
 		for (Path file : source.otherFiles()) {
-			// Empty for anything that is not text, a pack's own textures included, and decided on
-			// the head of the file rather than on its name.
+
 			String text = source.searchableText(file);
 			for (String name : names) {
 				if (text.contains(name)) {
@@ -67,12 +61,10 @@ public final class SourceMentions {
 		return new SourceMentions(found, pasting);
 	}
 
-	
 	public static SourceMentions unread() {
 		return new SourceMentions(Set.of(), true);
 	}
 
-	
 	public boolean maybe(String name) {
 		return this.pasting || this.found.contains(name);
 	}

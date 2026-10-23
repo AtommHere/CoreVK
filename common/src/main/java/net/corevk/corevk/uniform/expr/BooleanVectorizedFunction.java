@@ -53,10 +53,9 @@ public class BooleanVectorizedFunction implements TypedFunction {
 			this.index = i;
 			this.inner.evaluateTo(this.vectorAccessors, context, functionReturn);
 			if (!functionReturn.booleanReturn)
-				return; // if false -> return false
+				return; 
 		}
 
-		// if all true (and thus the last one was true) -> return true
 	}
 
 	class ElementAccessExpression implements Expression {

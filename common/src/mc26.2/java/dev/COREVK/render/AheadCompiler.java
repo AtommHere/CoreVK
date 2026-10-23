@@ -24,17 +24,14 @@ public final class AheadCompiler implements AutoCloseable {
 		this.compiler = new GlslCompiler();
 	}
 
-	
 	public static boolean available(GpuDevice device) {
 		return ((GpuDeviceAccessor) device).corevk$backend() instanceof VulkanDevice;
 	}
 
-	
 	public static AheadCompiler open(GpuDevice device) {
 		return new AheadCompiler((VulkanDevice) ((GpuDeviceAccessor) device).corevk$backend());
 	}
 
-	
 	public Ahead build(RenderPipeline pipeline, ShaderSource source) throws Refused {
 		try {
 			IntermediaryShaderModule vertex = intermediary(pipeline, source,
@@ -48,10 +45,7 @@ public final class AheadCompiler implements AutoCloseable {
 					return new Ahead(VulkanRenderPipeline.compile(this.device, modules.layout(),
 							pipeline, modules.vertex(), modules.fragment()));
 				} finally {
-					// vkCreateShaderModule consumes pCode at the call, by spec, so the buffers
-					// behind the intermediaries are done once compile returns. The device keeps
-					// its own in a cache instead, which is why its path has no close: here nothing
-					// keeps them.
+
 					fragment.close();
 				}
 			} finally {
@@ -62,7 +56,6 @@ public final class AheadCompiler implements AutoCloseable {
 		}
 	}
 
-	
 	private IntermediaryShaderModule intermediary(RenderPipeline pipeline, ShaderSource source,
 			Identifier id, ShaderType type) throws ShaderCompileException {
 		String text = GraphicsApi.shaderText(source, id, type);
@@ -79,7 +72,6 @@ public final class AheadCompiler implements AutoCloseable {
 		this.compiler.close();
 	}
 
-	
 	public static final class Ahead {
 
 		private final VulkanRenderPipeline built;
@@ -88,19 +80,16 @@ public final class AheadCompiler implements AutoCloseable {
 			this.built = built;
 		}
 
-		
 		public boolean adopt(GpuDevice device, RenderPipeline pipeline) {
 			return ((GpuDeviceAccessor) device).corevk$backend() instanceof StalePipelines cache
 					&& cache.corevk$adopt(pipeline, this.built);
 		}
 
-		
 		public void destroy() {
 			this.built.destroy();
 		}
 	}
 
-	
 	public static final class Refused extends Exception {
 
 		Refused(String message) {

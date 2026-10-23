@@ -5,7 +5,6 @@ import org.joml.Matrix4fc;
 
 public interface UniformSink {
 
-	
 	default UniformSink member(String name, int elements, boolean supplied) {
 		return this;
 	}

@@ -11,38 +11,31 @@ import org.jspecify.annotations.Nullable;
 
 public final class GamePipelines {
 
-	
 	private static @Nullable RenderPipeline weatherDepthWrite;
 
 	private GamePipelines() {
 	}
 
-	
 	public static RenderPipeline armorTranslucent() {
 		return RenderPipelines.WOLF_ARMOR_CRACKS;
 	}
 
-	
 	public static boolean solidPhase(RenderPipeline pipeline) {
 		return pipeline == RenderPipelines.BANNER_PATTERN;
 	}
 
-	
 	public static @Nullable RenderPipeline textBackground() {
 		return null;
 	}
 
-	
 	public static @Nullable RenderPipeline textBackgroundSeeThrough() {
 		return null;
 	}
 
-	
 	public static RenderPipeline weather() {
 		return RenderPipelines.WEATHER;
 	}
 
-	
 	public static RenderPipeline weatherDepthWrite() {
 		RenderPipeline built = weatherDepthWrite;
 		if (built == null) {

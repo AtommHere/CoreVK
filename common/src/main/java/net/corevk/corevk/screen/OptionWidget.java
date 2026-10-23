@@ -19,27 +19,21 @@ import java.util.Optional;
 
 public abstract class OptionWidget extends PageWidget {
 
-	
 	private static final Component DIVIDER = Component.literal(": ");
 
 	private static final int WHITE = 0xFFFFFFFF;
 
-	
 	private static final int TEXT_INSET = 7;
 
-	
 	private static final int LABEL_INSET = 6;
 
 	protected static final Component SET_TO_DEFAULT =
 			Component.translatable(ScreenText.SET_TO_DEFAULT).withStyle(ChatFormatting.GREEN);
 
-	
 	private @Nullable ScreenHost host;
 
-	
 	private MutableComponent label = Component.empty();
 
-	
 	private MutableComponent plainLabel = Component.empty();
 
 	private @Nullable Component trimmedLabel;
@@ -49,7 +43,6 @@ public abstract class OptionWidget extends PageWidget {
 	private int maxLabelWidth;
 	private int valueSectionWidth;
 
-	
 	protected boolean usedKeyboard;
 
 	@Override
@@ -67,23 +60,18 @@ public abstract class OptionWidget extends PageWidget {
 		return this.host;
 	}
 
-	
 	protected abstract String name();
 
-	
 	protected abstract Component valueLabel();
 
-	
 	protected abstract boolean nextValue();
 
 	protected abstract boolean previousValue();
 
-	
 	protected abstract boolean originalValue();
 
 	protected abstract boolean modified();
 
-	
 	protected abstract Optional<String> comment();
 
 	protected final void setLabel(MutableComponent name) {
@@ -91,22 +79,18 @@ public abstract class OptionWidget extends PageWidget {
 		this.label = name.copy().append(DIVIDER);
 	}
 
-	
 	protected final Component plainLabel() {
 		return this.plainLabel;
 	}
 
-	
 	protected final Component valueText() {
 		return this.valueLabel == null ? Component.empty() : this.valueLabel;
 	}
 
-	
 	protected final boolean forced() {
 		return host().values().forced(name());
 	}
 
-	
 	@Override
 	protected Component narration() {
 		return CommonComponents.optionNameValue(this.plainLabel, valueText());
@@ -122,7 +106,6 @@ public abstract class OptionWidget extends PageWidget {
 		return comment().map(ScreenText::fromPack);
 	}
 
-	
 	protected final void measure(int minValueSectionWidth) {
 		this.usedKeyboard = isFocused();
 
@@ -134,8 +117,6 @@ public abstract class OptionWidget extends PageWidget {
 		this.valueSectionWidth = Math.max(minValueSectionWidth, font.width(this.valueLabel) + 8);
 		this.maxLabelWidth = (bounds().width() - 8) - this.valueSectionWidth;
 
-		// Cut again only when the answer to "does it fit" has changed, which is what keeps a resize
-		// from rebuilding every label on every frame.
 		if (this.trimmedLabel == null
 				|| (font.width(this.label) > this.maxLabelWidth) != this.labelTrimmed) {
 			updateLabels();
@@ -156,7 +137,6 @@ public abstract class OptionWidget extends PageWidget {
 		drawWithValue(graphics, hovered, -1.0F, 0);
 	}
 
-	
 	protected final void drawWithValue(GuiGraphicsExtractor graphics, boolean hovered,
 			float sliderPosition, int sliderWidth) {
 		ScreenRectangle at = bounds();
@@ -181,7 +161,6 @@ public abstract class OptionWidget extends PageWidget {
 				y + TEXT_INSET, WHITE);
 	}
 
-	
 	protected final void tryTooltip(GuiGraphicsExtractor graphics, int x, int y, boolean hovered) {
 		if (Minecraft.getInstance().hasShiftDown()) {
 			tooltip(graphics, SET_TO_DEFAULT, x, y, hovered);
@@ -190,7 +169,6 @@ public abstract class OptionWidget extends PageWidget {
 		}
 	}
 
-	
 	protected final void tooltip(GuiGraphicsExtractor graphics, Component text, int x, int y,
 			boolean hovered) {
 		if (hovered) {
@@ -199,7 +177,6 @@ public abstract class OptionWidget extends PageWidget {
 		}
 	}
 
-	
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT
@@ -227,7 +204,6 @@ public abstract class OptionWidget extends PageWidget {
 		return true;
 	}
 
-	
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (!event.isConfirmation()) {

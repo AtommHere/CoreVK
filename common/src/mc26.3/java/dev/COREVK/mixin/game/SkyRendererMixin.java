@@ -39,23 +39,18 @@ import java.util.function.Supplier;
 @Mixin(SkyRenderer.class)
 public abstract class SkyRendererMixin {
 
-	
 	@Unique
 	private @Nullable Matrix4f corevk$modelView;
 
-	
 	@Unique
 	private @Nullable Vector4f corevk$colour;
 
-	
 	@Unique
 	private @Nullable RenderPipeline corevk$pipeline;
 
-	
 	@Unique
 	private @Nullable RenderPass corevk$opened;
 
-	
 	@Inject(method = "renderSunMoonAndStars",
 			at = @At(value = "INVOKE", ordinal = 0, shift = At.Shift.AFTER,
 					target = "Lcom/mojang/blaze3d/vertex/PoseStack;rotateDegrees(Lcom/mojang/math/Axis;F)V"))
@@ -68,7 +63,6 @@ public abstract class SkyRendererMixin {
 		}
 	}
 
-	
 	@WrapOperation(method = "render", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;createRenderPass("
@@ -86,12 +80,10 @@ public abstract class SkyRendererMixin {
 			return first;
 		}
 
-		// Opened again with nothing emptied, which is what the first opening did too.
 		return LevelPass.open(first, colour, depth, () -> original.call(encoder, label, colour,
 				Optional.empty(), depth, OptionalDouble.empty()));
 	}
 
-	
 	@Inject(method = "renderSun", at = @At("HEAD"), cancellable = true, require = 1)
 	private void corevk$sun(RenderPass pass, float rainBrightness, PoseStack poseStack,
 			CallbackInfo callback) {
@@ -100,7 +92,6 @@ public abstract class SkyRendererMixin {
 		}
 	}
 
-	
 	@Inject(method = "renderMoon", at = @At("HEAD"), cancellable = true, require = 1)
 	private void corevk$moon(RenderPass pass, MoonPhase moonPhase, float rainBrightness,
 			PoseStack poseStack, CallbackInfo callback) {
@@ -109,7 +100,6 @@ public abstract class SkyRendererMixin {
 		}
 	}
 
-	
 	@WrapOperation(
 			method = {"renderSkyDisc", "renderDarkDisc", "renderStars", "renderSunriseAndSunset",
 					"renderSun", "renderMoon", "renderEndFlash"},
@@ -126,7 +116,6 @@ public abstract class SkyRendererMixin {
 		return original.call(uniforms, modelView, colour);
 	}
 
-	
 	@WrapOperation(method = "renderEndSky", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/DynamicGpuData;writeTransform("
@@ -169,7 +158,6 @@ public abstract class SkyRendererMixin {
 		return corevk$piece(pass, "End sky");
 	}
 
-	
 	@ModifyVariable(method = "drawCelestialBody", require = 1, argsOnly = true,
 			at = @At(value = "LOAD", ordinal = 0))
 	private RenderPass corevk$body(RenderPass pass, Supplier<String> label) {
@@ -187,9 +175,7 @@ public abstract class SkyRendererMixin {
 		this.corevk$opened = null;
 		this.corevk$pipeline = null;
 		if (opened != null) {
-			// Kept rather than ended where the next piece the pack serves names the same images,
-			// which is what GeometryHold is for; the game's pass ends it where the next piece is
-			// the game's own.
+
 			opened.close();
 		}
 	}
@@ -250,7 +236,6 @@ public abstract class SkyRendererMixin {
 		}
 	}
 
-	
 	@Unique
 	private RenderPass corevk$piece(RenderPass pass, String label) {
 		this.corevk$pipeline = null;

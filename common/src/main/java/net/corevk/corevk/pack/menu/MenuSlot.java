@@ -8,7 +8,6 @@ public sealed interface MenuSlot {
 	record Option(MenuOption option) implements MenuSlot {
 	}
 
-	
 	record Link(String page, boolean resolved) implements MenuSlot {
 	}
 

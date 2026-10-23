@@ -11,7 +11,6 @@ import java.util.function.UnaryOperator;
 
 public final class MenuValues {
 
-	
 	private static final String PROFILE_KEY = "profile";
 
 	private final PackMenu menu;
@@ -32,7 +31,6 @@ public final class MenuValues {
 		return new MenuValues(menu, saved, forced);
 	}
 
-	
 	public MenuValues reread(PackMenu menu, Map<String, String> saved, Map<String, String> forced) {
 		MenuValues next = new MenuValues(menu, saved, forced);
 		next.pending.putAll(this.pending);
@@ -40,7 +38,6 @@ public final class MenuValues {
 		return next;
 	}
 
-	
 	public void rebase(Map<String, String> saved, Map<String, String> forced) {
 		this.saved = copy(saved);
 		this.forced = copy(forced);
@@ -72,7 +69,6 @@ public final class MenuValues {
 		return this.forced.containsKey(name);
 	}
 
-	
 	public int forcedShown() {
 		int count = 0;
 		for (String name : this.forced.keySet()) {
@@ -87,32 +83,26 @@ public final class MenuValues {
 		return count;
 	}
 
-	
 	public void queue(String name, String value) {
 		this.pending.put(name, value);
 	}
 
-	
 	public void queueAll(Map<String, String> values) {
 		values.forEach((name, value) -> this.pending.put(name, spelt(name, value)));
 	}
 
-	
 	public void queueProfile(String name) {
 		this.pending.putAll(this.menu.profile(name));
 	}
 
-	
 	public String matchedProfile() {
 		return match(this::pending);
 	}
 
-	
 	public String matchedAppliedProfile() {
 		return match(this::applied);
 	}
 
-	
 	public String profileInfo() {
 		String matched = matchedAppliedProfile();
 		String name = matched.isEmpty() ? "Custom" : matched;
@@ -121,7 +111,6 @@ public final class MenuValues {
 				+ (extra == 1 ? "" : "s") + " changed by user)";
 	}
 
-	
 	private int appliedOptionsChanged() {
 		int count = 0;
 		for (String name : this.menu.optionNames()) {
@@ -133,7 +122,6 @@ public final class MenuValues {
 		return count;
 	}
 
-	
 	private int profileOptionsChanged(String profileName) {
 		if (profileName.isEmpty()) {
 			return 0;
@@ -178,14 +166,12 @@ public final class MenuValues {
 		return true;
 	}
 
-	
 	public String profile() {
 		String over = this.forced.get(PROFILE_KEY);
 
 		return over == null ? matchedProfile() : over;
 	}
 
-	
 	public void reset(String name) {
 		this.pending.put(name, packDefault(name));
 	}
@@ -205,13 +191,11 @@ public final class MenuValues {
 		return count;
 	}
 
-	
 	public Map<String, String> toSave() {
 		Map<String, String> result = new LinkedHashMap<>();
 
 		for (String name : touched()) {
-			// Never write what options.txt forces. The day that line goes away the setting has to
-			// come back to what was chosen underneath, not stay stuck at what was forced over it.
+
 			if (this.forced.containsKey(name)) {
 				String kept = this.saved.get(name);
 				if (kept != null) {
@@ -221,11 +205,8 @@ public final class MenuValues {
 				continue;
 			}
 
-			// What this side chose, resolved without the profile options.txt may be forcing: that
-			// profile decides what is drawn and never what is written, exactly like a forced value.
 			String value = chosen(name);
-			// A name the pack does not declare has no default to compare against, so it is kept as
-			// it was: dropping it loses a player's settings the day they go back to an older pack.
+
 			if (!value.equals(packDefault(name))) {
 				result.put(name, written(name, value));
 			}
@@ -234,7 +215,6 @@ public final class MenuValues {
 		return result;
 	}
 
-	
 	private String unforced(String name) {
 		String value = this.pending.get(name);
 		if (value == null) {
@@ -247,7 +227,6 @@ public final class MenuValues {
 		return value == null ? packDefault(name) : value;
 	}
 
-	
 	private String chosen(String name) {
 		String value = this.pending.get(name);
 		if (value == null) {
@@ -261,7 +240,6 @@ public final class MenuValues {
 		return this.forced.getOrDefault(PROFILE_KEY, "");
 	}
 
-	
 	private Set<String> touched() {
 		Set<String> names = new LinkedHashSet<>(this.saved.keySet());
 		names.addAll(this.pending.keySet());
@@ -273,7 +251,6 @@ public final class MenuValues {
 		return this.menu.option(name).map(MenuOption::defaultValue).orElse("");
 	}
 
-	
 	private Map<String, String> copy(Map<String, String> values) {
 		Map<String, String> copied = new LinkedHashMap<>();
 		values.forEach((name, value) -> copied.put(name, spelt(name, value)));
@@ -281,24 +258,16 @@ public final class MenuValues {
 		return Collections.unmodifiableMap(copied);
 	}
 
-	
 	private String spelt(String name, String value) {
 		return toggle(name) ? OptionValue.parse(value).asText() : value;
 	}
 
-	
 	private String written(String name, String value) {
 		return written(this.menu, name, value);
 	}
 
-	
 	public static String written(PackMenu menu, String name, String value) {
-		// Every value of a toggle goes through Boolean.toString, including one that is not one of
-		// the four words, which happens where a new version of a pack turns a cycle into a toggle.
-		// Copying such a value instead LOOKS kinder and is not: this engine would rewrite it as
-		// {@code #define NAME Medium}, which leaves the toggle DEFINED and therefore on, while CoreVK
-		// turns an unreadable spelling into the option's default. One shared file would then draw
-		// two different images. Written false, both engines read false and both draw off.
+
 		return menu.option(name).filter(option -> option.form() == MenuOption.Form.TOGGLE).isPresent()
 				? Boolean.toString(OptionValue.parse(value).asBoolean())
 				: value;

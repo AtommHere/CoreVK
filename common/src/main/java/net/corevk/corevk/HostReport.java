@@ -14,22 +14,16 @@ import java.util.List;
 
 public final class HostReport {
 
-	
 	private static final String VULKAN = "Vulkan";
 
-	
 	private static final String UNKNOWN = "unknown";
 
-	
 	private static final String CHLORIDE_CONFIG = "config/chloride-client.toml";
 
-	
 	private static final String CHLORIDE_ID = "chloride";
 
-	
 	private static volatile boolean saidInWorld;
 
-	
 	private static final List<Entry> CHLORIDE = List.of(
 			new Entry("fastBlocks", "chests",
 					"Chloride draws chests as static block models. That path is covered over by this "
@@ -58,20 +52,17 @@ public final class HostReport {
 	private HostReport() {
 	}
 
-	
 	public static String backend() {
 		GpuDevice device = RenderSystem.tryGetDevice();
 		return device == null ? UNKNOWN : device.getDeviceInfo().backendName();
 	}
 
-	
 	public static boolean otherBackend() {
 		String backend = backend();
 
 		return !UNKNOWN.equals(backend) && !VULKAN.equals(backend);
 	}
 
-	
 	public static void sayInWorld() {
 		if (saidInWorld) {
 			return;
@@ -87,10 +78,6 @@ public final class HostReport {
 			return;
 		}
 
-		// CoreVK drawing this session means a player who picked it, and a red line saying the picture
-		// is missing would be false for them. Asked of what CoreVK chose at startup rather than of
-		// CoreVK being there: after a Vulkan boot that fell back, CoreVK draws nothing and the line is
-		// owed.
 		if (CoreVKBeside.draws()) {
 			return;
 		}
@@ -101,19 +88,14 @@ public final class HostReport {
 				.withStyle(ChatFormatting.RED));
 	}
 
-	
 	public static void say(Path gameDirectory) {
 		sayBackend();
 
-		// Asked before the file is looked for, and that question is the difference between a mod
-		// that is installed and has not written its settings yet, which is worth a line because its
-		// defaults are then in play, and a mod that is simply not there, which is worth none.
 		if (CoreVK.platform().isModLoaded(CHLORIDE_ID)) {
 			sayChloride(gameDirectory.resolve(CHLORIDE_CONFIG));
 		}
 	}
 
-	
 	private static void sayBackend() {
 		if (!otherBackend()) {
 			return;
@@ -138,7 +120,6 @@ public final class HostReport {
 				backend(), CoreVK.MOD_NAME, VULKAN);
 	}
 
-	
 	private static void sayChloride(Path file) {
 		List<String> lines;
 		try {
@@ -168,21 +149,17 @@ public final class HostReport {
 		}
 
 		if (!missing.isEmpty()) {
-			// Joined rather than handed over whole: each name is already bracketed, and a list
-			// printed as one reads "for [[culling] entities]".
+
 			CoreVK.logger().warn("{} writes no line for {}, so whether Chloride is drawing what that "
 					+ "governs was not established. It decides which blocks and which entities reach "
 					+ "the pack at all", file, String.join(", ", missing));
 		}
 	}
 
-	
 	private static Boolean written(List<String> lines, String table, String key) {
 		String current = "";
 		for (String raw : lines) {
-			// A comment runs to the end of the line, and both a table header and a value may carry
-			// one. Cutting it here rather than at each reading below is also what turns a whole line
-			// of comment into an empty one.
+
 			int hash = raw.indexOf('#');
 			String line = (hash < 0 ? raw : raw.substring(0, hash)).trim();
 
@@ -208,7 +185,6 @@ public final class HostReport {
 		return null;
 	}
 
-	
 	private record Entry(String table, String key, String cost) {
 
 		String name() {

@@ -12,7 +12,6 @@ public interface CoreVKPlatform {
 
 	String minecraftVersion();
 
-	
 	Path gameDirectory();
 
 	boolean isModLoaded(String modId);

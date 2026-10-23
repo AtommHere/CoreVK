@@ -12,16 +12,12 @@ import java.util.Locale;
 
 public enum GraphicsApiChoice {
 
-	
 	VULKAN("vulkan"),
 
-	
 	OPENGL("opengl"),
 
-	
 	GAME("game");
 
-	
 	public static final GraphicsApiChoice DEFAULT = VULKAN;
 
 	private static final String FILE = "graphics-api.txt";
@@ -36,7 +32,6 @@ public enum GraphicsApiChoice {
 		return this.word;
 	}
 
-	
 	public static GraphicsApiChoice read() {
 		Path file = file();
 		String asked;
@@ -62,7 +57,6 @@ public enum GraphicsApiChoice {
 		return DEFAULT;
 	}
 
-	
 	public static void write(Path gameDirectory, GraphicsApiChoice choice) {
 		Path file = gameDirectory.resolve("corevk").resolve(FILE);
 		try {
@@ -73,7 +67,6 @@ public enum GraphicsApiChoice {
 		}
 	}
 
-	
 	private static Path file() {
 		Minecraft minecraft = Minecraft.getInstance();
 		Path directory = minecraft == null ? null : minecraft.gameDirectory.toPath();

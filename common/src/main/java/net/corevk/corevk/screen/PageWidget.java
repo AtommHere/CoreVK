@@ -18,11 +18,9 @@ public abstract class PageWidget implements GuiEventListener, NarratableEntry {
 	private ScreenRectangle bounds = ScreenRectangle.empty();
 	private boolean focused;
 
-	
 	public void init(ScreenHost host) {
 	}
 
-	
 	public final void place(ScreenRectangle bounds) {
 		this.bounds = bounds;
 	}
@@ -33,7 +31,6 @@ public abstract class PageWidget implements GuiEventListener, NarratableEntry {
 
 	public abstract void draw(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered);
 
-	
 	public Optional<Component> commentTitle() {
 		return Optional.empty();
 	}
@@ -62,7 +59,6 @@ public abstract class PageWidget implements GuiEventListener, NarratableEntry {
 		return this.bounds;
 	}
 
-	
 	protected Component narration() {
 		return Component.empty();
 	}
@@ -76,8 +72,7 @@ public abstract class PageWidget implements GuiEventListener, NarratableEntry {
 	public void updateNarration(NarrationElementOutput output) {
 		Component said = narration();
 		if (!said.getString().isEmpty()) {
-			// The game's own wording for a button, so that a cell is announced the way every other
-			// control the player has already met is announced.
+
 			output.add(NarratedElementType.TITLE,
 					Component.translatable("gui.narrate.button", said));
 		}

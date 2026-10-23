@@ -22,7 +22,6 @@ public final class LoadClock {
 	private LoadClock() {
 	}
 
-	
 	public static void reset() {
 		EXPANSION_NANOS.set(0);
 		EXPANDED.set(0);
@@ -33,24 +32,20 @@ public final class LoadClock {
 		MODULES.set(0);
 	}
 
-	
 	public static void expansion(long nanos) {
 		EXPANSION_NANOS.addAndGet(nanos);
 		EXPANDED.incrementAndGet();
 	}
 
-	
 	public static void expansionServed() {
 		EXPANSIONS_SERVED.incrementAndGet();
 	}
 
-	
 	public static void translation(long nanos) {
 		TRANSLATION_NANOS.addAndGet(nanos);
 		TRANSLATED.incrementAndGet();
 	}
 
-	
 	public static void module(long nanos) {
 		MODULE_NANOS.addAndGet(nanos);
 		MODULES.incrementAndGet();

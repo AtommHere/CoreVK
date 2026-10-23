@@ -32,19 +32,14 @@ import java.util.Set;
 
 public final class WeatherDraw extends FamilyDraw {
 
-	
 	private static volatile boolean wanted;
 
-	
 	private static final String PROGRAM = "gbuffers_weather";
 
-	
 	private static final AlphaTest CUTOUT = AlphaTest.ONE_TENTH;
 
-	
 	record Element(RenderPipeline pipeline, String element, RenderStage stage) {
 
-		
 		private PackProgram.GeometryElement asked() {
 			return new PackProgram.GeometryElement(this.element, PROGRAM, CUTOUT,
 					VertexInputs.PARTICLE, false);
@@ -56,7 +51,6 @@ public final class WeatherDraw extends FamilyDraw {
 	static {
 		put(new Element(GamePipelines.weather(), "weather", RenderStage.RAIN_SNOW));
 
-		// 26.3 has no depth writing weather pipeline, so there the family is one element.
 		RenderPipeline depthWrite = GamePipelines.weatherDepthWrite();
 		if (depthWrite != null) {
 			put(new Element(depthWrite, "weather_depth", RenderStage.RAIN_SNOW));
@@ -79,19 +73,14 @@ public final class WeatherDraw extends FamilyDraw {
 	private final boolean chainRuns;
 	private final ColorTargets targets;
 
-	
 	private final Map<String, WeatherProgram> programs = new LinkedHashMap<>();
 
-	
 	private volatile boolean read;
 
-	
 	private final Set<String> refused = new LinkedHashSet<>();
 
-	
 	private WeatherProgram drawing;
 
-	
 	private RenderPassDescriptor descriptor;
 
 	WeatherDraw(PackChain owner, Path packPath, String place, Map<String, OptionValue> chosen,
@@ -110,22 +99,18 @@ public final class WeatherDraw extends FamilyDraw {
 		this.targets = targets;
 	}
 
-	
 	static void wanted(boolean asked) {
 		wanted = asked;
 	}
 
-	
 	static boolean wanted() {
 		return wanted;
 	}
 
-	
 	void prefetch() {
 		prefetch(null);
 	}
 
-	
 	@Override
 	void prefetch(OpenedPack shared) {
 		if (!this.read && wanted()) {
@@ -133,28 +118,24 @@ public final class WeatherDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static boolean draws() {
 		WeatherDraw draw = PackChain.weather();
 
 		return draw == null || !wanted || draw.values.weather().drawn();
 	}
 
-	
 	public static boolean splashes() {
 		WeatherDraw draw = PackChain.weather();
 
 		return draw == null || !wanted || draw.values.weather().particles();
 	}
 
-	
 	public static boolean depth() {
 		WeatherDraw draw = PackChain.weather();
 
 		return draw != null && draw.values.rainDepth();
 	}
 
-	
 	public static RenderPipeline element(RenderPipeline game, GpuTextureView colour,
 			GpuTextureView depth) {
 		WeatherDraw draw = PackChain.weather();
@@ -176,14 +157,12 @@ public final class WeatherDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static RenderPassDescriptor descriptor() {
 		WeatherDraw draw = PackChain.weather();
 
 		return draw == null ? null : draw.descriptor;
 	}
 
-	
 	public static void texture(GpuTextureView view, GpuSampler sampler) {
 		WeatherDraw draw = PackChain.weather();
 		if (draw != null && draw.drawing != null) {
@@ -191,7 +170,6 @@ public final class WeatherDraw extends FamilyDraw {
 		}
 	}
 
-	
 	public static void bind(RenderPass pass, RenderPipeline bound) {
 		WeatherDraw draw = PackChain.weather();
 		if (draw != null && draw.drawing != null && draw.drawing.owns(bound)) {
@@ -199,7 +177,6 @@ public final class WeatherDraw extends FamilyDraw {
 		}
 	}
 
-	
 	private boolean shown() {
 		return !this.chainRuns || this.owner.drawable();
 	}
@@ -217,13 +194,6 @@ public final class WeatherDraw extends FamilyDraw {
 			return null;
 		}
 
-		// The one refusal this family has that the sky has not, and it is a question about the run
-		// rather than about the pack. The renderer draws into OutputTarget.WEATHER_TARGET, which is a
-		// target of its own wherever the game's transparency chain is running and the main target
-		// everywhere else; the pack's colour targets are attached beside that image, and beside a
-		// target the game is going to compose itself afterwards they would be attached to a picture
-		// this engine has not got and does not read. 26.3 has no such target and composes its order
-		// independent passes instead, which GameRender asks in that game's terms.
 		if (GameRender.weatherApart()) {
 			this.drawing = null;
 
@@ -235,9 +205,6 @@ public final class WeatherDraw extends FamilyDraw {
 					+ "the pack's rain back");
 		}
 
-		// The same two calls the sky and the terrain make, and for the same reasons. This is never the
-		// call that opens the frame, the weather being drawn after the whole of the main pass, but
-		// beginFrame is what makes that a fact rather than an assumption.
 		this.owner.beginFrame();
 		if (!this.owner.openTargets(device)) {
 			this.drawing = null;
@@ -261,20 +228,10 @@ public final class WeatherDraw extends FamilyDraw {
 					+ "draws its own rain, steadily rather than as a flicker");
 		}
 
-		// Here and not at the door's second call, so that the two cannot answer differently. A null
-		// descriptor means one of two things and only one of them is safe: a pass that gains nothing
-		// over the renderer's own, which is a program writing the game's target alone, or a pass this
-		// engine could not build. The second one has to take the pipeline down with it, since binding
-		// a pipeline that carries a state per target the pack asked for into the renderer's single
-		// attachment pass is refused by name, in the middle of a rainstorm.
 		this.descriptor = program.descriptor(colour, depth);
 		if (this.descriptor == null && !program.plain()) {
 			this.drawing = null;
 
-			// Keyed by the family and not by the element, unlike the refusal above and unlike the
-			// particles': the two elements are built from ONE writes list and one set of colour
-			// targets, so this condition is never true of one of them and false of the other, and a
-			// key per element would print the same sentence twice.
 			return refuse("unallocated", "one of the pack's colour targets had no image yet on some "
 					+ "frame, so the pass the curtain wanted could not be built then. That comes and "
 					+ "goes with the frame rather than lasting");
@@ -283,7 +240,6 @@ public final class WeatherDraw extends FamilyDraw {
 		return pipeline;
 	}
 
-	
 	private RenderPipeline refuse(String reason, String why) {
 		if (this.refused.add(reason)) {
 			CoreVK.logger().warn("The rain and the snow went back to the game's own shader because "
@@ -293,7 +249,6 @@ public final class WeatherDraw extends FamilyDraw {
 		return null;
 	}
 
-	
 	private void read(OpenedPack shared) {
 		try {
 			List<PackProgram.GeometryElement> asked = ELEMENTS.values().stream().map(Element::asked).toList();
@@ -308,8 +263,6 @@ public final class WeatherDraw extends FamilyDraw {
 				return;
 			}
 
-			// Asked once for the family rather than once per element: the two are one program name and
-			// so one file, and the plan would answer for it twice over.
 			List<ChainPlan.Attachment> writes = writes(loaded.values().iterator().next());
 			if (writes == null) {
 				return;
@@ -329,7 +282,6 @@ public final class WeatherDraw extends FamilyDraw {
 		}
 	}
 
-	
 	private List<ChainPlan.Attachment> writes(PackProgram.Loaded loaded) {
 		String servedBy = loaded.path().substring(loaded.path().lastIndexOf('/') + 1);
 		Optional<ChainPlan.Pass> geometry = this.plan.geometryOf(servedBy, true);
@@ -349,13 +301,11 @@ public final class WeatherDraw extends FamilyDraw {
 		return pass.attachments();
 	}
 
-	
 	@Override
 	Collection<WeatherProgram> programs() {
 		return this.programs.values();
 	}
 
-	
 	@Override
 	void rotate() {
 		this.drawing = null;
@@ -373,9 +323,7 @@ public final class WeatherDraw extends FamilyDraw {
 		this.programs.clear();
 		this.drawing = null;
 		this.descriptor = null;
-		// With the programs, or "once per load" would mean once per session: what is read again
-		// after this can refuse again, and a reader watching a storm would see the first reading's
-		// lines and nothing after them.
+
 		this.refused.clear();
 		this.read = false;
 	}

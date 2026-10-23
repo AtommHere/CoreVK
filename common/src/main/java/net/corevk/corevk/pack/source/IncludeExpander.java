@@ -22,21 +22,17 @@ import java.util.regex.Pattern;
 
 public final class IncludeExpander {
 
-	
 	private static final int MAX_DEPTH = 32;
 
-	
 	private static final int MAX_FILES = 20_000;
 
 	private static final int MAX_LINES = 400_000;
 
-	
 	private static final int MAX_CHARACTERS = 4_000_000;
 
 	private static final Pattern INCLUDE = Pattern.compile("^\\s*#\\s*include\\s+[<\"](.+?)[>\"].*$");
 	private static final Pattern IF_DEFINED = Pattern.compile("^(\\s*)#\\s*(ifdef|ifndef)\\b(.*)$");
 
-	
 	static final Pattern DEFINED_NAME = Pattern.compile("^\\s+([A-Za-z_]\\w*)(.*)$");
 
 	private static final Pattern IF = Pattern.compile("^(\\s*)#\\s*if\\b(.*)$");
@@ -48,7 +44,6 @@ public final class IncludeExpander {
 	private static final Pattern VERSION = Pattern.compile("^\\s*#\\s*version\\s+(.*)$");
 	private static final Pattern ERROR = Pattern.compile("^\\s*#\\s*error\\b.*$");
 
-	
 	private static final Pattern LINE_COMMENT = Pattern.compile("//.*");
 	private static final Pattern BLOCK_COMMENT = Pattern.compile("/\\*.*?\\*/");
 
@@ -56,7 +51,6 @@ public final class IncludeExpander {
 	private final SettingSet settings;
 	private final boolean partOfALoad;
 
-	
 	private final Set<String> loose = new LinkedHashSet<>();
 
 	public IncludeExpander(ShaderPackSource source, SettingSet settings) {
@@ -69,12 +63,10 @@ public final class IncludeExpander {
 		this.partOfALoad = partOfALoad;
 	}
 
-	
 	public static IncludeExpander forTheReport(ShaderPackSource source, SettingSet settings) {
 		return new IncludeExpander(source, settings, false);
 	}
 
-	
 	public ExpandedUnit expand(Path entry) throws IOException {
 		String relative = this.source.rel(entry);
 		if (this.partOfALoad) {
@@ -101,7 +93,6 @@ public final class IncludeExpander {
 		return unit;
 	}
 
-	
 	private Map<String, String> startingDefines(String relative) {
 		Map<String, String> defines = new LinkedHashMap<>();
 		ProgramStage.ofFile(relative)
@@ -111,7 +102,6 @@ public final class IncludeExpander {
 		return defines;
 	}
 
-	
 	public List<String> looseDirectives() {
 		return List.copyOf(this.loose);
 	}
@@ -131,9 +121,6 @@ public final class IncludeExpander {
 			return;
 		}
 
-		// A file already on the current path is a cycle. The measuring prototype had no such
-		// check and leaned on the depth limit instead, which meant a malformed pack was expanded
-		// thirty-two times over before anything said so.
 		if (!state.onPath.add(relative)) {
 			state.cycles++;
 			state.emit("#error include cycle at " + relative, true);
@@ -147,9 +134,7 @@ public final class IncludeExpander {
 		ConditionStack conditions = new ConditionStack();
 
 		for (Logical logical : logicalLines(file)) {
-			// Checked here and not only on the way in. One file is enough on its own: a pack that
-			// ships a single shader of a million lines never expands anything, so a budget read
-			// once per file would never be read at all.
+
 			if (state.overBudget()) {
 				state.giveUp(relative);
 				break;
@@ -183,7 +168,7 @@ public final class IncludeExpander {
 			if (ERROR.matcher(line).matches()) {
 				report(conditions, state, relative, logical,
 						"the reference only logs it, so it is not written out");
-				// A block comment the message opens still has to open, or its body would be code.
+
 				state.emit(BlockComments.openAfter(line, false)
 						? "/* error not written out */ /*"
 						: "// error not written out: " + line.trim(), conditions.active());
@@ -204,15 +189,14 @@ public final class IncludeExpander {
 			}
 
 			if (!conditions.active()) {
-				// Kept as it was, so that what the compiler discards is what is written here.
+
 				state.emit(logical.physical(), false);
 				continue;
 			}
 
 			Matcher version = VERSION.matcher(line);
 			if (version.matches()) {
-				// A unit has exactly one version directive and it is the entry file's. Later
-				// ones come from includes and would be an error where they land.
+
 				if (state.version == null) {
 					state.version = LINE_COMMENT.matcher(version.group(1)).replaceAll("").trim();
 					state.emit(logical.physical(), true);
@@ -229,11 +213,6 @@ public final class IncludeExpander {
 			}
 		}
 
-		// A rewritten conditional the file never closes would leave a directive this reader put in
-		// the text with nothing to close it, so it is closed where the file ends.
-		//
-		// Only those are closed: a group the PACK left open is handed to the compiler exactly as the
-		// pack wrote it.
 		for (int open = conditions.unclosedRewritten(); open > 0; open--) {
 			state.emit("#endif", true);
 			state.openInOutput--;
@@ -242,15 +221,12 @@ public final class IncludeExpander {
 		state.onPath.remove(relative);
 	}
 
-	
 	private record Logical(String text, int number, List<String> physical) {
 	}
 
-	
 	private record LogicalLinesOf(Path file) {
 	}
 
-	
 	private List<Logical> logicalLines(Path file) throws IOException {
 		if (!this.partOfALoad) {
 			return logicalLines(this.source.readLines(file));
@@ -286,7 +262,6 @@ public final class IncludeExpander {
 		return logical;
 	}
 
-	
 	private String handleCondition(Logical logical, String relative, ConditionStack conditions,
 			State state) {
 		String line = logical.text();
@@ -372,7 +347,6 @@ public final class IncludeExpander {
 		return null;
 	}
 
-	
 	private static String unopened(ConditionStack conditions, State state, String relative,
 			Logical logical) {
 		report(conditions, state, relative, logical,
@@ -381,7 +355,6 @@ public final class IncludeExpander {
 		return "// no conditional is open here: " + logical.text().trim();
 	}
 
-	
 	private static void report(ConditionStack conditions, State state, String relative,
 			Logical logical, String decided) {
 		if (conditions.active()) {
@@ -389,7 +362,6 @@ public final class IncludeExpander {
 		}
 	}
 
-	
 	private String defined(Logical logical, String relative, Matcher ifDefined,
 			ConditionStack conditions, State state) {
 		String indent = ifDefined.group(1);
@@ -416,7 +388,6 @@ public final class IncludeExpander {
 		return indent + "#" + keyword + " " + name.group(1);
 	}
 
-	
 	private static String beyondComments(String tail) {
 		String code = BLOCK_COMMENT.matcher(tail).replaceAll(" ");
 		int line = code.indexOf("//");
@@ -432,7 +403,6 @@ public final class IncludeExpander {
 		return code.trim();
 	}
 
-	
 	private boolean decide(String expression, State state) {
 		Optional<Boolean> value = PreprocessorExpression.evaluate(expression, state.defines);
 		if (value.isEmpty()) {
@@ -443,7 +413,6 @@ public final class IncludeExpander {
 		return value.get();
 	}
 
-	
 	private String rewritten(String expression, State state) {
 		PreprocessorExpression.Verdict verdict =
 				PreprocessorExpression.decide(expression, state.defines);
@@ -451,11 +420,6 @@ public final class IncludeExpander {
 			return null;
 		}
 
-		// Not counted as undecidable, unlike decide's own road, and the difference is the point:
-		// that counter says how many conditions this reader handed to the compiler without an
-		// answer, and these it answers. An `#elif` is also asked here before the stack has said
-		// whether the branch can still matter, so counting would drift by every branch an earlier
-		// one had already won.
 		return verdict.taken().orElse(true) ? "1" : "0";
 	}
 
@@ -466,8 +430,7 @@ public final class IncludeExpander {
 
 		if (target.isEmpty()) {
 			state.missing++;
-			// Left in the text on purpose: the compiler then names the file that is absent,
-			// rather than the load quietly producing a unit with a hole in it.
+
 			state.emit("#error include not found: " + spec, true);
 			return;
 		}
@@ -476,7 +439,6 @@ public final class IncludeExpander {
 		expandFile(target.get(), depth + 1, state);
 	}
 
-	
 	private String track(String line, State state) {
 		Matcher undef = UNDEF.matcher(line);
 		if (undef.matches()) {
@@ -492,18 +454,16 @@ public final class IncludeExpander {
 			state.defines.put(applied.group(1),
 					LINE_COMMENT.matcher(applied.group(2)).replaceAll("").trim());
 		} else if (original.matches()) {
-			// The line declared something and no longer does: a switch that was turned off.
+
 			state.defines.remove(original.group(1));
 		}
 
 		return rewritten;
 	}
 
-	
 	public record ExpandedUnit(String entry, List<String> lines, String version,
 			ExpansionStats stats, BitSet live, Map<String, String> defines) {
 
-		
 		public ExpandedUnit {
 			live = (BitSet) live.clone();
 			defines = Map.copyOf(defines);
@@ -547,10 +507,8 @@ public final class IncludeExpander {
 		private int conditionals;
 		private int undecidable;
 
-		
 		private int openInOutput;
 
-		
 		private boolean inBlockComment;
 
 		private State(Map<String, String> defines, Set<String> loose) {
@@ -568,7 +526,6 @@ public final class IncludeExpander {
 			this.inBlockComment = BlockComments.openAfter(line, this.inBlockComment);
 		}
 
-		
 		private void emit(List<String> lines, boolean taken) {
 			StringBuilder joined = new StringBuilder();
 			for (String line : lines) {
@@ -589,7 +546,6 @@ public final class IncludeExpander {
 			return this.output.size() > MAX_LINES || this.characters > MAX_CHARACTERS;
 		}
 
-		
 		private void giveUp(String relative) {
 			if (this.exhausted++ == 0) {
 				emit("#error include budget exhausted at " + relative, true);

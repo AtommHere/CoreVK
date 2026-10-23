@@ -19,7 +19,6 @@ abstract class OpResolver<T> {
 			multiChar("", op);
 		}
 
-		
 		public void multiChar(String trailing, T op) {
 			T previous = map.put(trailing, op);
 
@@ -42,7 +41,7 @@ abstract class OpResolver<T> {
 				} else {
 					for (Map.Entry<String, T> subEntry : map.entrySet()) {
 						if ("".equals(subEntry.getKey())) {
-							// We already checked this key
+
 							continue;
 						}
 
@@ -51,7 +50,6 @@ abstract class OpResolver<T> {
 								"currently only be built of operators that contain one or two characters.");
 						}
 
-						// We can assume that this is the only other entry in the map due to the size check above
 						return new OpResolver.SingleDualChar<>(
 							singleChar,
 							subEntry.getValue(),
@@ -71,7 +69,6 @@ abstract class OpResolver<T> {
 							"currently only be built of operators that contain one or two characters.");
 					}
 
-					// We can assume that this is the only entry in the map due to the size check above.
 					return new OpResolver.DualChar<>(
 						subEntry.getValue(),
 						subEntry.getKey().charAt(0)
@@ -87,7 +84,6 @@ abstract class OpResolver<T> {
 		}
 	}
 
-	
 	static class SingleChar<T> extends OpResolver<T> {
 		private final T op;
 
@@ -101,7 +97,6 @@ abstract class OpResolver<T> {
 		}
 	}
 
-	
 	static class DualChar<T> extends OpResolver<T> {
 		private final T op;
 		private final char secondChar;
@@ -118,7 +113,6 @@ abstract class OpResolver<T> {
 		}
 	}
 
-	
 	static class SingleDualChar<T> extends OpResolver<T> {
 		private final T singleCharOperator;
 		private final T doubleCharOperator;

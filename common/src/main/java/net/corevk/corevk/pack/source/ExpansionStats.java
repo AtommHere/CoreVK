@@ -20,7 +20,6 @@ public record ExpansionStats(int seen, int followed, int skipped, int missing, i
 				this.exhausted + other.exhausted);
 	}
 
-	
 	public boolean clean() {
 		return this.missing == 0 && this.cycles == 0 && this.tooDeep == 0 && this.exhausted == 0;
 	}

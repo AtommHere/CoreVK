@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererHandMixin {
 
-	
 	@WrapOperation(method = "renderItemInHand", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;"

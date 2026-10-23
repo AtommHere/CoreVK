@@ -8,27 +8,21 @@ import java.util.stream.Stream;
 
 public final class MovingBlockVertex {
 
-	
 	public static final String NORMAL = "Normal";
 
-	
 	public static final String MID_BLOCK = "MidBlock";
 
-	
 	public static final List<String> APPENDED =
 			List.of(NORMAL, EntityVertex.MID_TEX_COORD, EntityVertex.TANGENT, MID_BLOCK);
 
-	
 	public static final List<String> ATTRIBUTES = Stream.concat(
 			Stream.of("Position", "Color", "UV0", "UV2"), APPENDED.stream()).toList();
 
-	
 	public static final Set<String> ANSWERED = Set.of("mc_midTexCoord", "at_tangent", "at_midBlock");
 
 	private MovingBlockVertex() {
 	}
 
-	
 	public static List<String> prologue(Set<String> used, Map<String, String> synthesized) {
 		List<String> lines = new ArrayList<>();
 
@@ -39,8 +33,7 @@ public final class MovingBlockVertex {
 		lines.add("#define of_Vertex vec4(Position, 1.0)");
 		lines.add("#define of_Color Color");
 		lines.add("#define of_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
-		// Not full light: CoreVK keys this draw on the light map (ShaderKey.java:50), and the element
-		// carries the block's own.
+
 		lines.add("#define of_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
 		lines.add("#define of_MultiTexCoord2 vec4(UV2, 0.0, 1.0)");
 		lines.addAll(VertexPrologue.blankTexCoords());
@@ -58,7 +51,6 @@ public final class MovingBlockVertex {
 		return List.copyOf(lines);
 	}
 
-	
 	private static String midBlock(String type) {
 		return switch (type) {
 			case "float" -> "(" + MID_BLOCK + ".x * 127.0)";
@@ -69,7 +61,6 @@ public final class MovingBlockVertex {
 		};
 	}
 
-	
 	private static String noBlock(String type) {
 		return switch (type) {
 			case "float" -> "-1.0";

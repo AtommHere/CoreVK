@@ -15,17 +15,14 @@ public final class AheadCompiler implements AutoCloseable {
 		this.device = device;
 	}
 
-	
 	public static boolean available(GpuDevice device) {
 		return true;
 	}
 
-	
 	public static AheadCompiler open(GpuDevice device) {
 		return new AheadCompiler(device);
 	}
 
-	
 	public Ahead build(RenderPipeline pipeline, ShaderSource source) throws Refused {
 		CompiledRenderPipeline compiled;
 		try {
@@ -45,10 +42,9 @@ public final class AheadCompiler implements AutoCloseable {
 
 	@Override
 	public void close() {
-		// Holds nothing of its own: the device pools the compilers.
+
 	}
 
-	
 	public static final class Ahead {
 
 		private final CompiledRenderPipeline built;
@@ -57,18 +53,15 @@ public final class AheadCompiler implements AutoCloseable {
 			this.built = built;
 		}
 
-		
 		public boolean adopt(GpuDevice device, RenderPipeline pipeline) {
 			return GraphicsApi.adopt(pipeline, this.built);
 		}
 
-		
 		public void destroy() {
 			this.built.close();
 		}
 	}
 
-	
 	public static final class Refused extends Exception {
 
 		Refused(String message) {

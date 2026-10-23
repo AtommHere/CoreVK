@@ -20,11 +20,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class FileDialog {
 
-	
 	private static final String FILTER = "txt";
 	private static final String FILTER_LABEL = "Shader Pack Settings (.txt)";
 
-	
 	private static final Map<Long, CompletableFuture<Optional<Path>>> WAITING =
 			new ConcurrentHashMap<>();
 
@@ -37,20 +35,16 @@ public final class FileDialog {
 	private FileDialog() {
 	}
 
-	
 	public static CompletableFuture<Optional<Path>> choose(Kind kind, String title, Path origin) {
 		CompletableFuture<Optional<Path>> answer = new CompletableFuture<>();
 		long question = NEXT.getAndIncrement();
 
-		// Before asking and not after, since SDL answers at once, before it returns, when it cannot
-		// show a dialog at all.
 		WAITING.put(question, answer);
 
 		try {
 			ask(kind, title, origin, question);
 		} catch (RuntimeException | LinkageError e) {
-			// A platform with no dialog to offer is not a broken screen, so the failure goes back
-			// through the future and the caller says it once, the same as on 26.2.
+
 			WAITING.remove(question);
 			answer.completeExceptionally(e);
 		}
@@ -59,7 +53,7 @@ public final class FileDialog {
 	}
 
 	private static void ask(Kind kind, String title, Path origin, long question) {
-		// SDL's own rule for this call, and on macOS a broken one is a crash rather than an error.
+
 		RenderSystem.assertOnRenderThread();
 
 		SDL_DialogFileFilter.Buffer filters = Kept.FILTERS;
@@ -71,9 +65,6 @@ public final class FileDialog {
 					"SDL could not make a file dialog: " + SDLError.SDL_GetError());
 		}
 
-		// SDL is done with the set once the call returns: the functions it builds on this one destroy
-		// their own set straight after asking. The filters are the exception, read through their
-		// pointer until the callback has run, which is why they are kept rather than made here.
 		try {
 			SDLProperties.SDL_SetPointerProperty(properties,
 					SDLDialog.SDL_PROP_FILE_DIALOG_WINDOW_POINTER, window);
@@ -83,9 +74,7 @@ public final class FileDialog {
 					SDLDialog.SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER, filters.remaining());
 			SDLProperties.SDL_SetStringProperty(properties,
 					SDLDialog.SDL_PROP_FILE_DIALOG_TITLE_STRING, title);
-			// A file rather than a folder, as the 26.2 half hands tinyfd. SDL takes either, and each
-			// system does with it what its own dialog does: the folder it is in, the name offered to
-			// save under, or both.
+
 			String at = origin.toAbsolutePath().toString();
 			SDLProperties.SDL_SetStringProperty(properties,
 					SDLDialog.SDL_PROP_FILE_DIALOG_LOCATION_STRING, at);
@@ -99,7 +88,6 @@ public final class FileDialog {
 		}
 	}
 
-	
 	private static void answered(long question, long files, int filter) {
 		CompletableFuture<Optional<Path>> answer = WAITING.remove(question);
 		if (answer == null) {
@@ -123,7 +111,6 @@ public final class FileDialog {
 		}
 	}
 
-	
 	private static final class Kept {
 
 		static final SDL_DialogFileCallback CALLBACK =

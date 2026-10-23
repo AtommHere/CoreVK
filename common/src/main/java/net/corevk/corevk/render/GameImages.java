@@ -16,7 +16,6 @@ final class GameImages {
 	private GameImages() {
 	}
 
-	
 	static String name(GpuTextureView view) {
 		if (view == null) {
 			return "one white pixel, this pass having no image of its own";
@@ -36,12 +35,9 @@ final class GameImages {
 			}
 		}
 
-		// Every image of the pack's own is one of these, the colour targets first of all, so this is
-		// the ordinary answer for a sampler the chain fills rather than a fault.
 		return "an image the game does not hold, " + size;
 	}
 
-	
 	static GpuTextureView held(Identifier location) {
 		Minecraft minecraft = Minecraft.getInstance();
 		TextureManager manager = minecraft == null ? null : minecraft.getTextureManager();
@@ -61,7 +57,6 @@ final class GameImages {
 		return missing == null ? null : viewOf(missing);
 	}
 
-	
 	private static GpuTextureView viewOf(AbstractTexture texture) {
 		try {
 			return texture.getTextureView();

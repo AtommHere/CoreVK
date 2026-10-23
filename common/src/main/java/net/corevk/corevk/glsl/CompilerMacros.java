@@ -8,7 +8,6 @@ import java.util.Map;
 
 public final class CompilerMacros {
 
-	
 	private static final List<String> PREAMBLE = List.of(
 			"GL_AMD_gcn_shader", "GL_AMD_gpu_shader_half_float",
 			"GL_AMD_gpu_shader_half_float_fetch", "GL_AMD_gpu_shader_int16",
@@ -86,7 +85,6 @@ public final class CompilerMacros {
 	private CompilerMacros() {
 	}
 
-	
 	public static Map<String, String> definedIn(ProgramStage stage) {
 		Map<String, String> defined = new LinkedHashMap<>();
 		for (String name : PREAMBLE) {
@@ -95,10 +93,8 @@ public final class CompilerMacros {
 			}
 		}
 
-		// The Vulkan GLSL version the compiler targets, which it writes whatever the target's own
-		// version is.
 		defined.put("VULKAN", "100");
-		// glslang's names for the stages are the enum's, GL_FRAGMENT_SHADER for FRAGMENT.
+
 		defined.put("GL_" + stage.name() + "_SHADER", "1");
 
 		return defined;

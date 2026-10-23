@@ -11,11 +11,9 @@ import org.joml.Vector4f;
 
 public final class CelestialValues {
 
-	
 	private static final Matrix4f SCRATCH = new Matrix4f();
 	private static final Vector4f POSITION = new Vector4f();
 
-	
 	private static final Settled SUN = new Settled();
 	private static final Settled MOON = new Settled();
 	private static final Settled UP = new Settled();
@@ -39,8 +37,6 @@ public final class CelestialValues {
 		builder.add("moonPosition", UniformShape.VEC3, (world, out) -> celestial(world, false, out));
 		builder.add("upPosition", UniformShape.VEC3, CelestialValues::up);
 
-		// The pack has to have opted in for this one, and not for the position below it. Where the
-		// light comes from is something a pack is written around; where the flash is is a fact.
 		builder.add("shadowLightPosition", UniformShape.VEC3, (world, out) -> {
 			if (inEndFlash(world) && world.endFlashShadows()) {
 				endFlash(world, out);
@@ -63,10 +59,8 @@ public final class CelestialValues {
 				(world, out) -> out.set(world.previousEndFlashIntensity()));
 	}
 
-	
 	public static Vector3f shadowLightVector(WorldState world, Vector3f dest) {
-		// The shared scratch, on the invariant the field's own note carries: every call fills all of
-		// it before reading any of it, so a reader between two writes is impossible.
+
 		if (inEndFlash(world) && world.endFlashShadows()) {
 			SCRATCH.identity()
 					.rotateY((float) Math.toRadians(180.0F - world.endFlashYAngleDegrees()))
@@ -79,16 +73,12 @@ public final class CelestialValues {
 							? world.sunAngleDegrees() : world.moonAngleDegrees()));
 		}
 
-		// A direction and not a place, which is why the w is nought: the hundred is a length the
-		// normalisation throws away, and it is kept only so that the rotations are fed the very
-		// vector the uniform feeds them.
 		POSITION.set(0.0F, 100.0F, 0.0F, 0.0F);
 		SCRATCH.transform(POSITION);
 
 		return dest.set(POSITION.x, POSITION.y, POSITION.z).normalize();
 	}
 
-	
 	private static float sunAngle(WorldState world, boolean sun) {
 		float angle = (sun ? world.sunAngleDegrees() : world.moonAngleDegrees()) + 90.0F;
 		if (angle < 0.0F) {
@@ -108,7 +98,6 @@ public final class CelestialValues {
 		return world.dimensionOrdinal() == 1 && world.hasEndFlash();
 	}
 
-	
 	private static void up(WorldState world, Val out) {
 		if (!UP.holds(world.gbufferModelView())) {
 			SCRATCH.set(world.gbufferModelView()).rotateY((float) Math.toRadians(-90.0F));
@@ -120,7 +109,6 @@ public final class CelestialValues {
 		out.set(UP_POSITION);
 	}
 
-	
 	private static void celestial(WorldState world, boolean sun, Val out) {
 		Settled settled = sun ? SUN : MOON;
 		Vector3f held = sun ? SUN_POSITION : MOON_POSITION;
@@ -140,7 +128,6 @@ public final class CelestialValues {
 		out.set(held);
 	}
 
-	
 	private static void endFlash(WorldState world, Val out) {
 		if (!FLASH.holds(world.gbufferModelView(),
 				world.endFlashXAngleDegrees(), world.endFlashYAngleDegrees())) {

@@ -3,13 +3,13 @@ package net.corevk.corevk.uniform.expr.kroppeb.stareval.parser;
 import net.corevk.corevk.uniform.expr.kroppeb.stareval.exception.UnexpectedCharacterException;
 
 public final class StringReader {
-	
+
 	private final String string;
-	
+
 	private int nextIndex = -1;
-	
+
 	private int lastIndex;
-	
+
 	private int mark;
 
 	public StringReader(String string) {
@@ -17,12 +17,10 @@ public final class StringReader {
 		this.advanceOneCharacter();
 		this.skipWhitespace();
 
-		// Initializing these variables to the actual start of the string.
 		this.lastIndex = this.nextIndex;
 		this.mark();
 	}
 
-	
 	private void advanceOneCharacter() {
 		this.lastIndex = this.nextIndex;
 
@@ -33,31 +31,26 @@ public final class StringReader {
 		this.nextIndex++;
 	}
 
-	
 	public void skipWhitespace() {
 		while (this.nextIndex < this.string.length() && Character.isWhitespace(this.string.charAt(this.nextIndex))) {
 			this.nextIndex++;
 		}
 	}
 
-	
 	public char peek() {
 		return this.string.charAt(this.nextIndex);
 	}
 
-	
 	public void skipOneCharacter() {
 		this.advanceOneCharacter();
 	}
 
-	
 	public char read() {
 		char current = this.peek();
 		this.skipOneCharacter();
 		return current;
 	}
 
-	
 	public void read(char c) throws UnexpectedCharacterException {
 		char read = this.read();
 
@@ -66,7 +59,6 @@ public final class StringReader {
 		}
 	}
 
-	
 	public boolean tryRead(char c) {
 		if (!this.canRead()) {
 			return false;
@@ -82,17 +74,14 @@ public final class StringReader {
 		return true;
 	}
 
-	
 	public void mark() {
 		this.mark = this.lastIndex;
 	}
 
-	
 	public String substring() {
 		return this.string.substring(this.mark, this.lastIndex + 1);
 	}
 
-	
 	public boolean canRead() {
 		return this.nextIndex < this.string.length();
 	}

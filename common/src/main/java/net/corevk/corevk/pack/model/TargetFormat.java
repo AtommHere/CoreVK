@@ -46,7 +46,6 @@ public enum TargetFormat {
 	RGB10A2_UINT(4, 4, true),
 	RG11B10_FLOAT(3, 4, false);
 
-	
 	private static final TargetFormat FALLBACK = RGBA8_UNORM;
 
 	private static final String DEFAULT_NAME = "RGBA";
@@ -65,27 +64,23 @@ public enum TargetFormat {
 
 	public enum Reason { EXACT, PROMOTED, REPLACED, UNKNOWN }
 
-	
 	public record Resolution(String declared, TargetFormat used, Reason reason, boolean alphaAdded) {
 	}
 
-	
 	public static Resolution resolve(String declared) {
 		Entry entry = DECLARED.get(declared.trim().toUpperCase(Locale.ROOT));
 		if (entry == null) {
-			// A typo in a downloaded pack costs one line of log, never a load that fails.
+
 			return new Resolution(declared, FALLBACK, Reason.UNKNOWN, false);
 		}
 
 		return new Resolution(declared, entry.used(), entry.reason(), entry.alphaAdded());
 	}
 
-	
 	public static Resolution defaultFormat() {
 		return new Resolution(DEFAULT_NAME, FALLBACK, Reason.EXACT, false);
 	}
 
-	
 	public int components() {
 		return this.components;
 	}
@@ -94,7 +89,6 @@ public enum TargetFormat {
 		return this.bytesPerPixel;
 	}
 
-	
 	public boolean integer() {
 		return this.integer;
 	}
@@ -102,7 +96,6 @@ public enum TargetFormat {
 	private static Map<String, Entry> table() {
 		Map<String, Entry> declared = new LinkedHashMap<>();
 
-		// CoreVK's implicit default, which packs may also write out.
 		exact(declared, DEFAULT_NAME, RGBA8_UNORM);
 
 		exact(declared, "R8", R8_UNORM);
@@ -143,11 +136,9 @@ public enum TargetFormat {
 		exact(declared, "RGBA32UI", RGBA32_UINT);
 		exact(declared, "RGB10_A2", RGB10A2_UNORM);
 		exact(declared, "RGB10_A2UI", RGB10A2_UINT);
-		// Three channels and no alpha, and still exact: the packing is one thirty two bit word,
-		// which every device attaches.
+
 		exact(declared, "R11F_G11F_B10F", RG11B10_FLOAT);
 
-		// Three components, widened. Twenty six of the corpus's declarations land here.
 		promoted(declared, "RGB8", RGBA8_UNORM);
 		promoted(declared, "RGB8_SNORM", RGBA8_SNORM);
 		promoted(declared, "RGB16", RGBA16_UNORM);
@@ -161,16 +152,12 @@ public enum TargetFormat {
 		promoted(declared, "RGB32I", RGBA32_SINT);
 		promoted(declared, "RGB32UI", RGBA32_UINT);
 
-		// Relics of the fixed function era with no modern equivalent at all. Every one of them
-		// gains precision here, which is what the driver has been doing for them for years
-		// anyway, and the corpus uses exactly one of them once.
 		replaced(declared, "RGBA2", RGBA8_UNORM, false);
 		replaced(declared, "RGBA4", RGBA8_UNORM, false);
 		replaced(declared, "R3_G3_B2", RGBA8_UNORM, true);
 		replaced(declared, "RGB5_A1", RGBA8_UNORM, false);
 		replaced(declared, "RGB565", RGBA8_UNORM, true);
-		// The one that loses something. Nine bits of mantissa per channel with a shared exponent,
-		// so half floats keep more of it than the eleven and ten bit packing would.
+
 		replaced(declared, "RGB9_E5", RGBA16_FLOAT, true);
 
 		return Map.copyOf(declared);

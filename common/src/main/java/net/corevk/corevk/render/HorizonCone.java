@@ -15,35 +15,26 @@ import net.minecraft.client.Minecraft;
 
 final class HorizonCone {
 
-	
 	private static final float TOP = 16.0F;
 
-	
 	private static final float BOTTOM = -16.0F;
 
-	
 	private static final int SIDES = 8;
 
-	
 	private static final int VERTICES = SIDES + 2;
 
-	
 	private static final int MAX_RADIUS = 256;
 
 	private static final String LABEL = "CoreVK horizon cone";
 
 	private GpuBuffer buffer;
 
-	
 	private int radius;
 
-	
 	private boolean drew;
 
-	
 	private boolean refused;
 
-	
 	void update(GpuDevice device) {
 		int wanted = radius();
 		if (this.buffer != null && this.radius == wanted) {
@@ -65,13 +56,9 @@ final class HorizonCone {
 		}
 	}
 
-	
 	void draw(RenderPass pass, String program, TerrainDraw.Mask world) {
 		if (this.buffer == null || world != TerrainDraw.Mask.WRITTEN) {
-			// Said once, and only for the answer that is really an answer: a refusal while nothing
-			// has been read yet is the first frame and settles itself. The band staying bare is not
-			// a thing a reader can tell from a picture, so without this line the cone would be
-			// missing for a reason nothing anywhere says.
+
 			if (world == TerrainDraw.Mask.ABSENT && !this.refused) {
 				this.refused = true;
 				CoreVK.logger().info("The horizon cone is not drawn: the world's opaque geometry "
@@ -85,9 +72,6 @@ final class HorizonCone {
 		pass.setVertexBuffer(0, this.buffer.slice());
 		pass.draw(VERTICES, 1, 0, 0);
 
-		// Once, and it is the only proof this lot can leave outside the picture: the band it closes
-		// is a thing nobody can measure from a log, but whether the geometry was recorded at all is
-		// exactly what this says, and with which program.
 		if (!this.drew) {
 			this.drew = true;
 			CoreVK.logger().info("The horizon cone is drawn with {}, {} walls out to {} blocks "
@@ -107,7 +91,6 @@ final class HorizonCone {
 		this.refused = false;
 	}
 
-	
 	private static int radius() {
 		Minecraft minecraft = Minecraft.getInstance();
 		int blocks = minecraft == null ? MAX_RADIUS : minecraft.options.getEffectiveRenderDistance() * 16;
@@ -115,7 +98,6 @@ final class HorizonCone {
 		return Math.min(blocks, MAX_RADIUS);
 	}
 
-	
 	private static void build(VertexConsumer consumer, int radius) {
 		consumer.addVertex(0.0F, BOTTOM, 0.0F);
 

@@ -9,18 +9,15 @@ import java.util.Set;
 
 final class PackBuiltins {
 
-	
 	private static final Map<String, String> HELPERS = helpers();
 
 	private PackBuiltins() {
 	}
 
-	
 	static String helper(String builtin) {
 		return HELPERS.get(builtin);
 	}
 
-	
 	static List<String> definitions(Set<String> called) {
 		List<String> lines = new ArrayList<>();
 		for (String builtin : HELPERS.keySet()) {

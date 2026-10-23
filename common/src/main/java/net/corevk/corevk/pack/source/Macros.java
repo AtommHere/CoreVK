@@ -8,7 +8,6 @@ public final class Macros {
 
 	private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_]\\w*");
 
-	
 	private static final int MAX_ROUNDS = 4;
 
 	private Macros() {
@@ -47,7 +46,6 @@ public final class Macros {
 		return out.toString();
 	}
 
-	
 	private static boolean component(String text, int start) {
 		for (int i = start - 1; i >= 0; i--) {
 			char c = text.charAt(i);

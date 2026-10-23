@@ -25,9 +25,6 @@ public final class TimeValues {
 		builder.add("worldDay", UniformShape.INT, (world, out) -> out.set((int) world.worldDay()));
 		builder.add("moonPhase", UniformShape.INT, (world, out) -> out.set(world.moonPhase()));
 
-		// The real world clock, which packs use for a seasonal tint or a date joke. Read once a
-		// frame like everything else here: read per source, two passes of one frame either side of
-		// a second boundary would be handed two different times.
 		builder.add("currentDate", UniformShape.IVEC3, (world, out) -> {
 			LocalDateTime now = WALL_CLOCK.at(world);
 			out.set(now.getYear(), now.getMonthValue(), now.getDayOfMonth());
@@ -44,9 +41,6 @@ public final class TimeValues {
 		});
 	}
 
-	
-	// The machine's own zone is the answer here rather than a default nobody chose: a pack asking
-	// for the date wants the clock on the wall behind the player.
 	@SuppressWarnings("JavaTimeDefaultTimeZone")
 	private static final class WallClock {
 

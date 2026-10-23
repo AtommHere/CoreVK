@@ -17,21 +17,17 @@ import java.util.Random;
 
 public final class NoiseTexture {
 
-	
 	private static final int MAX_SIDE = 16384;
 
-	
 	private static final long MAX_TEXELS = 32L * 1024 * 1024;
 
 	private NoiseTexture() {
 	}
 
-	
 	@SuppressWarnings("ArrayRecordComponent")
 	public record Image(int width, int height, byte[] rgba) {
 	}
 
-	
 	public static final class TooLarge extends IOException {
 
 		private static final long serialVersionUID = 1L;
@@ -41,7 +37,6 @@ public final class NoiseTexture {
 		}
 	}
 
-	
 	public static Image decode(byte[] png) throws IOException {
 		try (ImageInputStream stream = new MemoryCacheImageInputStream(new ByteArrayInputStream(png))) {
 			Iterator<ImageReader> readers = ImageIO.getImageReaders(stream);
@@ -67,7 +62,6 @@ public final class NoiseTexture {
 		}
 	}
 
-	
 	private static Image pixels(BufferedImage image, int width, int height) {
 		byte[] pixels = new byte[width * height * 4];
 		if (bands(image)) {
@@ -79,17 +73,8 @@ public final class NoiseTexture {
 		return new Image(width, height, pixels);
 	}
 
-	
 	private static boolean bands(BufferedImage image) {
-		// An indexed palette is the first of the models whose bands say nothing on their own: the
-		// sample is an index. Whole bytes are the other half of the question, a band of five or of
-		// ten bits being a field of a packed word rather than a channel. Both go through getRGB,
-		// which converts nothing there: a palette and a packed word are both already sRGB.
-		//
-		// A sample is a channel only in a grey or an RGB space with its alpha kept apart: a
-		// premultiplied alpha or a CMYK band would be uploaded as the colour it is not. A PNG never
-		// carries either, so this is about the other formats the reader accepts, which the
-		// reference refuses outright; they take the colour model road rather than a raw one.
+
 		if (image.getColorModel() instanceof IndexColorModel || image.isAlphaPremultiplied()) {
 			return false;
 		}
@@ -165,12 +150,10 @@ public final class NoiseTexture {
 		}
 	}
 
-	
 	public static byte[] rgba(int resolution) {
 		byte[] pixels = new byte[resolution * resolution * 4];
 		Random random = new Random(0);
 
-		// x outside and y inside, which is CoreVK's order and therefore the packs' order.
 		for (int x = 0; x < resolution; x++) {
 			for (int y = 0; y < resolution; y++) {
 				int colour = random.nextInt() | (255 << 24);

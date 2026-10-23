@@ -35,7 +35,6 @@ public enum PixelType {
 		this.packed = packed;
 	}
 
-	
 	public static Optional<PixelType> parse(String name) {
 		for (PixelType type : values()) {
 			if (type.name().equalsIgnoreCase(name.trim())) {
@@ -46,12 +45,10 @@ public enum PixelType {
 		return Optional.empty();
 	}
 
-	
 	public long bytesPerTexel(PixelFormat format) {
 		return this.packed ? this.bytes : (long) this.bytes * format.components();
 	}
 
-	
 	public int channelBytes() {
 		return this.bytes;
 	}

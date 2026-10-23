@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 
 public final class NameIds {
 
-	
 	public enum Kind {
 
 		ITEM("item"),
@@ -34,13 +33,11 @@ public final class NameIds {
 			return this.keyword + ".properties";
 		}
 
-		
 		Pattern entry() {
 			return Pattern.compile("^\\s*" + this.keyword + "\\.(\\d+)\\s*=\\s*(.*)$");
 		}
 	}
 
-	
 	public static final int NONE = -1;
 
 	private static final NameIds EMPTY = new NameIds(false, Map.of(), List.of());
@@ -95,8 +92,6 @@ public final class NameIds {
 					continue;
 				}
 
-				// The last declaration wins, which is what a pack that overrides its own table
-				// upgrade path expects, and the earlier one is named rather than lost quietly.
 				Integer previous = byName.put(namespaced(token), id);
 				if (previous != null && previous != id) {
 					problems.add(token + ": claimed by " + kind.keyword() + "." + previous + " and by "
@@ -116,7 +111,6 @@ public final class NameIds {
 		return this.present;
 	}
 
-	
 	public int id(String namespacedName) {
 		return this.byName.getOrDefault(namespacedName, NONE);
 	}
@@ -125,7 +119,6 @@ public final class NameIds {
 		return this.byName;
 	}
 
-	
 	public List<String> problems() {
 		return this.problems;
 	}

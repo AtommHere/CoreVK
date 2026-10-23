@@ -16,17 +16,14 @@ import org.joml.Vector4f;
 
 public final class ShadowCullFrustum implements Frustum {
 
-	
 	private static final int MAX_PLANES = 13;
 
-	
 	private static final int[][] NEIGHBOURS = {
 		{2, 3, 4, 5},
 		{0, 1, 4, 5},
 		{0, 1, 2, 3},
 	};
 
-	
 	private static final float SECTION_HALF_SIZE = Viewport.CHUNK_SECTION_PADDED_RADIUS;
 
 	private static final Matrix4f TRANSPOSED = new Matrix4f();
@@ -43,7 +40,6 @@ public final class ShadowCullFrustum implements Frustum {
 	private final boolean[] back = new boolean[6];
 	private final Vector3f light = new Vector3f();
 
-	
 	private final float safeZone;
 
 	private int planeCount;
@@ -55,7 +51,6 @@ public final class ShadowCullFrustum implements Frustum {
 		build(camera);
 	}
 
-	
 	public static Chosen of(ShadowCullPlan plan) {
 		boolean boxAsked = BoxShadowCull.asked();
 		boolean box = plan.state() == ShadowCullState.DISTANCE
@@ -81,11 +76,9 @@ public final class ShadowCullFrustum implements Frustum {
 				: new Chosen(new ShadowCull(frustum, plan.bound(), plan.safeZone()), token);
 	}
 
-	
 	public record Chosen(Frustum frustum, String culling) {
 	}
 
-	
 	private static String token(ShadowCullPlan plan, String shape) {
 		StringBuilder line = new StringBuilder();
 		line.append(plan.state().name()).append(' ').append(shape);
@@ -106,10 +99,6 @@ public final class ShadowCullFrustum implements Frustum {
 	private void build(Matrix4fc camera) {
 		Vector4f[] faces = faces(camera);
 
-		// The faces whose inward normal points towards the light, which are the far side of the
-		// camera's volume as the light sees it and the only ones that still bound the casters. A
-		// normal exactly across the light bounds nothing and cuts nothing either, so it is kept
-		// without being counted as back, which is CoreVK's reading of the degenerate case.
 		for (int index = 0; index < faces.length; index++) {
 			Vector4f face = faces[index];
 			float towards = face.x * this.light.x + face.y * this.light.y + face.z * this.light.z;
@@ -120,7 +109,6 @@ public final class ShadowCullFrustum implements Frustum {
 			}
 		}
 
-		// And the silhouette: every edge between a kept face and a dropped one, swept along the light.
 		for (int index = 0; index < faces.length; index++) {
 			if (!this.back[index]) {
 				continue;
@@ -134,16 +122,13 @@ public final class ShadowCullFrustum implements Frustum {
 		}
 	}
 
-	
 	private static Vector4f[] faces(Matrix4fc camera) {
 		TRANSPOSED.set(camera).transpose();
 		face(FACES[0], TRANSPOSED, -1.0F, 0.0F, 0.0F, 1.0F);
 		face(FACES[1], TRANSPOSED, 1.0F, 0.0F, 0.0F, 1.0F);
 		face(FACES[2], TRANSPOSED, 0.0F, -1.0F, 0.0F, 1.0F);
 		face(FACES[3], TRANSPOSED, 0.0F, 1.0F, 0.0F, 1.0F);
-		// The far face, rowW - rowZ, and the near one, rowW + rowZ. CoreVK's own two lines, and
-		// they are right here because the matrix is already in CoreVK's volume. The class note
-		// carries what a second conversion would move and what the drawn matrix would lose.
+
 		face(FACES[4], TRANSPOSED, 0.0F, 0.0F, -1.0F, 1.0F);
 		face(FACES[5], TRANSPOSED, 0.0F, 0.0F, 1.0F, 1.0F);
 
@@ -155,7 +140,6 @@ public final class ShadowCullFrustum implements Frustum {
 		into.set(x, y, z, w).mul(transposed).normalize();
 	}
 
-	
 	private void edge(Vector4f back, Vector4f front) {
 		EDGE.set(back.x, back.y, back.z).cross(front.x, front.y, front.z);
 		NORMAL.set(EDGE).cross(this.light);
@@ -178,19 +162,14 @@ public final class ShadowCullFrustum implements Frustum {
 
 	@Override
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// The safe zone is a KEEP and not a bound, so it stands beside the sweep rather than in front
-		// of it, which is the shape CoreVK gives it (SafeZoneCullingFrustum.testAab): a section reaching
-		// into the pack's own voxel grid is drawn whatever the sweep says of it, because the pack
-		// samples that grid from places the sweep knows nothing about.
+
 		return within(minX, minY, minZ, maxX, maxY, maxZ)
 				|| visible(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	@Override
 	public int intersectAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// Wholly inside the safe zone answers INSIDE and not INTERSECT, which is CoreVK's own line
-		// (SafeZoneCullingFrustum.intersectAab:76-78). It buys the walk the right to stop testing a
-		// whole subtree; answered INTERSECT it would still keep everything, one test at a time.
+
 		if (this.safeZone >= 0.0F && minX >= -this.safeZone && maxX <= this.safeZone
 				&& minY >= -this.safeZone && maxY <= this.safeZone
 				&& minZ >= -this.safeZone && maxZ <= this.safeZone) {
@@ -209,7 +188,6 @@ public final class ShadowCullFrustum implements Frustum {
 		return testSectionExpanded(originX, originY, originZ, 0.0F);
 	}
 
-	
 	@Override
 	public boolean testSectionExpanded(float originX, float originY, float originZ, float extend) {
 		float half = SECTION_HALF_SIZE + extend;
@@ -218,7 +196,6 @@ public final class ShadowCullFrustum implements Frustum {
 				originY + half, originZ + half);
 	}
 
-	
 	private boolean within(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		return this.safeZone >= 0.0F
 				&& maxX >= -this.safeZone && minX <= this.safeZone
@@ -226,7 +203,6 @@ public final class ShadowCullFrustum implements Frustum {
 				&& maxZ >= -this.safeZone && minZ <= this.safeZone;
 	}
 
-	
 	private boolean visible(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		for (int index = 0; index < this.planeCount; index++) {
 			float[] plane = this.planes[index];
@@ -242,7 +218,6 @@ public final class ShadowCullFrustum implements Frustum {
 		return true;
 	}
 
-	
 	private int corners(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		boolean inside = true;
 
@@ -266,7 +241,6 @@ public final class ShadowCullFrustum implements Frustum {
 		return inside ? FrustumIntersection.INSIDE : FrustumIntersection.INTERSECT;
 	}
 
-	
 	private static final class AlwaysVisible implements Frustum {
 
 		private static final AlwaysVisible INSTANCE = new AlwaysVisible();

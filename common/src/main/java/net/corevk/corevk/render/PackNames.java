@@ -17,15 +17,12 @@ public final class PackNames {
 	private PackNames() {
 	}
 
-	
 	public static String cacheWord() {
 		return DebugNames.VERSION;
 	}
 
-	
 	public static ByteBuffer patch(String filename, ByteBuffer spirv) {
-		// The same set of compiles RawLocals claims, asked of RawLocals rather than restated: two
-		// copies of that rule would answer differently the day one of them is widened.
+
 		if (ShaderDebugInfo.asked() || !RawLocals.ours(filename)) {
 			return spirv;
 		}
@@ -47,7 +44,6 @@ public final class PackNames {
 		return stripped;
 	}
 
-	
 	public static void say(long compiled) {
 		long walked = WALKED.getAndSet(0L);
 		long stripped = STRIPPED.getAndSet(0L);

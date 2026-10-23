@@ -16,7 +16,6 @@ import java.nio.ByteBuffer;
 @Mixin(IntermediaryShaderModule.class)
 public abstract class IntermediaryShaderModuleMixin {
 
-	
 	@Inject(method = "createFromSpirv", at = @At("RETURN"), require = 1)
 	private static void corevk$storageImages(String filename, ByteBuffer spirv,
 			CallbackInfoReturnable<IntermediaryShaderModule> callback) {
@@ -25,7 +24,6 @@ public abstract class IntermediaryShaderModuleMixin {
 		ComputeShader.appendStorageBuffers(callback.getReturnValue());
 	}
 
-	
 	@WrapOperation(method = "rebind", require = 1,
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/vulkan/glsl/SpvSampler;dimensions()I"))
