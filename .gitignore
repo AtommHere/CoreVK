@@ -1,0 +1,74 @@
+# Gradle
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Run directories. ModDevGradle puts the dev client under runs/.
+run/
+*/run/
+runs/
+*/runs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.ipr
+*.iws
+.fleet/
+.classpath
+.project
+.settings/
+# ModDevGradle writes launch configs here, with absolute paths to whoever built them.
+.eclipse/
+bin/
+*/bin/
+local.properties
+
+# OS
+Thumbs.db
+.DS_Store
+
+# JVM crash and heap dumps
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# Working notes, planning and measurement work. Useful to have next to the code,
+# but none of it is part of what the project ships. Matched by shape rather than
+# listed by name: any Markdown at the root that is not one of the published pages,
+# any table of measurements written there, and any dotted directory that is not the
+# workflow definitions or the commit hooks.
+#
+# The tables earn their line the hard way: two of them sat at the root untracked for
+# a week, and every one is measured on shader packs that may not be redistributed.
+# Nothing of a pack's own text is in them, but a git add -A would still have put a
+# reading of somebody else's work into a repository meant to be public.
+#
+# The allow list earns its own the same way: a page added at the root without a line
+# here is not refused, it is passed over, so git add -A reports nothing and the commit
+# goes out without it. That is how CHANGELOG.md was first committed empty-handed.
+/*.md
+!/README.md
+!/INSTALL.md
+!/CONTRIBUTING.md
+!/CHANGELOG.md
+!/CODE_OF_CONDUCT.md
+!/SECURITY.md
+/*.tsv
+/.*/
+!/.github/
+!/.githooks/
+
+# Pages being written. A page moves out of here and into docs/ when it has been read back
+# against the source and stops moving; until then it is a draft, and publishing a draft is how
+# a wrong mechanism gets quoted back at you six weeks later. Ignored rather than deleted so the
+# matter survives being wrong.
+/docs/in-progress/
+
+# Shader packs used for testing are not redistributable and must never be committed.
+*.zip
+
+# glslangValidator drops its SPIR-V next to wherever it was run from.
+*.spv

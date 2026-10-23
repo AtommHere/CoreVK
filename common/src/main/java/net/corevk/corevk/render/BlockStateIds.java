@@ -1,0 +1,240 @@
+package net.corevk.corevk.render;
+
+import net.corevk.corevk.pack.id.BlockIds;
+import net.corevk.corevk.CoreVK;
+
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+public final class BlockStateIds {
+
+	
+	public static final int NONE = 0;
+
+	
+	public static final int PACKED_MASK = 0x7FFFFF;
+
+	
+	private static final int MAX_ID = (PACKED_MASK >> 1) - 1;
+
+	
+	private static final int FLUID = 1;
+
+	private static volatile Object2IntMap<BlockState> table = empty();
+
+	
+	private static volatile int generation;
+
+	private BlockStateIds() {
+	}
+
+	
+	// One writer, here, and the counter is volatile for the mesh readers rather than for a second
+	// writer: a pack is installed where the pack is read, and two loads never overlap.
+	@SuppressWarnings("NonAtomicVolatileUpdate")
+	static void install(BlockIds ids) {
+		Object2IntMap<BlockState> built = empty();
+		List<String> unknown = new ArrayList<>();
+		// A set, because a declaration on a tag walks every block of it and would otherwise say the
+		// same thing forty times over.
+		Set<String> widened = new TreeSet<>();
+		for (BlockIds.Entry entry : ids.entries()) {
+			if (entry.id() > MAX_ID) {
+				// Refused rather than truncated. A number that does not fit would come back out of
+				// the mesh as a different number, which lights the wrong blocks and says nothing.
+				// Weighed on the id and not on its packed form, which overflows an int long before
+				// it passes the mask: weighed on its packed form, block.1073741924 is accepted, the
+				// encoder cuts it down, and the shader reads the pack's own id 100. The file writes
+				// block. followed by digits, so there is no negative number to weigh.
+				unknown.add("block." + entry.id() + ", too large for the mesh to carry");
+			} else if (entry.tag()) {
+				addTag(entry, built, unknown, widened);
+			} else {
+				addBlock(entry, built, unknown, widened);
+			}
+		}
+
+		Object2IntMap<BlockState> previous = table;
+		table = built;
+		generation++;
+		if (!ids.isEmpty()) {
+			// The table is numbered here as well as where it is read back, and for the same reason:
+			// a second load of the same pack prints this line again, word for word, and the number
+			// is what ties the two readings of the mesh below to the table they were taken against.
+			CoreVK.logger().info("{} of this pack's {} block declarations reach {} block states, in "
+					+ "block table {}", ids.entries().size() - unknown.size(), ids.entries().size(),
+					built.size(), generation);
+		}
+
+		// Named rather than counted. Every one of them is a block another mod was meant to add, or a
+		// name the pack spelled wrong, and both read as "the pack does nothing for that block".
+		if (!unknown.isEmpty()) {
+			CoreVK.logger().info("{} name nothing this game has and are dropped: {}", unknown.size(),
+					unknown);
+		}
+
+		// Said out loud, where this was a debug line nobody turns on. A filter naming a property the
+		// block has not got is not skipped, it is taken out of the test, and what is left matches
+		// more states than the pack wrote: the declaration paints the whole block where it meant to
+		// paint the half of it that is lit, or wet, or open.
+		if (!widened.isEmpty()) {
+			// Filters and not declarations: one declaration naming two absent properties is two lines
+			// here. The set is keyed by the id, the name and the property, so two declarations that
+			// agree on all three fold into one line; naming them declarations would be wrong more
+			// often than naming them filters is.
+			CoreVK.logger().warn("{} filters name a property their block has not got, so the "
+					+ "declarations that carry them bind more states than the pack named: {}",
+					widened.size(), widened);
+		}
+
+		ids.problems().forEach(problem -> CoreVK.logger().warn("{}", problem));
+		rebuildIfMoved(previous, built);
+	}
+
+	
+	private static void rebuildIfMoved(Object2IntMap<BlockState> previous,
+			Object2IntMap<BlockState> built) {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft == null || minecraft.level == null || previous.equals(built)) {
+			return;
+		}
+
+		CoreVK.logger().info("The block ids moved, from {} states to {}. The sections carry them, so "
+				+ "they are all built again", previous.size(), built.size());
+		minecraft.levelExtractor.allChanged();
+	}
+
+	
+	public static int packed(BlockState state) {
+		int id = table.getInt(state);
+
+		return id < 0 ? NONE : packedFrom(id);
+	}
+
+	
+	public static int packedFluid(BlockState state) {
+		return (state == null ? NONE : packed(state)) | FLUID;
+	}
+
+	
+	public static int id(BlockState state) {
+		return table.getInt(state);
+	}
+
+	
+	public static int generation() {
+		return generation;
+	}
+
+	private static int packedFrom(int id) {
+		return (id + 1) << 1;
+	}
+
+	private static void addBlock(BlockIds.Entry entry, Object2IntMap<BlockState> into,
+			List<String> unknown, Set<String> widened) {
+		Identifier identifier;
+		try {
+			identifier = Identifier.fromNamespaceAndPath(entry.namespace(), entry.path());
+		} catch (RuntimeException e) {
+			unknown.add(entry.name());
+
+			return;
+		}
+
+		Block block = BuiltInRegistries.BLOCK.get(identifier).map(Holder::value).orElse(null);
+		if (block == null) {
+			unknown.add(entry.name());
+
+			return;
+		}
+
+		add(block, entry, into, widened);
+	}
+
+	
+	private static void addTag(BlockIds.Entry entry, Object2IntMap<BlockState> into,
+			List<String> unknown, Set<String> widened) {
+		List<HolderSet.Named<Block>> found = BuiltInRegistries.BLOCK.getTags()
+				.filter(tag -> tag.key().location().getNamespace().equalsIgnoreCase(entry.namespace())
+						&& tag.key().location().getPath().equalsIgnoreCase(entry.path()))
+				.toList();
+		if (found.isEmpty()) {
+			unknown.add("%" + entry.name());
+
+			return;
+		}
+
+		found.forEach(tag -> tag.forEach(block -> add(block.value(), entry, into, widened)));
+	}
+
+	private static void add(Block block, BlockIds.Entry entry, Object2IntMap<BlockState> into,
+			Set<String> widened) {
+		StateDefinition<Block, BlockState> states = block.getStateDefinition();
+		if (entry.predicates().isEmpty()) {
+			states.getPossibleStates().forEach(state -> into.putIfAbsent(state, entry.id()));
+
+			return;
+		}
+
+		// Resolved to properties once rather than compared as strings per state: a block with four
+		// properties has a hundred states and the corpus filters two thirds of its declarations.
+		Map<Property<?>, String> wanted = new LinkedHashMap<>();
+		entry.predicates().forEach((key, value) -> {
+			Property<?> property = states.getProperty(key);
+			if (property == null) {
+				// Collected rather than said here: a pack keeps declarations for blocks whose
+				// properties changed between versions, and one line per block of a tag would bury
+				// the point. Dropping the filter is what widens the declaration, so the count and
+				// the names are what install() reports, once.
+				widened.add("block." + entry.id() + " " + entry.name() + " on " + key);
+
+				return;
+			}
+
+			wanted.put(property, value);
+		});
+
+		for (BlockState state : states.getPossibleStates()) {
+			if (matches(state, wanted)) {
+				into.putIfAbsent(state, entry.id());
+			}
+		}
+	}
+
+	// The property types are compared as the strings the file writes, so the wildcards the generics
+	// would need buy nothing.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static boolean matches(BlockState state, Map<Property<?>, String> wanted) {
+		for (Map.Entry<Property<?>, String> condition : wanted.entrySet()) {
+			Property property = condition.getKey();
+			if (!condition.getValue().equals(property.getName(state.getValue(property)))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static Object2IntMap<BlockState> empty() {
+		Object2IntMap<BlockState> map = new Object2IntOpenHashMap<>();
+		map.defaultReturnValue(-1);
+
+		return map;
+	}
+}
